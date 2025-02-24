@@ -1,0 +1,69 @@
+core-identity-uri: ${SERVICE_SCHEME}://${CORE_IDENTITY_HOST}:${CORE_IDENTITY_PORT}
+core-messaging-uri: ${SERVICE_SCHEME}://${CORE_IDENTITY_HOST}:${CORE_IDENTITY_PORT}
+core-gateway-uri: ${SERVICE_SCHEME}://${CORE_GATEWAY_HOST}:${CORE_GATEWAY_PORT}
+core-gateway-public-uri: ${APP_SCHEME}://${CORE_GATEWAY_PUBLIC_HOST}:${CORE_GATEWAY_PUBLIC_PORT}
+
+server:
+  port: ${CORE_PROJECT_PORT}
+  shutdown: graceful
+
+spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_SERVER}/oauth2/jwks
+          issuer-uri: ${AUTH_SERVER}
+  
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+  
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      
+management:
+  endpoints:
+    web:
+      base-path: ""
+      path-mapping:
+        health: health
+  health:
+    ldap:
+      enabled: false
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api/project/v3/api-docs
+  swagger-ui:
+    enabled: true
+    csrf:
+      enabled: true
+    path: /api/project/swagger-ui.html
+
+
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:INFO}
+    org.springframework.web.cors: ${LOG_LEVEL_SPRING_WEB_CORS:DEBUG}
+    org.springframework.security: ${LOG_LEVEL_SPRING_SECURITY:DEBUG}
+    com.ginkgooai: ${LOG_LEVEL_GINKGOOAI:DEBUG}
