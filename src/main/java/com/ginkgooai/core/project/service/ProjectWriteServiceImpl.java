@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.service;
 
+import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.project.domain.*;
 import com.ginkgooai.core.project.dto.request.*;

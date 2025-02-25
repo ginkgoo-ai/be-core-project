@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.domain;
 
+import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.project.dto.request.ProjectRequest;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -11,7 +12,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -40,6 +40,8 @@ public class Project {
     private ProjectStatus status = ProjectStatus.DRAFTING;
 
     private String ownerId;
+    
+    private String producer;
 
     @Column(name = "last_activity_at")
     private LocalDateTime lastActivityAt;

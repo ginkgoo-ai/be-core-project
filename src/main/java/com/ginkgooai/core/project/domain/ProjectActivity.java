@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.domain;
 
+import com.ginkgooai.core.common.bean.ActivityType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
