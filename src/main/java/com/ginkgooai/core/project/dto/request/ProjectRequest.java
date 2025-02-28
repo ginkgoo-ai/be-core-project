@@ -28,6 +28,9 @@ public class ProjectRequest {
 
     @Schema(description = "List of roles associated with the project")
     private List<ProjectRoleRequest> roles;
+    
+    @Schema(description = "Producer of the project", example = "Mark Ronson")
+    private String producer;
 
     @Schema(description = "List of NDA IDs associated with the project")
     private Set<String> ndaIds;

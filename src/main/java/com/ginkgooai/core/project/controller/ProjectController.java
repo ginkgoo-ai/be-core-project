@@ -1,5 +1,9 @@
 package com.ginkgooai.core.project.controller;
 
+import com.ginkgooai.core.common.bean.ActivityType;
+import com.ginkgooai.core.common.constant.MessageQueue;
+import com.ginkgooai.core.common.constant.RedisKey;
+import com.ginkgooai.core.common.message.ActivityLogMessage;
 import com.ginkgooai.core.project.domain.*;
 import com.ginkgooai.core.project.dto.request.*;
 import com.ginkgooai.core.project.dto.response.ProjectActivityResponse;
@@ -13,18 +17,29 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpSession;
+import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RQueue;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/projects")
 @Tag(name = "Project Management", description = "APIs for managing projects, roles, NDAs, members, and activities")
+@Slf4j
 public class ProjectController {
 
     @Autowired
@@ -33,16 +48,43 @@ public class ProjectController {
     @Autowired
     private ProjectWriteService projectWriteService;
 
+    @Autowired
+    private RedissonClient redissonClient;
+
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+
+
     @Operation(summary = "Create a new project", description = "Creates a new project with the provided details")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Project created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     @PostMapping
-    public ResponseEntity<ProjectResponse> createProject(@RequestBody ProjectRequest request) {
-        Project project = projectWriteService.createProject(request);
+    public ResponseEntity<ProjectResponse> createProject(@RequestBody ProjectRequest request, @AuthenticationPrincipal Jwt jwt) {
+        
+        String key = RedisKey.WORKSPACE_CONTEXT_KEY_PREFIX  + jwt.getSubject();
+        String workspaceId = redisTemplate.opsForValue().get(key);
+
+        Project project = projectWriteService.createProject(request, workspaceId);
         ProjectResponse response = projectReadService.findById(project.getId())
                 .orElseThrow(() -> new RuntimeException("Project not found after creation"));
+        try {
+            RQueue<ActivityLogMessage> queue = redissonClient.getQueue(MessageQueue.ACTIVITY_LOG_QUEUE);
+            ActivityLogMessage message = ActivityLogMessage.builder()
+                    .workspaceId(project.getWorkspaceId())
+                    .projectId(project.getId())
+                    .activityType(ActivityType.PROJECT_CREATED.name())
+                    .description("default")
+                    .createdBy(jwt.getSubject())
+//                    .context(buildContext(joinPoint, result))
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            queue.offer(message);
+            log.debug("Activity log message enqueued successfully");
+        } catch (Exception e) {
+            log.error("Failed to enqueue activity log message", e);
+        }
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 

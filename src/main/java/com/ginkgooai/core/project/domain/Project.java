@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.domain;
 
+import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.project.dto.request.ProjectRequest;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -11,19 +12,12 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(
-        name = "project",
-        indexes = {
-                @Index(name = "idx_owner", columnList = "owner_id"),
-                @Index(name = "idx_createdat", columnList = "created_at")
-        }
-)
+@Table(name = "project")
 public class Project {
 
     @Id
@@ -41,6 +35,8 @@ public class Project {
 
     private String ownerId;
 
+    private String producer;
+
     @Column(name = "last_activity_at")
     private LocalDateTime lastActivityAt;
 
@@ -56,27 +52,24 @@ public class Project {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProjectActivity> activities = new HashSet<>();
 
+    private String workspaceId;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    public static Project createFromRequest(ProjectRequest request) {
-        Project project = new Project(
-                request.getName(),
-                request.getDescription(),
-                request.getPlotLine(),
-                request.getOwnerId()
-        );
-
-     
-        
-        return project;
+    public Project(ProjectRequest request, String workspaceId) {
+        this.name = request.getName();
+        this.description = request.getDescription();
+        this.plotLine = request.getPlotLine();
+        this.ownerId = request.getOwnerId();
+        this.workspaceId = workspaceId;
     }
 
     // Constructor for creating a new project (used in write operations)
-    public Project(String name, String description, String plotLine, String ownerId) {
+    public Project(String name, String description, String plotLine, String ownerId, String workspaceId) {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Project name cannot be null or empty");
         }
@@ -87,7 +80,8 @@ public class Project {
         this.description = description;
         this.plotLine = plotLine;
         this.ownerId = ownerId;
-        this.status = ProjectStatus.DRAFTING;
+        this.status = ProjectStatus.IN_PROGRESS;
+        this.workspaceId = workspaceId;
     }
 
     public void updateDetails(String name, String description, String plotLine, ProjectStatus status) {
