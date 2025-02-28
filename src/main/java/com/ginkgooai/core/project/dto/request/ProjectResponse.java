@@ -23,8 +23,8 @@ public class ProjectResponse {
     @Schema(description = "Plot line of the project", example = "A young hero embarks on a journey...")
     private String plotLine;
 
-    @Schema(description = "Status of the project", example = "DRAFTING, ACTIVE, COMPLETED, PENDING_REVIEW")
-    private ProjectStatus status;
+    @Schema(description = "Status of the project", example = "In Progress")
+    private String status;
 
     @Schema(description = "Owner ID of the project", example = "user123")
     private String ownerId;
@@ -49,4 +49,7 @@ public class ProjectResponse {
 
     @Schema(description = "List of activity IDs associated with the project")
     private Set<String> activityIds;
+
+    @Schema(description = "Workspace Id of this project", example = "work123")
+    private String workspaceId;
 }

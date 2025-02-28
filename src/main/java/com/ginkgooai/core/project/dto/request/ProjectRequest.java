@@ -20,8 +20,8 @@ public class ProjectRequest {
     @Schema(description = "Plot line of the project", example = "A young hero embarks on a journey...")
     private String plotLine;
 
-    @Schema(description = "Status of the project", example = "DRAFTING")
-    private ProjectStatus status;
+    @Schema(description = "Status of the project", example = "In Progress")
+    private String status;
 
     @Schema(description = "Owner ID of the project", example = "user123")
     private String ownerId;

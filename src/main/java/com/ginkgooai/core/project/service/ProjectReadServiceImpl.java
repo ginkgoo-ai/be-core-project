@@ -2,7 +2,9 @@ package com.ginkgooai.core.project.service;
 
 import com.ginkgooai.core.project.domain.*;
 import com.ginkgooai.core.project.dto.request.ProjectResponse;
+import com.ginkgooai.core.project.dto.response.ProjectBasicResponse;
 import com.ginkgooai.core.project.repository.ProjectRepository;
+import com.ginkgooai.core.project.repository.ProjectRoleRepository;
 import com.ginkgooai.core.project.specification.ProjectSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,6 +21,8 @@ public class ProjectReadServiceImpl implements ProjectReadService {
 
     @Autowired
     private ProjectRepository projectRepository;
+    @Autowired
+    private ProjectRoleRepository projectRoleRepository;
 
     @Override
     public Optional<ProjectResponse> findById(String id) {
@@ -52,6 +56,13 @@ public class ProjectReadServiceImpl implements ProjectReadService {
     }
 
     @Override
+    public List<ProjectBasicResponse> findAllBasicInfo() {
+        return projectRepository.findAll().stream()
+                .map(ProjectBasicResponse::fromProject)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<ProjectResponse> findByOwnerId(String ownerId) {
         return projectRepository.findByOwnerId(ownerId).stream()
                 .map(this::mapToResponse)
@@ -63,6 +74,16 @@ public class ProjectReadServiceImpl implements ProjectReadService {
         return projectRepository.findByStatus(status).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<ProjectRole> findRoleById(String roleId) {
+        return projectRoleRepository.findById(roleId); 
+    }
+
+    @Override
+    public List<ProjectRole> findRolesByProjectId(String projectId) {
+        return projectRoleRepository.findByProjectId(projectId);
     }
 
     private ProjectResponse mapToResponse(Project project) {
@@ -80,6 +101,7 @@ public class ProjectReadServiceImpl implements ProjectReadService {
         response.setNdaIds(project.getNdas().stream().map(ProjectNda::getId).collect(Collectors.toSet()));
         response.setMemberIds(project.getMembers().stream().map(ProjectMember::getId).collect(Collectors.toSet()));
         response.setActivityIds(project.getActivities().stream().map(ProjectActivity::getId).collect(Collectors.toSet()));
+        response.setWorkspaceId(project.getWorkspaceId());
         return response;
     }
 }
