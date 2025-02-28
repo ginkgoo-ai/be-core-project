@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -24,12 +25,9 @@ public class ProjectRole {
 
     private String selfTapeInstructions;
 
-    private String auditionNotes;
-
-    private String ageRange;
-
-    private String gender;
-
+    @Column(name = "sides", columnDefinition = "text[]")
+    private String[] sides;
+    
     private Boolean isActive = true;
 
     @ManyToOne(fetch = FetchType.LAZY)

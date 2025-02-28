@@ -3,6 +3,7 @@ package com.ginkgooai.core.project.service;
 import com.ginkgooai.core.project.domain.*;
 import com.ginkgooai.core.project.dto.request.ProjectResponse;
 import com.ginkgooai.core.project.dto.response.ProjectBasicResponse;
+import com.ginkgooai.core.project.dto.response.ProjectRoleStatisticsResponse;
 import com.ginkgooai.core.project.repository.ProjectRepository;
 import com.ginkgooai.core.project.repository.ProjectRoleRepository;
 import com.ginkgooai.core.project.specification.ProjectSpecification;
@@ -82,6 +83,11 @@ public class ProjectReadServiceImpl implements ProjectReadService {
     }
 
     @Override
+    public ProjectRoleStatisticsResponse getRoleStatistics(String roleId) {
+        return new ProjectRoleStatisticsResponse();
+    }
+
+    @Override
     public List<ProjectRole> findRolesByProjectId(String projectId) {
         return projectRoleRepository.findByProjectId(projectId);
     }
@@ -100,7 +106,6 @@ public class ProjectReadServiceImpl implements ProjectReadService {
         response.setRoleIds(project.getRoles().stream().map(ProjectRole::getId).collect(Collectors.toSet()));
         response.setNdaIds(project.getNdas().stream().map(ProjectNda::getId).collect(Collectors.toSet()));
         response.setMemberIds(project.getMembers().stream().map(ProjectMember::getId).collect(Collectors.toSet()));
-        response.setActivityIds(project.getActivities().stream().map(ProjectActivity::getId).collect(Collectors.toSet()));
         response.setWorkspaceId(project.getWorkspaceId());
         return response;
     }

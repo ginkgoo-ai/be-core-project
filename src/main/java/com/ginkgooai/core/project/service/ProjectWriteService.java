@@ -9,7 +9,7 @@ public interface ProjectWriteService {
 
     Project updateProject(String id, ProjectRequest request);
 
-    Project updateProjectStatus(String id, String status);
+    Project updateProjectStatus(String id, ProjectStatus status);
 
     void deleteProject(String id);
 
@@ -17,11 +17,11 @@ public interface ProjectWriteService {
 
     ProjectRole updateRole(String roleId, ProjectRoleRequest request);
 
+    ProjectRole patchRoleDetails(String roleId, ProjectRolePatchRequest request);
+
     void deleteRole(String roleId);
 
     ProjectNda createNda(String projectId, ProjectNdaRequest request);
 
     ProjectMember addMember(String projectId, ProjectMemberRequest request);
-
-    ProjectActivity logActivity(String projectId, ProjectActivityRequest request);
 }

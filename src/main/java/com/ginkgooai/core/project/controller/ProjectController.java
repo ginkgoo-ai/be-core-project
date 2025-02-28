@@ -5,6 +5,7 @@ import com.ginkgooai.core.common.constant.MessageQueue;
 import com.ginkgooai.core.common.constant.RedisKey;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.message.ActivityLogMessage;
+import com.ginkgooai.core.common.utils.ActivityLogger;
 import com.ginkgooai.core.project.domain.*;
 import com.ginkgooai.core.project.dto.request.*;
 import com.ginkgooai.core.project.dto.response.*;
@@ -32,11 +33,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/projects")
-@Tag(name = "Project Management", description = "APIs for managing projects, roles, NDAs, members, and activities")
+@Tag(name = "Project Management", description = "APIs for managing projects")
 @Slf4j
 public class ProjectController {
 
@@ -48,6 +49,10 @@ public class ProjectController {
 
     @Autowired
     private RedissonClient redissonClient;
+
+    @Autowired
+    private ActivityLogger activityLogger;
+
 
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
@@ -67,22 +72,39 @@ public class ProjectController {
         Project project = projectWriteService.createProject(request, workspaceId);
         ProjectResponse response = projectReadService.findById(project.getId())
                 .orElseThrow(() -> new RuntimeException("Project not found after creation"));
-        try {
-            RQueue<ActivityLogMessage> queue = redissonClient.getQueue(MessageQueue.ACTIVITY_LOG_QUEUE);
-            ActivityLogMessage message = ActivityLogMessage.builder()
-                    .workspaceId(project.getWorkspaceId())
-                    .projectId(project.getId())
-                    .activityType(ActivityType.PROJECT_CREATED.name())
-                    .description("default")
-                    .createdBy(jwt.getSubject())
-//                    .context(buildContext(joinPoint, result))
-                    .createdAt(LocalDateTime.now())
-                    .build();
-            queue.offer(message);
-            log.debug("Activity log message enqueued successfully");
-        } catch (Exception e) {
-            log.error("Failed to enqueue activity log message", e);
-        }
+//        try {
+//            RQueue<ActivityLogMessage> queue = redissonClient.getQueue(MessageQueue.ACTIVITY_LOG_QUEUE);
+//            ActivityLogMessage message = ActivityLogMessage.builder()
+//                    .workspaceId(project.getWorkspaceId())
+//                    .projectId(project.getId())
+//                    .activityType(ActivityType.PROJECT_CREATED.name())
+//                    .description("default")
+//                    .createdBy(jwt.getSubject())
+////                    .context(buildContext(joinPoint, result))
+//                    .createdAt(LocalDateTime.now())
+//                    .build();
+//            queue.offer(message);
+//            log.debug("Activity log message enqueued successfully");
+//        } catch (Exception e) {
+//            log.error("Failed to enqueue activity log message", e);
+//        }
+
+
+        Map<String, Object> variables = Map.of(
+                "user", jwt.getSubject(),
+                "project", project.getName(),
+                "timeAgo", "just now"
+        );
+
+        activityLogger.log(
+                project.getWorkspaceId(),
+                project.getId(),
+                null,
+                ActivityType.PROJECT_CREATED,
+                variables,
+                null,
+                jwt.getSubject()
+        );
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
@@ -163,7 +185,7 @@ public class ProjectController {
     public ResponseEntity<ProjectResponse> updateProjectStatus(
             @PathVariable String id,
             @Parameter(description = "New project status", required = true)
-            @RequestBody String status,
+            @RequestBody ProjectStatus status,
             @AuthenticationPrincipal Jwt jwt) {
         try {
             Project updatedProject = projectWriteService.updateProjectStatus(id, status);
@@ -171,21 +193,22 @@ public class ProjectController {
                     .orElseThrow(() -> new RuntimeException("Project not found after status update"));
 
             // Log activity to message queue
-            try {
-                RQueue<ActivityLogMessage> queue = redissonClient.getQueue(MessageQueue.ACTIVITY_LOG_QUEUE);
-                ActivityLogMessage message = ActivityLogMessage.builder()
-                        .workspaceId(updatedProject.getWorkspaceId())
-                        .projectId(updatedProject.getId())
-                        .activityType(ActivityType.PROJECT_STATUS_UPDATED.name())
-                        .description("Project status changed to " + status)
-                        .createdBy(jwt.getSubject())
-                        .createdAt(LocalDateTime.now())
-                        .build();
-                queue.offer(message);
-                log.debug("Activity log message enqueued successfully for status update");
-            } catch (Exception e) {
-                log.error("Failed to enqueue activity log message for status update", e);
-            }
+            Map<String, Object> variables = Map.of(
+                    "project", updatedProject.getName(),
+                    "previousStatus", updatedProject.getStatus().name(),
+                    "newStatus", status.name(),
+                    "time", System.currentTimeMillis() 
+            );
+
+            activityLogger.log(
+                    updatedProject.getWorkspaceId(),
+                    updatedProject.getId(),
+                    null,
+                    ActivityType.PROJECT_STATUS_CHANGE,
+                    variables,
+                    null,
+                    jwt.getSubject()
+            );
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (ResourceNotFoundException e) {
@@ -209,116 +232,4 @@ public class ProjectController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-
-    @Operation(summary = "Create a new role for a project", description = "Creates a new role for the specified project")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Role created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input")
-    })
-    @PostMapping("/{projectId}/roles")
-    public ResponseEntity<ProjectRoleResponse> createRole(@PathVariable String projectId, @RequestBody ProjectRoleRequest request) {
-        ProjectRole role = projectWriteService.createRole(projectId, request);
-        ProjectRoleResponse response = ProjectRoleResponse.mapToProjectRoleResponse(role);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
-
-    @Operation(summary = "Create a new NDA for a project", description = "Creates a new NDA for the specified project")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "NDA created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input")
-    })
-    @PostMapping("/{projectId}/ndas")
-    public ResponseEntity<ProjectNdaResponse> createNda(@PathVariable String projectId, @RequestBody ProjectNdaRequest request) {
-        ProjectNda nda = projectWriteService.createNda(projectId, request);
-        ProjectNdaResponse response = ProjectNdaResponse.mapToProjectNdaResponse(nda);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
-
-    @Operation(summary = "Add a member to a project", description = "Adds a new member to the specified project")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Member added successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input")
-    })
-    @PostMapping("/{projectId}/members")
-    public ResponseEntity<ProjectMemberResponse> addMember(@PathVariable String projectId, @RequestBody ProjectMemberRequest request) {
-        ProjectMember member = projectWriteService.addMember(projectId, request);
-        ProjectMemberResponse response = ProjectMemberResponse.mapToProjectMemberResponse(member);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
-
-    @Operation(summary = "Log an activity for a project", description = "Logs a new activity for the specified project")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Activity logged successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input")
-    })
-    @PostMapping("/{projectId}/activities")
-    public ResponseEntity<ProjectActivityResponse> logActivity(@PathVariable String projectId, @RequestBody ProjectActivityRequest request) {
-        ProjectActivity activity = projectWriteService.logActivity(projectId, request);
-        ProjectActivityResponse response = ProjectActivityResponse.mapToProjectActivityResponse(activity);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
-
-    @Operation(summary = "Get a role by ID", description = "Retrieves details of a specific role by its ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Role found"),
-            @ApiResponse(responseCode = "404", description = "Role not found")
-    })
-    @GetMapping("/{projectId}/roles/{roleId}")
-    public ResponseEntity<ProjectRoleResponse> getRoleById(@PathVariable String projectId, @PathVariable String roleId) {
-        return projectReadService.findRoleById(roleId)
-                .map(role -> new ResponseEntity<>(ProjectRoleResponse.mapToProjectRoleResponse(role), HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    @Operation(summary = "Get all roles for a project", description = "Retrieves all roles associated with a specific project")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Roles retrieved successfully"),
-            @ApiResponse(responseCode = "404", description = "Project not found")
-    })
-    @GetMapping("/{projectId}/roles")
-    public ResponseEntity<List<ProjectRoleResponse>> getProjectRoles(@PathVariable String projectId) {
-        List<ProjectRoleResponse> roles = projectReadService.findRolesByProjectId(projectId)
-                .stream()
-                .map(ProjectRoleResponse::mapToProjectRoleResponse)
-                .collect(Collectors.toList());
-        return new ResponseEntity<>(roles, HttpStatus.OK);
-    }
-
-    @Operation(summary = "Update a role", description = "Updates an existing role with the provided details")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Role updated successfully"),
-            @ApiResponse(responseCode = "404", description = "Role not found"),
-            @ApiResponse(responseCode = "400", description = "Invalid input")
-    })
-    @PutMapping("/{projectId}/roles/{roleId}")
-    public ResponseEntity<ProjectRoleResponse> updateRole(
-            @PathVariable String projectId,
-            @PathVariable String roleId,
-            @RequestBody ProjectRoleRequest request) {
-        try {
-            ProjectRole updatedRole = projectWriteService.updateRole(roleId, request);
-            return new ResponseEntity<>(
-                    ProjectRoleResponse.mapToProjectRoleResponse(updatedRole),
-                    HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
-
-    @Operation(summary = "Delete a role", description = "Deletes a role by its ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Role deleted successfully"),
-            @ApiResponse(responseCode = "404", description = "Role not found")
-    })
-    @DeleteMapping("/{projectId}/roles/{roleId}")
-    public ResponseEntity<Void> deleteRole(@PathVariable String projectId, @PathVariable String roleId) {
-        try {
-            projectWriteService.deleteRole(roleId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
-
-
 }

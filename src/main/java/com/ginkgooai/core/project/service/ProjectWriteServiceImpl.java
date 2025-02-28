@@ -1,6 +1,5 @@
 package com.ginkgooai.core.project.service;
 
-import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.project.domain.*;
 import com.ginkgooai.core.project.dto.request.*;
@@ -10,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,8 +29,6 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
     private ProjectNdaRepository projectNdaRepository;
     @Autowired
     private ProjectMemberRepository projectMemberRepository;
-    @Autowired
-    private ProjectActivityRepository projectActivityRepository;
     @Autowired
     private RedissonClient redissonClient; // Inject Redisson client
 
@@ -58,9 +56,6 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
                 role.setName(roleRequest.getName());
                 role.setCharacterDescription(roleRequest.getCharacterDescription());
                 role.setSelfTapeInstructions(roleRequest.getSelfTapeInstructions());
-                role.setAuditionNotes(roleRequest.getAuditionNotes());
-                role.setAgeRange(roleRequest.getAgeRange());
-                role.setGender(roleRequest.getGender());
                 role.setIsActive(true);
                 role.setProject(savedProject);
 //                project.addRole(role);
@@ -85,15 +80,6 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
                 projectMemberRepository.save(member);
             });
         }
-
-        // Log creation activity (handled by Project itself)
-        ProjectActivity activity = new ProjectActivity();
-        activity.setActivityType(ActivityType.PROJECT_CREATED);
-        activity.setStatus(ActivityStatus.SUBMITTED);
-        activity.setDescription("Project " + project.getName() + " created");
-        activity.setProject(savedProject);
-        activity.setCreatedAt(LocalDateTime.now());
-        projectActivityRepository.save(activity);
 
         return savedProject;
     }
@@ -149,7 +135,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
 
     @Override
     @Transactional
-    public Project updateProjectStatus(String id, String status) {
+    public Project updateProjectStatus(String id, ProjectStatus status) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
 
@@ -159,15 +145,6 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
 
         project.setStatus(status);
         project.setLastActivityAt(LocalDateTime.now());
-
-        // Log status change activity
-//        ProjectActivity activity = new ProjectActivity();
-//        activity.setActivityType(ActivityType.PROJECT_STATUS_CHANGED);
-//        activity.setStatus(ActivityStatus.SUBMITTED);
-//        activity.setDescription("Project status changed to " + status);
-//        activity.setProject(project);
-//        activity.setCreatedAt(LocalDateTime.now());
-//        project.addActivity(activity);
 
         return projectRepository.save(project);
     }
@@ -198,13 +175,6 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
             project.addMember(member);
         });
 
-        // Clear and re-add activities
-        project.getActivities().clear();
-        request.getActivityIds().forEach(activityId -> {
-            ProjectActivity activity = projectActivityRepository.findById(activityId)
-                    .orElseThrow(() -> new RuntimeException("Activity not found"));
-            project.addActivity(activity);
-        });
     }
 
     @Override
@@ -240,25 +210,12 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         role.setName(request.getName());
         role.setCharacterDescription(request.getCharacterDescription());
         role.setSelfTapeInstructions(request.getSelfTapeInstructions());
-        role.setAuditionNotes(request.getAuditionNotes());
-        role.setAgeRange(request.getAgeRange());
-        role.setGender(request.getGender());
         role.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
         role.setProject(project);
 
         ProjectRole savedRole = projectRoleRepository.save(role);
         project.addRole(savedRole); // Update the project aggregate
         projectRepository.save(project); // Save to persist the relationship
-
-        // Log activity
-        ProjectActivity activity = new ProjectActivity();
-        activity.setActivityType(ActivityType.ROLE_SUBMISSION);
-        activity.setStatus(ActivityStatus.SUBMITTED);
-        activity.setDescription("Role " + role.getName() + " added to project");
-        activity.setProject(project);
-        activity.setCreatedAt(LocalDateTime.now());
-        project.addActivity(activity);
-        projectRepository.save(project); // Save to persist the activity
 
         return savedRole;
     }
@@ -272,27 +229,31 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         role.setName(request.getName());
         role.setCharacterDescription(request.getCharacterDescription());
         role.setSelfTapeInstructions(request.getSelfTapeInstructions());
-        role.setAuditionNotes(request.getAuditionNotes());
-        role.setAgeRange(request.getAgeRange());
-        role.setGender(request.getGender());
         if (request.getIsActive() != null) {
             role.setIsActive(request.getIsActive());
         }
 
         ProjectRole savedRole = projectRoleRepository.save(role);
 
-        // Log activity
-//        Project project = role.getProject();
-//        ProjectActivity activity = new ProjectActivity();
-//        activity.setActivityType(ActivityType.ROLE_UPDATED);
-//        activity.setStatus(ActivityStatus.SUBMITTED);
-//        activity.setDescription("Role " + role.getName() + " updated");
-//        activity.setProject(project);
-//        activity.setCreatedAt(LocalDateTime.now());
-//        project.addActivity(activity);
-//        projectRepository.save(project);
-
         return savedRole;
+    }
+
+    @Override
+    public ProjectRole patchRoleDetails(String roleId, ProjectRolePatchRequest request) {
+        ProjectRole role = projectRoleRepository.findById(roleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Role", "roleId", roleId));
+
+        // Only update fields that are provided in the request
+        if (request.getCharacterDescription() != null) {
+            role.setCharacterDescription(request.getCharacterDescription());
+        }
+        if (request.getSelfTapeInstructions() != null) {
+            role.setSelfTapeInstructions(request.getSelfTapeInstructions());
+        }
+        if (request.getSides() != null) {
+            role.setSides(request.getSides());
+        }
+        return projectRoleRepository.save(role);
     }
 
     @Override
@@ -304,19 +265,9 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         Project project = role.getProject();
         project.removeRole(roleId);
 
-        // Log activity
-//        ProjectActivity activity = new ProjectActivity();
-//        activity.setActivityType(ActivityType.ROLE_DELETED);
-//        activity.setStatus(ActivityStatus.SUBMITTED);
-//        activity.setDescription("Role " + role.getName() + " deleted");
-//        activity.setProject(project);
-//        activity.setCreatedAt(LocalDateTime.now());
-//        project.addActivity(activity);
-
         projectRepository.save(project);
         projectRoleRepository.delete(role);
     }
-
     @Override
     @Transactional
     public ProjectNda createNda(String projectId, ProjectNdaRequest request) {
@@ -336,68 +287,12 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         project.addNda(savedNda); // Update the project aggregate
         projectRepository.save(project); // Save to persist the relationship
 
-        // Log activity
-        ProjectActivity activity = new ProjectActivity();
-        activity.setActivityType(ActivityType.NDA_SIGNED);
-        activity.setStatus(ActivityStatus.SUBMITTED);
-        activity.setDescription("NDA created for project");
-        activity.setProject(project);
-        activity.setCreatedAt(LocalDateTime.now());
-        project.addActivity(activity);
-        projectRepository.save(project); // Save to persist the activity
-
         return savedNda;
     }
 
     @Override
     @Transactional
     public ProjectMember addMember(String projectId, ProjectMemberRequest request) {
-        Project project = projectRepository.findById(projectId).orElseThrow(() -> new ResourceNotFoundException("Project", "projectId", projectId));
-
-        ProjectMember member = new ProjectMember();
-        member.setUserId(request.getUserId());
-        member.setStatus(request.getStatus() != null ? request.getStatus() : MemberStatus.ACTIVE);
-        member.setProject(project);
-
-        // Optionally set the role if provided
-        if (request.getRoleId() != null) {
-            ProjectRole role = projectRoleRepository.findById(request.getRoleId())
-                    .orElseThrow(() -> new RuntimeException("Role not found: " + request.getRoleId()));
-        }
-
-        ProjectMember savedMember = projectMemberRepository.save(member);
-        project.addMember(savedMember); // Update the project aggregate
-        projectRepository.save(project); // Save to persist the relationship
-
-        // Log activity
-        ProjectActivity activity = new ProjectActivity();
-        activity.setActivityType(ActivityType.MEMBER_ADDED);
-        activity.setStatus(ActivityStatus.SUBMITTED);
-        activity.setDescription("Member " + member.getUserId() + " added to project");
-        activity.setProject(project);
-        activity.setCreatedAt(LocalDateTime.now());
-        project.addActivity(activity);
-        projectRepository.save(project); // Save to persist the activity
-
-        return savedMember;
-    }
-
-    @Override
-    @Transactional
-    public ProjectActivity logActivity(String projectId, ProjectActivityRequest request) {
-        Project project = projectRepository.findById(projectId).orElseThrow(() -> new ResourceNotFoundException("Project", "projectId", projectId));
-
-        ProjectActivity activity = new ProjectActivity();
-        activity.setActivityType(request.getActivityType());
-        activity.setStatus(request.getStatus() != null ? request.getStatus() : ActivityStatus.SUBMITTED);
-        activity.setDescription(request.getDescription());
-        activity.setProject(project);
-        activity.setCreatedAt(LocalDateTime.now());
-
-        ProjectActivity savedActivity = projectActivityRepository.save(activity);
-        project.addActivity(savedActivity); // Update the project aggregate
-        projectRepository.save(project); // Save to persist the relationship
-
-        return savedActivity;
+       return new ProjectMember(); 
     }
 }
