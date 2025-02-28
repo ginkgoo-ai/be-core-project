@@ -30,8 +30,9 @@ public class Project {
 
     private String plotLine;
 
-    @Enumerated(EnumType.STRING)
-    private ProjectStatus status = ProjectStatus.DRAFTING;
+//    @Enumerated(EnumType.STRING)
+//    private ProjectStatus status = ProjectStatus.DRAFTING;
+    private String status;
 
     private String ownerId;
 
@@ -65,26 +66,27 @@ public class Project {
         this.description = request.getDescription();
         this.plotLine = request.getPlotLine();
         this.ownerId = request.getOwnerId();
+        this.status = "In Progress";
         this.workspaceId = workspaceId;
     }
 
-    // Constructor for creating a new project (used in write operations)
-    public Project(String name, String description, String plotLine, String ownerId, String workspaceId) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Project name cannot be null or empty");
-        }
-        if (ownerId == null || ownerId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Owner ID cannot be null or empty");
-        }
-        this.name = name.trim();
-        this.description = description;
-        this.plotLine = plotLine;
-        this.ownerId = ownerId;
-        this.status = ProjectStatus.IN_PROGRESS;
-        this.workspaceId = workspaceId;
-    }
+//    // Constructor for creating a new project (used in write operations)
+//    public Project(String name, String description, String plotLine, String ownerId, String workspaceId) {
+//        if (name == null || name.trim().isEmpty()) {
+//            throw new IllegalArgumentException("Project name cannot be null or empty");
+//        }
+//        if (ownerId == null || ownerId.trim().isEmpty()) {
+//            throw new IllegalArgumentException("Owner ID cannot be null or empty");
+//        }
+//        this.name = name.trim();
+//        this.description = description;
+//        this.plotLine = plotLine;
+//        this.ownerId = ownerId;
+//        this.status = "In Progress";
+//        this.workspaceId = workspaceId;
+//    }
 
-    public void updateDetails(String name, String description, String plotLine, ProjectStatus status) {
+    public void updateDetails(String name, String description, String plotLine, String status) {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Project name cannot be null or empty");
         }

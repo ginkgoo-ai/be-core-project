@@ -9,9 +9,15 @@ public interface ProjectWriteService {
 
     Project updateProject(String id, ProjectRequest request);
 
+    Project updateProjectStatus(String id, String status);
+
     void deleteProject(String id);
 
     ProjectRole createRole(String projectId, ProjectRoleRequest request);
+
+    ProjectRole updateRole(String roleId, ProjectRoleRequest request);
+
+    void deleteRole(String roleId);
 
     ProjectNda createNda(String projectId, ProjectNdaRequest request);
 

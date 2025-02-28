@@ -3,13 +3,11 @@ package com.ginkgooai.core.project.controller;
 import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.common.constant.MessageQueue;
 import com.ginkgooai.core.common.constant.RedisKey;
+import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.message.ActivityLogMessage;
 import com.ginkgooai.core.project.domain.*;
 import com.ginkgooai.core.project.dto.request.*;
-import com.ginkgooai.core.project.dto.response.ProjectActivityResponse;
-import com.ginkgooai.core.project.dto.response.ProjectMemberResponse;
-import com.ginkgooai.core.project.dto.response.ProjectNdaResponse;
-import com.ginkgooai.core.project.dto.response.ProjectRoleResponse;
+import com.ginkgooai.core.project.dto.response.*;
 import com.ginkgooai.core.project.service.ProjectReadService;
 import com.ginkgooai.core.project.service.ProjectWriteService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,7 +15,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RQueue;
 import org.redisson.api.RedissonClient;
@@ -31,10 +28,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/projects")
@@ -62,7 +60,7 @@ public class ProjectController {
     })
     @PostMapping
     public ResponseEntity<ProjectResponse> createProject(@RequestBody ProjectRequest request, @AuthenticationPrincipal Jwt jwt) {
-        
+
         String key = RedisKey.WORKSPACE_CONTEXT_KEY_PREFIX  + jwt.getSubject();
         String workspaceId = redisTemplate.opsForValue().get(key);
 
@@ -127,6 +125,16 @@ public class ProjectController {
         }
     }
 
+    @Operation(summary = "Get basic info of all projects", description = "Retrieves basic information (id and name) of all projects")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of project basic info retrieved successfully")
+    })
+    @GetMapping("/basic")
+    public ResponseEntity<List<ProjectBasicResponse>> getAllProjectsBasicInfo() {
+        List<ProjectBasicResponse> projects = projectReadService.findAllBasicInfo();
+        return new ResponseEntity<>(projects, HttpStatus.OK);
+    }
+
     @Operation(summary = "Update a project", description = "Updates an existing project with the provided details")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Project updated successfully"),
@@ -142,6 +150,48 @@ public class ProjectController {
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Operation(summary = "Update project status", description = "Updates the status of an existing project")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Project status updated successfully"),
+            @ApiResponse(responseCode = "404", description = "Project not found"),
+            @ApiResponse(responseCode = "400", description = "Invalid status value")
+    })
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ProjectResponse> updateProjectStatus(
+            @PathVariable String id,
+            @Parameter(description = "New project status", required = true)
+            @RequestBody String status,
+            @AuthenticationPrincipal Jwt jwt) {
+        try {
+            Project updatedProject = projectWriteService.updateProjectStatus(id, status);
+            ProjectResponse response = projectReadService.findById(updatedProject.getId())
+                    .orElseThrow(() -> new RuntimeException("Project not found after status update"));
+
+            // Log activity to message queue
+            try {
+                RQueue<ActivityLogMessage> queue = redissonClient.getQueue(MessageQueue.ACTIVITY_LOG_QUEUE);
+                ActivityLogMessage message = ActivityLogMessage.builder()
+                        .workspaceId(updatedProject.getWorkspaceId())
+                        .projectId(updatedProject.getId())
+                        .activityType(ActivityType.PROJECT_STATUS_UPDATED.name())
+                        .description("Project status changed to " + status)
+                        .createdBy(jwt.getSubject())
+                        .createdAt(LocalDateTime.now())
+                        .build();
+                queue.offer(message);
+                log.debug("Activity log message enqueued successfully for status update");
+            } catch (Exception e) {
+                log.error("Failed to enqueue activity log message for status update", e);
+            }
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (ResourceNotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -206,6 +256,68 @@ public class ProjectController {
         ProjectActivity activity = projectWriteService.logActivity(projectId, request);
         ProjectActivityResponse response = ProjectActivityResponse.mapToProjectActivityResponse(activity);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @Operation(summary = "Get a role by ID", description = "Retrieves details of a specific role by its ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Role found"),
+            @ApiResponse(responseCode = "404", description = "Role not found")
+    })
+    @GetMapping("/{projectId}/roles/{roleId}")
+    public ResponseEntity<ProjectRoleResponse> getRoleById(@PathVariable String projectId, @PathVariable String roleId) {
+        return projectReadService.findRoleById(roleId)
+                .map(role -> new ResponseEntity<>(ProjectRoleResponse.mapToProjectRoleResponse(role), HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @Operation(summary = "Get all roles for a project", description = "Retrieves all roles associated with a specific project")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Roles retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Project not found")
+    })
+    @GetMapping("/{projectId}/roles")
+    public ResponseEntity<List<ProjectRoleResponse>> getProjectRoles(@PathVariable String projectId) {
+        List<ProjectRoleResponse> roles = projectReadService.findRolesByProjectId(projectId)
+                .stream()
+                .map(ProjectRoleResponse::mapToProjectRoleResponse)
+                .collect(Collectors.toList());
+        return new ResponseEntity<>(roles, HttpStatus.OK);
+    }
+
+    @Operation(summary = "Update a role", description = "Updates an existing role with the provided details")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Role updated successfully"),
+            @ApiResponse(responseCode = "404", description = "Role not found"),
+            @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
+    @PutMapping("/{projectId}/roles/{roleId}")
+    public ResponseEntity<ProjectRoleResponse> updateRole(
+            @PathVariable String projectId,
+            @PathVariable String roleId,
+            @RequestBody ProjectRoleRequest request) {
+        try {
+            ProjectRole updatedRole = projectWriteService.updateRole(roleId, request);
+            return new ResponseEntity<>(
+                    ProjectRoleResponse.mapToProjectRoleResponse(updatedRole),
+                    HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Operation(summary = "Delete a role", description = "Deletes a role by its ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Role deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "Role not found")
+    })
+    @DeleteMapping("/{projectId}/roles/{roleId}")
+    public ResponseEntity<Void> deleteRole(@PathVariable String projectId, @PathVariable String roleId) {
+        try {
+            projectWriteService.deleteRole(roleId);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
 
