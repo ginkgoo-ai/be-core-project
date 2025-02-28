@@ -36,14 +36,14 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
 
     @Override
     @Transactional
-    public Project createProject(ProjectRequest request) {
+    public Project createProject(ProjectRequest request, String workspaceId) {
         log.debug("Creating new project with request: {}", request);
 
         validateProjectRequest(request);
 
         validateOwner(request.getOwnerId());
         
-        Project project = Project.createFromRequest(request);
+        Project project = new Project(request, workspaceId);
         Project savedProject = projectRepository.save(project);
 
         // Set optional status if provided (override default DRAFTING if necessary)
@@ -62,27 +62,27 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
                 role.setAgeRange(roleRequest.getAgeRange());
                 role.setGender(roleRequest.getGender());
                 role.setIsActive(true);
-                project.addRole(role);
+                role.setProject(savedProject);
+//                project.addRole(role);
+                projectRoleRepository.save(role);
             });
         }
 
-        if (request.getNdaIds() != null && !request.getNdaIds().isEmpty()) {
-            request.getNdaIds().forEach(ndaId -> {
-                ProjectNda nda = new ProjectNda(); // Placeholder, replace with actual entity from DB
-                nda.setId(ndaId);
-                nda.setProject(project);
-                projectNdaRepository.save(nda);
-                project.addNda(nda);
-            });
-        }
+//        if (request.getNdaIds() != null && !request.getNdaIds().isEmpty()) {
+//            request.getNdaIds().forEach(ndaId -> {
+//                ProjectNda nda = new ProjectNda(); // Placeholder, replace with actual entity from DB
+//                nda.setProject(savedProject);
+//                projectNdaRepository.save(nda);
+//                project.addNda(nda);
+//            });
+//        }
 
         if (request.getMemberIds() != null && !request.getMemberIds().isEmpty()) {
             request.getMemberIds().forEach(memberId -> {
                 ProjectMember member = new ProjectMember(); // Placeholder, replace with actual entity from DB
-                member.setId(memberId);
-                member.setProject(project);
+                member.setUserId(memberId);
+                member.setProject(savedProject);
                 projectMemberRepository.save(member);
-                project.addMember(member);
             });
         }
 
