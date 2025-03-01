@@ -1,6 +1,5 @@
 package com.ginkgooai.core.project.domain;
 
-import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.project.dto.request.ProjectRequest;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -30,9 +29,8 @@ public class Project {
 
     private String plotLine;
 
-//    @Enumerated(EnumType.STRING)
-//    private ProjectStatus status = ProjectStatus.DRAFTING;
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private ProjectStatus status = ProjectStatus.DRAFTING;
 
     private String ownerId;
 
@@ -50,9 +48,6 @@ public class Project {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProjectMember> members = new HashSet<>();
 
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ProjectActivity> activities = new HashSet<>();
-
     private String workspaceId;
 
     @CreationTimestamp
@@ -66,27 +61,12 @@ public class Project {
         this.description = request.getDescription();
         this.plotLine = request.getPlotLine();
         this.ownerId = request.getOwnerId();
-        this.status = "In Progress";
+        this.status = ProjectStatus.DRAFTING;
         this.workspaceId = workspaceId;
+        this.createdAt = LocalDateTime.now();
     }
 
-//    // Constructor for creating a new project (used in write operations)
-//    public Project(String name, String description, String plotLine, String ownerId, String workspaceId) {
-//        if (name == null || name.trim().isEmpty()) {
-//            throw new IllegalArgumentException("Project name cannot be null or empty");
-//        }
-//        if (ownerId == null || ownerId.trim().isEmpty()) {
-//            throw new IllegalArgumentException("Owner ID cannot be null or empty");
-//        }
-//        this.name = name.trim();
-//        this.description = description;
-//        this.plotLine = plotLine;
-//        this.ownerId = ownerId;
-//        this.status = "In Progress";
-//        this.workspaceId = workspaceId;
-//    }
-
-    public void updateDetails(String name, String description, String plotLine, String status) {
+    public void updateDetails(String name, String description, String plotLine, ProjectStatus status) {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Project name cannot be null or empty");
         }
@@ -117,7 +97,6 @@ public class Project {
         }
         nda.setProject(this);
         ndas.add(nda);
-        logActivity(ActivityType.NDA_SIGNED, "NDA added for project");
     }
 
     public void removeNda(String ndaId) {
@@ -130,29 +109,10 @@ public class Project {
         }
         member.setProject(this);
         members.add(member);
-        logActivity(ActivityType.MEMBER_ADDED, "Member " + member.getUserId() + " added");
     }
 
     public void removeMember(String userId) {
         members.removeIf(member -> member.getUserId().equals(userId));
-    }
-
-    public void addActivity(ProjectActivity activity) {
-        if (activity == null) {
-            throw new IllegalArgumentException("Activity cannot be null");
-        }
-        activity.setProject(this);
-        activities.add(activity);
-        this.lastActivityAt = LocalDateTime.now();
-    }
-
-    private void logActivity(ActivityType type, String description) {
-        ProjectActivity activity = new ProjectActivity();
-        activity.setActivityType(type);
-        activity.setStatus(ActivityStatus.SUBMITTED);
-        activity.setDescription(description);
-        activity.setCreatedAt(LocalDateTime.now());
-        addActivity(activity);
     }
 
     public boolean isMember(String userId) {

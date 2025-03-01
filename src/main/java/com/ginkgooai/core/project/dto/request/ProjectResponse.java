@@ -24,7 +24,7 @@ public class ProjectResponse {
     private String plotLine;
 
     @Schema(description = "Status of the project", example = "In Progress")
-    private String status;
+    private ProjectStatus status;
 
     @Schema(description = "Owner ID of the project", example = "user123")
     private String ownerId;

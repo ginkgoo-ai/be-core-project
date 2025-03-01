@@ -41,9 +41,6 @@ public class ProjectRoleResponse {
         response.setName(role.getName());
         response.setCharacterDescription(role.getCharacterDescription());
         response.setSelfTapeInstructions(role.getSelfTapeInstructions());
-        response.setAuditionNotes(role.getAuditionNotes());
-        response.setAgeRange(role.getAgeRange());
-        response.setGender(role.getGender());
         response.setIsActive(role.getIsActive());
         response.setProjectId(role.getProject().getId());
         return response;
