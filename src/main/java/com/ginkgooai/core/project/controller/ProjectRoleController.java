@@ -1,7 +1,7 @@
 package com.ginkgooai.core.project.controller;
 
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
-import com.ginkgooai.core.project.domain.*;
+import com.ginkgooai.core.project.domain.project.ProjectRole;
 import com.ginkgooai.core.project.dto.request.*;
 import com.ginkgooai.core.project.dto.response.ProjectRoleResponse;
 import com.ginkgooai.core.project.dto.response.ProjectRoleStatisticsResponse;

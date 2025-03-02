@@ -1,12 +1,11 @@
 package com.ginkgooai.core.project.controller;
 
 import com.ginkgooai.core.common.bean.ActivityType;
-import com.ginkgooai.core.common.constant.MessageQueue;
 import com.ginkgooai.core.common.constant.RedisKey;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
-import com.ginkgooai.core.common.message.ActivityLogMessage;
 import com.ginkgooai.core.common.utils.ActivityLogger;
-import com.ginkgooai.core.project.domain.*;
+import com.ginkgooai.core.project.domain.project.Project;
+import com.ginkgooai.core.project.domain.project.ProjectStatus;
 import com.ginkgooai.core.project.dto.request.*;
 import com.ginkgooai.core.project.dto.response.*;
 import com.ginkgooai.core.project.service.ProjectReadService;
@@ -17,7 +16,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RQueue;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -31,7 +29,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -72,23 +69,6 @@ public class ProjectController {
         Project project = projectWriteService.createProject(request, workspaceId);
         ProjectResponse response = projectReadService.findById(project.getId())
                 .orElseThrow(() -> new RuntimeException("Project not found after creation"));
-//        try {
-//            RQueue<ActivityLogMessage> queue = redissonClient.getQueue(MessageQueue.ACTIVITY_LOG_QUEUE);
-//            ActivityLogMessage message = ActivityLogMessage.builder()
-//                    .workspaceId(project.getWorkspaceId())
-//                    .projectId(project.getId())
-//                    .activityType(ActivityType.PROJECT_CREATED.name())
-//                    .description("default")
-//                    .createdBy(jwt.getSubject())
-////                    .context(buildContext(joinPoint, result))
-//                    .createdAt(LocalDateTime.now())
-//                    .build();
-//            queue.offer(message);
-//            log.debug("Activity log message enqueued successfully");
-//        } catch (Exception e) {
-//            log.error("Failed to enqueue activity log message", e);
-//        }
-
 
         Map<String, Object> variables = Map.of(
                 "user", jwt.getSubject(),

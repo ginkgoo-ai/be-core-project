@@ -1,35 +1,36 @@
-package com.ginkgooai.core.project.domain;
+package com.ginkgooai.core.project.domain.application;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
 @Entity
-@Table(name = "project_member")
-public class ProjectMember {
-
+@Builder
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "application_note")
+public class ApplicationNote {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-
-    private String userId;
-
-    @Enumerated(EnumType.STRING)
-    private MemberStatus status = MemberStatus.ACTIVE;
-
+    
     @ManyToOne(fetch = FetchType.LAZY)
-    private Project project;
-
+    @JoinColumn(name = "application_id")
+    private Application application;
+    
+    @Column(columnDefinition = "TEXT")
+    private String content;
+    
+    private String createdBy;
+    
     @CreationTimestamp
     private LocalDateTime createdAt;
-
+    
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-
 }

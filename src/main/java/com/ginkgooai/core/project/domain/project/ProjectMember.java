@@ -1,5 +1,6 @@
-package com.ginkgooai.core.project.domain;
+package com.ginkgooai.core.project.domain.project;
 
+import com.ginkgooai.core.project.domain.MemberStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,29 +12,19 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "project_nda")
-public class ProjectNda {
+@Table(name = "project_member")
+public class ProjectMember {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    private Boolean requiresNda;
+    private String userId;
 
-    private Boolean applyToAll;
-
-    private String version;
-
-    private String fullName;
-
-    private String title;
-
-    private String company;
-
-    private String signatureUrl;
+    @Enumerated(EnumType.STRING)
+    private MemberStatus status = MemberStatus.ACTIVE;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
     @CreationTimestamp
@@ -41,4 +32,5 @@ public class ProjectNda {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
 }

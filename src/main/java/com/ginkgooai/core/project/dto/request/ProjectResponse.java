@@ -1,6 +1,6 @@
 package com.ginkgooai.core.project.dto.request;
 
-import com.ginkgooai.core.project.domain.ProjectStatus;
+import com.ginkgooai.core.project.domain.project.ProjectStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
