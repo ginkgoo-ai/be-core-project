@@ -32,7 +32,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/applications")
 @RequiredArgsConstructor
-@Tag(name = "Applications", description = "Application management endpoints")
+@Tag(name = "Applications Management", description = "Application management endpoints")
 public class ApplicationController {
 
     private final ApplicationService applicationService;

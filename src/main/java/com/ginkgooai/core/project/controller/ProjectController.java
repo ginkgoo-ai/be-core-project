@@ -12,6 +12,7 @@ import com.ginkgooai.core.project.service.ProjectReadService;
 import com.ginkgooai.core.project.service.ProjectWriteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -163,7 +164,11 @@ public class ProjectController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<ProjectResponse> updateProjectStatus(
             @PathVariable String id,
-            @Parameter(description = "New project status", required = true)
+            @Parameter(
+                    description = "New project status",
+                    required = true,
+                    schema = @Schema(implementation = ProjectStatus.class, example = "IN_PROGRESS")
+            )
             @RequestBody ProjectStatus status,
             @AuthenticationPrincipal Jwt jwt) {
         try {
