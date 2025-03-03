@@ -6,18 +6,27 @@ import com.ginkgooai.core.project.domain.application.Application;
 import com.ginkgooai.core.project.domain.application.Shortlist;
 import com.ginkgooai.core.project.domain.application.ShortlistItem;
 import com.ginkgooai.core.project.domain.application.Submission;
-import com.ginkgooai.core.project.dto.request.ShortlistItemAddRequest;
+import com.ginkgooai.core.project.domain.project.ProjectRole;
+import com.ginkgooai.core.project.domain.talent.Talent;
 import com.ginkgooai.core.project.dto.response.ShortlistItemResponse;
 import com.ginkgooai.core.project.dto.response.ShortlistResponse;
+import com.ginkgooai.core.project.repository.ShortlistItemRepository;
 import com.ginkgooai.core.project.repository.ShortlistRepository;
 import com.ginkgooai.core.project.repository.SubmissionRepository;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +35,7 @@ import java.util.stream.Collectors;
 public class ShortlistService {
 
     private final ShortlistRepository shortlistRepository;
+    private final ShortlistItemRepository shortlistItemRepository;
     private final SubmissionRepository submissionRepository;
 
     @Transactional
@@ -36,12 +46,12 @@ public class ShortlistService {
         Application application = submission.getApplication();
         
         // Try to find existing shortlist
-        Shortlist shortlist = shortlistRepository.findByWorkspaceIdAndProjectIdAndOwnerId(application.getWorkspaceId(), application.getProjectId(), userId)
+        Shortlist shortlist = shortlistRepository.findByWorkspaceIdAndProjectIdAndOwnerId(application.getWorkspaceId(), application.getProject().getId(), userId)
                 .orElseGet(() -> {
                     // If shortlist doesn't exist, create a new one
                     Shortlist shortlistNew = Shortlist.builder()
                             .workspaceId(WorkspaceContext.getWorkspaceId())
-                            .projectId(application.getProjectId())
+                            .projectId(application.getProject().getId())
                             .ownerId(userId)
                             .name("Shortlist")
                             .createdBy(userId)
@@ -68,21 +78,72 @@ public class ShortlistService {
     }
 
     @Transactional
-    public void removeVideo(String shortlistId, String videoSubmissionId) {
+    public void removeVideo(String shortlistId, String submissionId) {
         Shortlist shortlist = findShortlistById(shortlistId);
         shortlist.getItems().removeIf(item -> 
-                item.getVideoSubmission().getId().equals(videoSubmissionId));
+                item.getSubmission().getId().equals(submissionId));
         shortlistRepository.save(shortlist);
     }
 
-    @Transactional(readOnly = true)
-    public Page<ShortlistResponse> listShortlists(String projectId, String roleId, Pageable pageable) {
-        String workspaceId = WorkspaceContext.getWorkspaceId();
+    private Shortlist findShortlistById(String shortlistId) {
+        return shortlistRepository.findById(shortlistId)
+                .orElseThrow(() -> new ResourceNotFoundException("Shortlist", "id", shortlistId));
+    }
 
-        return shortlistRepository.findAll(
-                buildSpecification(workspaceId, projectId, roleId), 
+    @Transactional(readOnly = true)
+    public Page<ShortlistItemResponse> listShortlistItems(String projectId, String keyword, Pageable pageable) {
+        String workspaceId = WorkspaceContext.getWorkspaceId();
+        String userId = null;
+
+        // First get the user's shortlist for this project
+        Shortlist shortlist = shortlistRepository.findByWorkspaceIdAndProjectIdAndOwnerId(workspaceId, projectId, userId)
+                .orElse(null);
+
+        if (shortlist == null) {
+            return Page.empty(pageable);
+        }
+
+        return shortlistItemRepository.findShortlistItems(
+                buildShortlistItemSpecification(shortlist.getId(), keyword),
                 pageable
-        ).map(this::convertToResponse);
+        ).map(this::convertItemToResponse);
+    }
+
+    private Specification<ShortlistItem> buildShortlistItemSpecification(String shortlistId, String keyword) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Basic condition - items belonging to the specific shortlist
+            predicates.add(cb.equal(root.get("shortlist").get("id"), shortlistId));
+
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String likePattern = "%" + keyword.toLowerCase() + "%";
+
+                // Join with Submission and Application
+                Join<ShortlistItem, Submission> submissionJoin = root.join("submission", JoinType.LEFT);
+                Join<Submission, Application> applicationJoin = submissionJoin.join("application", JoinType.LEFT);
+                // Join with ProjectRole and Talent
+                Join<Application, ProjectRole> roleJoin = applicationJoin.join("role", JoinType.LEFT);
+                Join<Application, Talent> talentJoin = applicationJoin.join("talent", JoinType.LEFT);
+
+                // Create OR conditions for roleName and talentName
+                Predicate roleNamePredicate = cb.like(
+                        cb.lower(roleJoin.get("name")),
+                        likePattern
+                );
+                Predicate talentNamePredicate = cb.like(
+                        cb.lower(talentJoin.get("name")),
+                        likePattern
+                );
+
+                predicates.add(cb.or(roleNamePredicate, talentNamePredicate));
+            }
+
+            // Sort by order
+            query.orderBy(cb.asc(root.get("order")));
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
     }
 
     private ShortlistResponse convertToResponse(Shortlist shortlist) {
@@ -92,7 +153,7 @@ public class ShortlistService {
                 .name(shortlist.getName())
                 .description(shortlist.getDescription())
                 .projectId(shortlist.getProjectId())
-                .roleId(shortlist.getRoleId())
+//                .roleId(shortlist.getRole().getId())
                 .items(shortlist.getItems().stream()
                         .sorted(Comparator.comparing(ShortlistItem::getOrder))
                         .map(this::convertItemToResponse)
@@ -106,7 +167,6 @@ public class ShortlistService {
     private ShortlistItemResponse convertItemToResponse(ShortlistItem item) {
         return ShortlistItemResponse.builder()
                 .id(item.getId())
-                .video(submissionService.getSubmissionResponse(item.getSubmission()))
                 .notes(item.getNotes())
                 .order(item.getOrder())
                 .addedBy(item.getAddedBy())

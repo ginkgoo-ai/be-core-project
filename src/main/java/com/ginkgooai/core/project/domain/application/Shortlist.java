@@ -31,8 +31,6 @@ public class Shortlist {
     
     private String description;
     
-    private String roleId;
-
     @OneToMany(mappedBy = "shortlist", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ShortlistItem> items;
     

@@ -1,6 +1,11 @@
 package com.ginkgooai.core.project.controller;
 
+import com.ginkgooai.core.common.constant.RedisKey;
 import com.ginkgooai.core.project.domain.application.Application;
+import com.ginkgooai.core.project.domain.application.ApplicationStatus;
+import com.ginkgooai.core.project.dto.request.ApplicationCreateRequest;
+import com.ginkgooai.core.project.dto.response.ApplicationCommentResponse;
+import com.ginkgooai.core.project.dto.response.ApplicationNoteResponse;
 import com.ginkgooai.core.project.dto.response.ApplicationResponse;
 import com.ginkgooai.core.project.service.application.ApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,18 +18,27 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/api/v1/applications")
+@RequestMapping("/applications")
 @RequiredArgsConstructor
 @Tag(name = "Applications", description = "Application management endpoints")
 public class ApplicationController {
 
     private final ApplicationService applicationService;
+
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
 
     @Operation(summary = "Create new application",
             description = "Creates a new application for a talent applying to a specific role")
@@ -36,9 +50,11 @@ public class ApplicationController {
     })
     @PostMapping
     public ResponseEntity<ApplicationResponse> createApplication(
-            @Valid @RequestBody ApplicationCreateRequest request) {
-//        return ResponseEntity.ok(applicationService.createApplication(request));
-        return null;
+            @Valid @RequestBody ApplicationCreateRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+        String key = RedisKey.WORKSPACE_CONTEXT_KEY_PREFIX + jwt.getSubject();
+        String workspaceId = redisTemplate.opsForValue().get(key);
+        return ResponseEntity.ok(applicationService.createApplication(request, workspaceId, jwt.getSubject()));
     }
 
     @Operation(summary = "Get application by ID",
@@ -49,58 +65,60 @@ public class ApplicationController {
             @ApiResponse(responseCode = "404", description = "Application not found")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<ApplicationResponse> getApplication(
-            @Parameter(description = "Application ID", example = "app_12345")
-            @PathVariable String id) {
-        Application application = applicationService.getApplicationById(id);
+    public ResponseEntity<ApplicationResponse> getApplication(@Parameter(description = "Application ID", example = "app_12345")
+                                                              @PathVariable String id,
+                                                              @AuthenticationPrincipal Jwt jwt) {
+        String key = RedisKey.WORKSPACE_CONTEXT_KEY_PREFIX + jwt.getSubject();
+        String workspaceId = redisTemplate.opsForValue().get(key);
+        Application application = applicationService.getApplicationById(workspaceId, id);
         return ResponseEntity.ok(ApplicationResponse.from(application));
     }
 
     @Operation(summary = "List applications",
-            description = "Retrieves a paginated list of applications with optional filtering")
+            description = "Retrieves a paginated list of applications with filtering and sorting options")
     @GetMapping
     public ResponseEntity<Page<ApplicationResponse>> listApplications(
-            @Parameter(description = "Project ID filter", example = "proj_12345")
+            @Parameter(description = "Project ID filter")
             @RequestParam(required = false) String projectId,
-            @Parameter(description = "Role ID filter", example = "role_12345")
+            @Parameter(description = "Role ID filter")
             @RequestParam(required = false) String roleId,
-            @Parameter(description = "Talent ID filter", example = "talent_12345")
-            @RequestParam(required = false) String talentId,
-            @ParameterObject Pageable pageable) {
-        return ResponseEntity.ok(applicationService.listApplications(projectId, roleId, talentId, pageable));
-    }
+            @Parameter(description = "Search keyword for talent name or email or role name")
+            @RequestParam(required = false) String keyword,
+            @Parameter(description = "Filter by application status")
+            @RequestParam(required = false) ApplicationStatus status,
+            @ParameterObject Pageable pageable,
+            @AuthenticationPrincipal Jwt jwt) {
 
-
-    @Operation(summary = "Toggle shortlist status",
-            description = "Adds or removes an application from the shortlist")
-    @PatchMapping("/{id}/shortlist")
-    public ResponseEntity<ApplicationResponse> toggleShortlist(
-            @Parameter(description = "Application ID", example = "app_12345")
-            @PathVariable String id,
-            @Parameter(description = "Shortlist status", example = "true")
-            @RequestParam boolean shortlisted) {
-        return ResponseEntity.ok(applicationService.toggleShortlist(id, shortlisted));
+        String key = RedisKey.WORKSPACE_CONTEXT_KEY_PREFIX + jwt.getSubject();
+        String workspaceId = redisTemplate.opsForValue().get(key);
+        return ResponseEntity.ok(applicationService.listApplications(workspaceId, projectId, roleId, keyword, status, pageable));
     }
 
     @Operation(summary = "Add comment to application",
             description = "Adds a new comment to the application")
     @PostMapping("/{id}/comments")
-    public ResponseEntity<ApplicationResponse> addComment(
+    public ResponseEntity<List<ApplicationCommentResponse>> addComment(
             @Parameter(description = "Application ID", example = "app_12345")
             @PathVariable String id,
             @Parameter(description = "Comment content", example = "Excellent performance in the audition")
-            @RequestParam String content) {
-        return ResponseEntity.ok(applicationService.addComment(id, null, content));
+            @RequestParam String content,
+            @AuthenticationPrincipal Jwt jwt) {
+        String key = RedisKey.WORKSPACE_CONTEXT_KEY_PREFIX + jwt.getSubject();
+        String workspaceId = redisTemplate.opsForValue().get(key);
+        return ResponseEntity.ok(applicationService.addComment(workspaceId, id, jwt.getSubject(), content));
     }
 
     @Operation(summary = "Add note to application",
             description = "Adds a private note to the application")
     @PostMapping("/{id}/notes")
-    public ResponseEntity<ApplicationResponse> addNote(
+    public ResponseEntity<List<ApplicationNoteResponse>> addNote(
             @Parameter(description = "Application ID", example = "app_12345")
             @PathVariable String id,
             @Parameter(description = "Note content", example = "Internal: Follow up needed")
-            @RequestParam String content) {
-        return ResponseEntity.ok(applicationService.addNote(id, null, content));
+            @RequestParam String content,
+            @AuthenticationPrincipal Jwt jwt) {
+        String key = RedisKey.WORKSPACE_CONTEXT_KEY_PREFIX + jwt.getSubject();
+        String workspaceId = redisTemplate.opsForValue().get(key);
+        return ResponseEntity.ok(applicationService.addNote(workspaceId, id, jwt.getSubject(), content));
     }
 }

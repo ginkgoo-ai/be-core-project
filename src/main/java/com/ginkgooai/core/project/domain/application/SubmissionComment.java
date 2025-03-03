@@ -1,7 +1,10 @@
 package com.ginkgooai.core.project.domain.application;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -12,16 +15,16 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "application_comment")
-public class ApplicationComment {
+@Table(name = "submission_comment")
+public class SubmissionComment {
     
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "application_id")
-    private Application application;
+    @JoinColumn(name = "submission_id")
+    private Submission submission;
     
     @Column(columnDefinition = "TEXT")
     private String content;
@@ -36,5 +39,5 @@ public class ApplicationComment {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_comment_id")
-    private ApplicationComment parentComment;
+    private SubmissionComment parentComment;
 }

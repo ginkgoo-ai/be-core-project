@@ -1,5 +1,7 @@
 package com.ginkgooai.core.project.domain.application;
 
+import com.ginkgooai.core.project.domain.project.Project;
+import com.ginkgooai.core.project.domain.project.ProjectRole;
 import com.ginkgooai.core.project.domain.talent.Talent;
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,16 +27,20 @@ public class Application {
 
     private String workspaceId;
 
-    private String projectId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id")
+    private Project project;
 
-    private String roleId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id")
+    private ProjectRole role;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "talent_id")
     private Talent talent;
 
     @OneToMany(mappedBy = "application")
-    private List<ApplicationVideoMapping> videoMappings;
+    private List<Submission> submissions;
 
     private String agencyName;
 
@@ -60,6 +66,8 @@ public class Application {
     @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ApplicationComment> comments = new ArrayList<>();
+
+    private String createdBy;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

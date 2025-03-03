@@ -12,8 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "shortlist_item",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"shortlist_id", "video_submission_id"}))
+@Table(name = "shortlist_item")
 public class ShortlistItem {
     
     @Id

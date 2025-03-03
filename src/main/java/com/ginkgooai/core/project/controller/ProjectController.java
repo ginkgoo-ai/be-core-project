@@ -50,7 +50,6 @@ public class ProjectController {
     @Autowired
     private ActivityLogger activityLogger;
 
-
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 

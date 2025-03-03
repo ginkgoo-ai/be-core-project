@@ -8,6 +8,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Entity
@@ -16,12 +18,14 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "video_submission")
+@Table(name = "submission")
 public class Submission {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
+
+    private String workspaceId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "application_id")
@@ -29,11 +33,11 @@ public class Submission {
 
     private String videoUrl;
     
-    private String thumbnailUrl;
+    private String videoThumbnailUrl;
     
-    private Long duration;
+    private Long videoDuration;
     
-    private String resolution;
+    private String videoResolution;
     
     private Long fileSize;
     
@@ -44,16 +48,20 @@ public class Submission {
     
     private String processingError;
     
-    private String uploadedBy;
-    
     private String originalFilename;
     
     @Type(JsonType.class)
     @Column(columnDefinition = "jsonb")
     private Map<String, Object> metadata;
 
+    @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<SubmissionComment> comments = new ArrayList<>();
+    
+    private String createdBy;
+
     @CreationTimestamp
-    private LocalDateTime uploadedAt;
+    private LocalDateTime createdAt;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
