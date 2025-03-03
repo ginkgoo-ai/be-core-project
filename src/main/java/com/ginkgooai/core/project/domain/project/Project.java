@@ -1,4 +1,4 @@
-package com.ginkgooai.core.project.domain;
+package com.ginkgooai.core.project.domain.project;
 
 import com.ginkgooai.core.project.dto.request.ProjectRequest;
 import jakarta.persistence.*;

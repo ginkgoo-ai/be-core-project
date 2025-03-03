@@ -1,7 +1,7 @@
 package com.ginkgooai.core.project.specification;
 
-import com.ginkgooai.core.project.domain.Project;
-import com.ginkgooai.core.project.domain.ProjectStatus;
+import com.ginkgooai.core.project.domain.project.Project;
+import com.ginkgooai.core.project.domain.project.ProjectStatus;
 import org.springframework.data.jpa.domain.Specification;
 
 public class ProjectSpecification {

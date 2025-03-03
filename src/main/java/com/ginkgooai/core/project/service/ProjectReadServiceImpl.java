@@ -1,6 +1,6 @@
 package com.ginkgooai.core.project.service;
 
-import com.ginkgooai.core.project.domain.*;
+import com.ginkgooai.core.project.domain.project.*;
 import com.ginkgooai.core.project.dto.request.ProjectResponse;
 import com.ginkgooai.core.project.dto.response.ProjectBasicResponse;
 import com.ginkgooai.core.project.dto.response.ProjectRoleStatisticsResponse;

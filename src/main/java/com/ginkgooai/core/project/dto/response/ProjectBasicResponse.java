@@ -1,6 +1,6 @@
 package com.ginkgooai.core.project.dto.response;
 
-import com.ginkgooai.core.project.domain.Project;
+import com.ginkgooai.core.project.domain.project.Project;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

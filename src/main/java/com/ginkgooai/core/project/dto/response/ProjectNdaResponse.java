@@ -1,6 +1,6 @@
 package com.ginkgooai.core.project.dto.response;
 
-import com.ginkgooai.core.project.domain.ProjectNda;
+import com.ginkgooai.core.project.domain.project.ProjectNda;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 

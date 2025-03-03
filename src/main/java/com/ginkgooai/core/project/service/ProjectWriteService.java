@@ -1,6 +1,6 @@
 package com.ginkgooai.core.project.service;
 
-import com.ginkgooai.core.project.domain.*;
+import com.ginkgooai.core.project.domain.project.*;
 import com.ginkgooai.core.project.dto.request.*;
 
 public interface ProjectWriteService {

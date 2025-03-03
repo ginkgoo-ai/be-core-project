@@ -1,7 +1,7 @@
 package com.ginkgooai.core.project.dto.response;
 
 import com.ginkgooai.core.project.domain.MemberStatus;
-import com.ginkgooai.core.project.domain.ProjectMember;
+import com.ginkgooai.core.project.domain.project.ProjectMember;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 

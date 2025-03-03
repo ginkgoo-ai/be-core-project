@@ -1,4 +1,4 @@
-package com.ginkgooai.core.project.domain;
+package com.ginkgooai.core.project.domain.project;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 

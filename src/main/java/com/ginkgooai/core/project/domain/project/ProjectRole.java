@@ -1,4 +1,4 @@
-package com.ginkgooai.core.project.domain;
+package com.ginkgooai.core.project.domain.project;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -7,7 +7,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Setter

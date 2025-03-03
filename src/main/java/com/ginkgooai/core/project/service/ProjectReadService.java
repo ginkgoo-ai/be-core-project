@@ -1,9 +1,8 @@
 package com.ginkgooai.core.project.service;
 
-import com.ginkgooai.core.project.domain.ProjectRole;
-import com.ginkgooai.core.project.domain.ProjectStatus;
+import com.ginkgooai.core.project.domain.project.ProjectRole;
+import com.ginkgooai.core.project.domain.project.ProjectStatus;
 import com.ginkgooai.core.project.dto.request.ProjectResponse;
-import com.ginkgooai.core.project.dto.request.ProjectRolePatchRequest;
 import com.ginkgooai.core.project.dto.response.ProjectBasicResponse;
 import com.ginkgooai.core.project.dto.response.ProjectRoleStatisticsResponse;
 import org.springframework.data.domain.Page;
