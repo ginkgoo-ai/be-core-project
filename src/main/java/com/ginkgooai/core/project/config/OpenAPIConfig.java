@@ -31,6 +31,12 @@ public class OpenAPIConfig {
                                 .type(SecurityScheme.Type.APIKEY)
                                 .in(SecurityScheme.In.COOKIE)
                                 .name("SESSION")
-                                .description("Session cookie for authentication")));
+                                .description("Session cookie for authentication"))
+                        .addParameters("workspaceId", new io.swagger.v3.oas.models.parameters.Parameter()
+                                .in("header")
+                                .name("x-workspace-id")
+                                .description("Workspace ID for multi-tenant requests")
+                                .required(true)
+                                .schema(new io.swagger.v3.oas.models.media.Schema<>().type("string"))));
     }
 }
