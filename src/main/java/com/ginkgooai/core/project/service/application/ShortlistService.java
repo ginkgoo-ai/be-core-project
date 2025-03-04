@@ -69,7 +69,7 @@ public class ShortlistService {
                 .shortlist(shortlist)
                 .submission(submission)
                 .notes(notes)
-                .order(maxOrder + 1)
+                .sortOrder(maxOrder + 1)
                 .addedBy(userId)
                 .build();
 
