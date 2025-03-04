@@ -4,6 +4,7 @@ import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.common.constant.RedisKey;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.utils.ActivityLogger;
+import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.project.ProjectStatus;
 import com.ginkgooai.core.project.dto.request.*;
@@ -46,9 +47,6 @@ public class ProjectController {
     private ProjectWriteService projectWriteService;
 
     @Autowired
-    private RedissonClient redissonClient;
-
-    @Autowired
     private ActivityLogger activityLogger;
 
     @Autowired
@@ -67,9 +65,6 @@ public class ProjectController {
         String workspaceId = redisTemplate.opsForValue().get(key);
 
         Project project = projectWriteService.createProject(request, workspaceId);
-        ProjectResponse response = projectReadService.findById(project.getId())
-                .orElseThrow(() -> new RuntimeException("Project not found after creation"));
-
         Map<String, Object> variables = Map.of(
                 "user", jwt.getSubject(),
                 "project", project.getName(),
@@ -85,7 +80,7 @@ public class ProjectController {
                 null,
                 jwt.getSubject()
         );
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return new ResponseEntity<>(ProjectResponse.from(project), HttpStatus.CREATED);
     }
 
     @Operation(summary = "Get a project by ID", description = "Retrieves details of a specific project by its ID")
@@ -95,7 +90,7 @@ public class ProjectController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<ProjectResponse> getProjectById(@PathVariable String id) {
-        return projectReadService.findById(id)
+        return projectReadService.findById(ContextUtils.get().getWorkspaceId(), id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -119,7 +114,7 @@ public class ProjectController {
             Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
             Pageable pageable = PageRequest.of(page, size, sort);
 
-            Page<ProjectResponse> projects = projectReadService.findProjects(name, status, pageable);
+            Page<ProjectResponse> projects = projectReadService.findProjects(ContextUtils.get().getWorkspaceId(), name, status, pageable);
 
             return new ResponseEntity<>(projects, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
@@ -147,9 +142,7 @@ public class ProjectController {
     public ResponseEntity<ProjectResponse> updateProject(@PathVariable String id, @RequestBody ProjectRequest request) {
         try {
             Project updatedProject = projectWriteService.updateProject(id, request);
-            ProjectResponse response = projectReadService.findById(updatedProject.getId())
-                    .orElseThrow(() -> new RuntimeException("Project not found after update"));
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            return new ResponseEntity<>(ProjectResponse.from(updatedProject), HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -173,9 +166,6 @@ public class ProjectController {
             @AuthenticationPrincipal Jwt jwt) {
         try {
             Project updatedProject = projectWriteService.updateProjectStatus(id, status);
-            ProjectResponse response = projectReadService.findById(updatedProject.getId())
-                    .orElseThrow(() -> new RuntimeException("Project not found after status update"));
-
             // Log activity to message queue
             Map<String, Object> variables = Map.of(
                     "project", updatedProject.getName(),
@@ -194,7 +184,7 @@ public class ProjectController {
                     jwt.getSubject()
             );
 
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            return new ResponseEntity<>(ProjectResponse.from(updatedProject), HttpStatus.OK);
         } catch (ResourceNotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (IllegalArgumentException e) {

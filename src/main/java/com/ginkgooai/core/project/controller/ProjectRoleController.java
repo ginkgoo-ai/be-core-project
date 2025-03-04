@@ -36,9 +36,6 @@ public class ProjectRoleController {
     private ProjectWriteService projectWriteService;
 
     @Autowired
-    private RedissonClient redissonClient;
-
-    @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
     @Operation(summary = "Create a new role for a project", description = "Creates a new role for the specified project")

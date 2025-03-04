@@ -13,9 +13,9 @@ import java.util.Optional;
 
 public interface ProjectReadService {
 
-    Optional<ProjectResponse> findById(String id);
+    Optional<ProjectResponse> findById(String workspaceId, String id);
 
-    Page<ProjectResponse> findProjects(String name, ProjectStatus status, Pageable pageable);
+    Page<ProjectResponse> findProjects(String workspaceId, String name, ProjectStatus status, Pageable pageable);
 
     List<ProjectBasicResponse> findAllBasicInfo();
 

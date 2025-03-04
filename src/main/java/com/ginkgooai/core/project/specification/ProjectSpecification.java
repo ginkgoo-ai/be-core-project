@@ -5,6 +5,15 @@ import com.ginkgooai.core.project.domain.project.ProjectStatus;
 import org.springframework.data.jpa.domain.Specification;
 
 public class ProjectSpecification {
+    
+    public static Specification<Project> hasWorkspaceId(String workspaceId) {
+        return (root, query, criteriaBuilder) -> {
+            if (workspaceId == null || workspaceId.trim().isEmpty()) {
+                return null; // No filtering if workspaceId is null or empty
+            }
+            return criteriaBuilder.equal(root.get("workspaceId"), workspaceId);
+        };
+    } 
 
     public static Specification<Project> hasNameLike(String name) {
         return (root, query, criteriaBuilder) -> {
