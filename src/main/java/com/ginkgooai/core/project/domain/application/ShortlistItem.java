@@ -29,7 +29,7 @@ public class ShortlistItem {
     
     private String notes;
     
-    private Integer order;
+    private Integer sortOrder;
     
     private String addedBy;
     

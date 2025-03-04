@@ -61,7 +61,7 @@ public class ShortlistService {
 
         // Get the maximum order value
         Integer maxOrder = shortlist.getItems().stream()
-                .map(ShortlistItem::getOrder)
+                .map(ShortlistItem::getSortOrder)
                 .max(Integer::compareTo)
                 .orElse(0);
 
@@ -155,7 +155,7 @@ public class ShortlistService {
                 .projectId(shortlist.getProjectId())
 //                .roleId(shortlist.getRole().getId())
                 .items(shortlist.getItems().stream()
-                        .sorted(Comparator.comparing(ShortlistItem::getOrder))
+                        .sorted(Comparator.comparing(ShortlistItem::getSortOrder))
                         .map(this::convertItemToResponse)
                         .collect(Collectors.toList()))
                 .createdBy(shortlist.getCreatedBy())
@@ -168,7 +168,7 @@ public class ShortlistService {
         return ShortlistItemResponse.builder()
                 .id(item.getId())
                 .notes(item.getNotes())
-                .order(item.getOrder())
+                .order(item.getSortOrder())
                 .addedBy(item.getAddedBy())
                 .addedAt(item.getAddedAt())
                 .build();
