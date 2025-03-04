@@ -13,10 +13,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -90,6 +88,9 @@ public class ImdbScraper {
         Map<String, String> personalDetails = scrapePersonalDetails(doc);
         log.info("Found personal details: {}", personalDetails);
 
+        // Update or create movie items
+        Set<ImdbMovieItem> movieItems = handleMovieItems(knownFor);
+
         TalentProfileData profile = TalentProfileData.builder()
                 .name(name)
                 .nameSuffix(nameSuffix)
@@ -100,15 +101,44 @@ public class ImdbScraper {
                 .sourceUrl(imdbUrl)
                 .build();
 
-        imdbMovieItemRepository.saveAll(profile.getKnownFor());
 
+        // First check if profile already exists
+        Optional<TalentProfileMeta> existingProfile = talentProfileMetaRepository.findBySourceUrl(imdbUrl);
         TalentProfileMeta profileMeta = talentProfileMetaRepository.save(TalentProfileMeta.builder()
+                .id(existingProfile.map(TalentProfileMeta::getId).orElse(null))
                 .source("IMDB")
                 .sourceUrl(imdbUrl)
                 .data(profile)
                 .build());
-        
+
         return profileMeta;
+    }
+
+    private Set<ImdbMovieItem> handleMovieItems(Set<ImdbMovieItem> newItems) {
+        if (newItems.isEmpty()) {
+            return newItems;
+        }
+        
+        // Get all titleUrls from new items
+        Set<String> newTitleUrls = newItems.stream()
+                .map(ImdbMovieItem::getTitleUrl)
+                .collect(Collectors.toSet());
+
+        // Find existing titleUrls
+        Set<String> existingTitleUrls = imdbMovieItemRepository.findExistingTitleUrls(newTitleUrls);
+
+        // Filter out items that already exist
+        Set<ImdbMovieItem> itemsToSave = newItems.stream()
+                .filter(item -> !existingTitleUrls.contains(item.getTitleUrl()))
+                .collect(Collectors.toSet());
+
+        if (!itemsToSave.isEmpty()) {
+            log.info("Saving {} new movie items", itemsToSave.size());
+            imdbMovieItemRepository.saveAll(itemsToSave);
+        }
+
+        // Return all items (both new and existing)
+        return newItems;
     }
 
     /**

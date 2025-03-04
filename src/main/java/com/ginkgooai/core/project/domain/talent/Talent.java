@@ -44,6 +44,8 @@ public class Talent {
     
     private String agentEmail;
 
+    private String profileMetaId;
+    
     private String profilePhotoUrl;
 
     @Type(StringArrayType.class)

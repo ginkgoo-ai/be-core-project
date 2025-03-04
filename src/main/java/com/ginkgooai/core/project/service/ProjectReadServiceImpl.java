@@ -41,7 +41,7 @@ public class ProjectReadServiceImpl implements ProjectReadService {
     @Override
     public Page<ProjectResponse> findProjects(String workspaceId, String name, ProjectStatus status, Pageable pageable) {
         Specification<Project> spec = Specification.where(ProjectSpecification.hasWorkspaceId(workspaceId));
-        
+
         // Apply name filter if provided and not empty
         if (name != null && !name.trim().isEmpty()) {
             spec = spec.and(ProjectSpecification.hasNameLike(name.trim()));
@@ -79,7 +79,7 @@ public class ProjectReadServiceImpl implements ProjectReadService {
 
     @Override
     public Optional<ProjectRole> findRoleById(String roleId) {
-        return projectRoleRepository.findById(roleId); 
+        return projectRoleRepository.findById(roleId);
     }
 
     @Override

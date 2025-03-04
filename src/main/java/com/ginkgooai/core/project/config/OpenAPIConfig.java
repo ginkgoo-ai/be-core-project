@@ -25,7 +25,7 @@ public class OpenAPIConfig {
         return new OpenAPI()
                 .servers(List.of(new Server().url(gatewayUri + "/api/project")))
                 .info(new Info().title("Project Service API").version("1.0.0"))
-                .addSecurityItem(new SecurityRequirement().addList(COOKIE_AUTH_NAME))
+                .addSecurityItem(new SecurityRequirement().addList(COOKIE_AUTH_NAME).addList(WORKSPACE_HEADER))
                 .components(new Components()
                         .addSecuritySchemes(COOKIE_AUTH_NAME, new SecurityScheme()
                                 .type(SecurityScheme.Type.APIKEY)

@@ -1,6 +1,6 @@
 package com.ginkgooai.core.project.service.scraper;
 
-import com.ginkgooai.core.project.dto.TalentProfileData;
+import com.ginkgooai.core.project.domain.talent.TalentProfileMeta;
 import com.ginkgooai.core.project.repository.TalentProfileMetaRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,7 @@ public class SpotlightScraper {
     
     private final TalentProfileMetaRepository talentProfileMetaRepository;
 
-    public TalentProfileData scrapeProfile(String spotlightUrl) throws Exception {
+    public TalentProfileMeta scrapeProfile(String spotlightUrl) throws Exception {
         Document doc = Jsoup.connect(spotlightUrl)
                 .userAgent("Mozilla/5.0")
                 .get();
@@ -24,9 +24,7 @@ public class SpotlightScraper {
         
         String photoUrl = doc.select("img.profile-photo").attr("src");
 
-        return TalentProfileData.builder()
-                .name(name)
-                .photoUrl(photoUrl)
+        return TalentProfileMeta.builder()
                 .source("Spotlight")
                 .sourceUrl(spotlightUrl)
                 .build();

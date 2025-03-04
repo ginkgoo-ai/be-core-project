@@ -8,11 +8,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebMvcInterceptor implements WebMvcConfigurer {
 
-
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new ContextsInterceptor()).addPathPatterns("/**");
+        registry.addInterceptor(new ContextsInterceptor())
+                .excludePathPatterns(
+                        "/api/project/v3/api-docs/**",
+                        "/api/project/swagger-ui/**",
+                        "/webjars/**"
+                );
     }
-
 
 }

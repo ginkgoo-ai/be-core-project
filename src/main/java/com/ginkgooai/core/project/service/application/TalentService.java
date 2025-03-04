@@ -5,10 +5,11 @@ import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.utils.ActivityLogger;
 import com.ginkgooai.core.project.domain.talent.ImdbMovieItem;
 import com.ginkgooai.core.project.domain.talent.Talent;
+import com.ginkgooai.core.project.domain.talent.TalentProfileMeta;
 import com.ginkgooai.core.project.domain.talent.TalentStatus;
 import com.ginkgooai.core.project.dto.KnownForItem;
 import com.ginkgooai.core.project.dto.TalentProfileData;
-import com.ginkgooai.core.project.dto.request.TalentCreateRequest;
+import com.ginkgooai.core.project.dto.request.TalentRequest;
 import com.ginkgooai.core.project.dto.request.TalentSearchRequest;
 import com.ginkgooai.core.project.dto.response.TalentResponse;
 import com.ginkgooai.core.project.repository.ImdbMovieItemRepository;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
@@ -37,23 +39,23 @@ public class TalentService {
     private final ActivityLogger activityLogger;
 
     @Transactional
-    public Talent createTalentFromProfiles(TalentCreateRequest request, String userId) {
+    public Talent createTalentFromProfiles(TalentRequest request, String workspaceId, String userId) {
         // Scrape profiles if URLs are provided
-        TalentProfileData imdbProfile = null;
-        if (StringUtils.hasText(request.getImdbProfileUrl())) {
+        TalentProfileMeta imdbProfile = null;
+        if (Objects.isNull(request.getProfile()) && StringUtils.hasText(request.getImdbProfileUrl())) {
             imdbProfile = profileScraperService.scrapeFromImdb(request.getImdbProfileUrl());
         }
 
-        TalentProfileData spotlightProfile = null;
-        if (StringUtils.hasText(request.getSpotlightProfileUrl())) {
+        TalentProfileMeta spotlightProfile = null;
+        if (Objects.isNull(request.getProfile()) && StringUtils.hasText(request.getSpotlightProfileUrl())) {
             spotlightProfile = profileScraperService.scrapeFromSpotlight(request.getSpotlightProfileUrl());
         }
 
         // Merge profiles with manual input
-        Talent talent = mergeTalentData(request, imdbProfile, spotlightProfile);
+        Talent talent = mergeTalentData(request, imdbProfile.getData(), spotlightProfile.getData());
+        talent.setProfileMetaId(Optional.ofNullable(imdbProfile.getId()).orElse(null));
         talent.setCreatedBy(userId);
-        talent.setWorkspaceId(request.getWorkspaceId());
-
+        talent.setWorkspaceId(workspaceId);
         Talent saved = talentRepository.save(talent);
 
         // Log activity
@@ -64,7 +66,7 @@ public class TalentService {
             ActivityType.TALENT_IMPORTED,
             Map.of(
                 "name", saved.getName(),
-                "sources", getProfileSources(imdbProfile, spotlightProfile)
+                "sources", getProfileSources(imdbProfile.getData(), spotlightProfile.getData())
             ),
             null,
             userId
@@ -74,30 +76,56 @@ public class TalentService {
     }
 
     @Transactional
-    public Talent refreshTalentProfiles(String talentId, String userId) {
+    public Talent updateTalent(TalentRequest request, String talentId) {
         Talent talent = talentRepository.findById(talentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Talent", "id", talentId));
+        
+        if (!ObjectUtils.isEmpty(request.getImdbProfileUrl())) {
+            talent.setImdbProfileUrl(request.getImdbProfileUrl());
+        }
+        if (!ObjectUtils.isEmpty(request.getSpotlightProfileUrl())) {
+            talent.setSpotlightProfileUrl(request.getSpotlightProfileUrl());
+        }
+        if (!ObjectUtils.isEmpty(request.getName())) {
+            talent.setName(request.getName());
+        }
+        if (!ObjectUtils.isEmpty(request.getProfilePhotoUrl())) {
+            talent.setProfilePhotoUrl(request.getProfilePhotoUrl());
+        }
+        if (!ObjectUtils.isEmpty(request.getEmail())) {
+            talent.setEmail(request.getEmail());
+        }
+        if (!ObjectUtils.isEmpty(request.getAgencyName())) {
+            talent.setAgencyName(request.getAgencyName());
+        }
+        if (!ObjectUtils.isEmpty(request.getAgentName())) {
+            talent.setAgentName(request.getAgentName());
+        }
+        if (!ObjectUtils.isEmpty(request.getAgentEmail())) {
+            talent.setAgentEmail(request.getAgentEmail());
+        }
 
         // Refresh profiles
-        TalentProfileData imdbProfile = null;
+        TalentProfileMeta imdbProfile = null;
         if (StringUtils.hasText(talent.getImdbProfileUrl())) {
             imdbProfile = profileScraperService.scrapeFromImdb(talent.getImdbProfileUrl());
         }
 
-        TalentProfileData spotlightProfile = null;
+        TalentProfileMeta spotlightProfile = null;
         if (StringUtils.hasText(talent.getSpotlightProfileUrl())) {
             spotlightProfile = profileScraperService.scrapeFromSpotlight(talent.getSpotlightProfileUrl());
         }
 
         // Update talent with new profile data
-        updateTalentFromProfiles(talent, imdbProfile, spotlightProfile);
+        updateTalentFromProfiles(talent, imdbProfile.getData(), spotlightProfile.getData());
+        talent.setProfileMetaId(Optional.ofNullable(imdbProfile.getId()).orElse(null));
 
         return talentRepository.save(talent);
     }
 
     private void updateTalentFromProfiles(Talent talent, TalentProfileData imdbProfile, TalentProfileData spotlightProfile) {
-        talent.setName(imdbProfile != null ? imdbProfile.getName() : 
-                      spotlightProfile != null ? spotlightProfile.getName() : talent.getName());
+        talent.setNameSuffix(imdbProfile != null ? imdbProfile.getNameSuffix() : 
+                      spotlightProfile != null ? spotlightProfile.getNameSuffix() : talent.getNameSuffix());
         talent.setProfilePhotoUrl(imdbProfile != null ? imdbProfile.getPhotoUrl() : 
                                  spotlightProfile != null ? spotlightProfile.getPhotoUrl() : talent.getProfilePhotoUrl());
         talent.setImdbProfileUrl(imdbProfile != null ? imdbProfile.getSourceUrl() : talent.getImdbProfileUrl());
@@ -105,9 +133,9 @@ public class TalentService {
         talent.setPersonalDetails(imdbProfile != null ? imdbProfile.getPersonalDetails() : talent.getPersonalDetails());
     }
 
-    private Talent mergeTalentData(TalentCreateRequest request, 
-                                 TalentProfileData imdbProfile, 
-                                 TalentProfileData spotlightProfile) {
+    private Talent mergeTalentData(TalentRequest request,
+                                   TalentProfileData imdbProfile,
+                                   TalentProfileData spotlightProfile) {
         return Talent.builder()
                 .name(request.getName() != null ? request.getName() : 
                      imdbProfile != null ? imdbProfile.getName() :
@@ -117,8 +145,7 @@ public class TalentService {
                 .profilePhotoUrl(request.getProfilePhotoUrl() != null ? request.getProfilePhotoUrl() :
                                imdbProfile != null ? imdbProfile.getPhotoUrl() :
                                spotlightProfile != null ? spotlightProfile.getPhotoUrl() : null)
-                .personalDetails(request.getPersonalDetails() != null ? request.getPersonalDetails() :
-                                imdbProfile != null ? imdbProfile.getPersonalDetails() : null)
+                .personalDetails(imdbProfile != null ? imdbProfile.getPersonalDetails() : null)
                 .status(TalentStatus.ACTIVE)
                 .build();
     }
@@ -141,13 +168,10 @@ public class TalentService {
         return talentResponse;
     }
 
-    public Page<TalentResponse> searchTalents(TalentSearchRequest request, Pageable pageable) {
+    public Page<TalentResponse> searchTalents(String workspaceId, TalentSearchRequest request, Pageable pageable) {
         return talentRepository.findAll((root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
-
-            if (request.getWorkspaceId() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("workspaceId"), request.getWorkspaceId()));
-            }
+            predicates.add(criteriaBuilder.equal(root.get("workspaceId"), workspaceId));
 
             if (StringUtils.hasText(request.getKeyword())) {
                 String keyword = "%" + request.getKeyword().toLowerCase() + "%";
@@ -157,14 +181,6 @@ public class TalentService {
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("agencyName")), keyword),
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("agentName")), keyword)
                 ));
-            }
-
-            if (StringUtils.hasText(request.getAgencyName())) {
-                predicates.add(criteriaBuilder.equal(root.get("agencyName"), request.getAgencyName()));
-            }
-
-            if (StringUtils.hasText(request.getAgentName())) {
-                predicates.add(criteriaBuilder.equal(root.get("agentName"), request.getAgentName()));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

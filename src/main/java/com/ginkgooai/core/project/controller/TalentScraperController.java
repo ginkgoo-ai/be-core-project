@@ -1,7 +1,5 @@
 package com.ginkgooai.core.project.controller;
 
-import com.ginkgooai.core.common.constant.RedisKey;
-import com.ginkgooai.core.common.context.WorkspaceContext;
 import com.ginkgooai.core.project.domain.talent.Talent;
 import com.ginkgooai.core.project.domain.talent.TalentProfileMeta;
 import com.ginkgooai.core.project.dto.TalentProfileData;
@@ -24,8 +22,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-
 @Slf4j
 @RestController
 @RequestMapping("/talents/scraper")
@@ -35,8 +31,6 @@ public class TalentScraperController {
 
     private final ImdbScraper imdbScraper;
     private final SpotlightScraper spotlightScraper;
-    private final TalentService talentService;
-    private final RedisTemplate<String, String> redisTemplate;
 
     @Operation(summary = "Scrape talent profile from IMDB",
             description = "Fetches talent information from IMDB URL and saves it to database")
@@ -54,12 +48,7 @@ public class TalentScraperController {
             @RequestParam String imdbUrl,
             @AuthenticationPrincipal Jwt jwt) {
         try {
-            String key = RedisKey.WORKSPACE_CONTEXT_KEY_PREFIX + jwt.getSubject();
-            String workspaceId = redisTemplate.opsForValue().get(key);
-//        String workspaceId = WorkspaceContext.getWorkspaceId(); 
-            
             TalentProfileMeta profile = imdbScraper.scrapeProfile(imdbUrl);
-            
             return ResponseEntity.ok(TalentProfileResponse.fromTalentProfileData(profile.getData()));
         } catch (Exception e) {
             log.error("Error scraping IMDB profile: {}", imdbUrl, e);
@@ -82,9 +71,7 @@ public class TalentScraperController {
                     example = "https://www.spotlight.com/profile/1234-5678-9012-3456")
             @RequestParam String spotlightUrl) {
         try {
-            TalentProfileData profileData = spotlightScraper.scrapeProfile(spotlightUrl);
-            profileData.setFetchedAt(LocalDateTime.now());
-            
+            TalentProfileData profileData = spotlightScraper.scrapeProfile(spotlightUrl).getData();
             return ResponseEntity.ok(TalentProfileResponse.fromTalentProfileData(profileData));
         } catch (Exception e) {
             log.error("Error scraping Spotlight profile: {}", spotlightUrl, e);

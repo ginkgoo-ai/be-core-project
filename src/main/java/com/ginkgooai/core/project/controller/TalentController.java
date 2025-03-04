@@ -1,10 +1,9 @@
 package com.ginkgooai.core.project.controller;
 
-import com.ginkgooai.core.common.constant.RedisKey;
+import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.domain.talent.Talent;
-import com.ginkgooai.core.project.dto.request.TalentCreateRequest;
+import com.ginkgooai.core.project.dto.request.TalentRequest;
 import com.ginkgooai.core.project.dto.request.TalentSearchRequest;
-import com.ginkgooai.core.project.dto.request.TalentUpdateRequest;
 import com.ginkgooai.core.project.dto.response.TalentResponse;
 import com.ginkgooai.core.project.service.application.TalentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -32,7 +30,6 @@ import org.springframework.web.bind.annotation.*;
 public class TalentController {
 
     private final TalentService talentService;
-    private final RedisTemplate<String, String> redisTemplate;
 
     @Operation(summary = "Create new talent",
             description = "Creates a new talent profile by importing data from external profiles")
@@ -48,14 +45,14 @@ public class TalentController {
     @PostMapping
     public ResponseEntity<TalentResponse> createTalent(
             @Parameter(description = "Talent creation details", required = true)
-            @Valid @RequestBody TalentCreateRequest request,
+            @Valid @RequestBody TalentRequest request,
             @Parameter(description = "JWT token containing user information", hidden = true)
             @AuthenticationPrincipal Jwt jwt) {
-        Talent talent = talentService.createTalentFromProfiles(request, jwt.getSubject());
+        Talent talent = talentService.createTalentFromProfiles(request, ContextUtils.get().getWorkspaceId(), jwt.getSubject());
         return ResponseEntity.ok(TalentResponse.from(talent));
     }
 
-    @Operation(summary = "Refresh talent profiles",
+    @Operation(summary = "Update talent profiles",
             description = "Updates talent information by re-syncing with external profile sources")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200",
@@ -66,14 +63,12 @@ public class TalentController {
             @ApiResponse(responseCode = "422",
                     description = "Unable to refresh profiles - external service error")
     })
-    @PostMapping("/{id}/refresh")
-    public ResponseEntity<TalentResponse> refreshProfiles(
-            @Parameter(description = "ID of the talent to refresh", required = true,
-                    example = "talent_123")
+    @PutMapping("/{id}")
+    public ResponseEntity<TalentResponse> updateTalent(
+            @Parameter(description = "ID of the talent to refresh", required = true, example = "talent_123")
             @PathVariable String id,
-            @Parameter(description = "JWT token containing user information", hidden = true)
-            @AuthenticationPrincipal Jwt jwt) {
-        Talent talent = talentService.refreshTalentProfiles(id, jwt.getSubject());
+            @Valid @RequestBody TalentRequest request) {
+        Talent talent = talentService.updateTalent(request, id);
         return ResponseEntity.ok(TalentResponse.from(talent));
     }
 
@@ -109,14 +104,8 @@ public class TalentController {
             @Parameter(description = "Search criteria and filters")
             @Valid @ParameterObject TalentSearchRequest request,
             @Parameter(description = "Pagination parameters")
-            @ParameterObject Pageable pageable,
-            @Parameter(description = "JWT token containing user information", hidden = true)
-            @AuthenticationPrincipal Jwt jwt) {
+            @ParameterObject Pageable pageable) {
 
-        String key = RedisKey.WORKSPACE_CONTEXT_KEY_PREFIX + jwt.getSubject();
-        String workspaceId = redisTemplate.opsForValue().get(key);
-        request.setWorkspaceId(workspaceId);
-
-        return ResponseEntity.ok(talentService.searchTalents(request, pageable));
+        return ResponseEntity.ok(talentService.searchTalents(ContextUtils.get().getWorkspaceId(), request, pageable));
     }
 }
