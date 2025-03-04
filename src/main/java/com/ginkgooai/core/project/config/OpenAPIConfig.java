@@ -15,10 +15,10 @@ import java.util.List;
 @Configuration
 public class OpenAPIConfig {
 
+    private static final String COOKIE_AUTH_NAME = "cookieAuth";
+    private static final String WORKSPACE_HEADER = "x-workspace-id";
     @Value("${core-gateway-public-uri}")
     private String gatewayUri;
-
-    private static final String COOKIE_AUTH_NAME = "cookieAuth";
 
     @Bean
     public OpenAPI customOpenAPI() {
@@ -32,11 +32,10 @@ public class OpenAPIConfig {
                                 .in(SecurityScheme.In.COOKIE)
                                 .name("SESSION")
                                 .description("Session cookie for authentication"))
-                        .addParameters("workspaceId", new io.swagger.v3.oas.models.parameters.Parameter()
-                                .in("header")
-                                .name("x-workspace-id")
-                                .description("Workspace ID for multi-tenant requests")
-                                .required(true)
-                                .schema(new io.swagger.v3.oas.models.media.Schema<>().type("string"))));
+                        .addSecuritySchemes(WORKSPACE_HEADER, new SecurityScheme()
+                                .type(SecurityScheme.Type.APIKEY)
+                                .in(SecurityScheme.In.HEADER)
+                                .name(WORKSPACE_HEADER)
+                                .description("Workspace ID for multi-tenant requests")));
     }
 }

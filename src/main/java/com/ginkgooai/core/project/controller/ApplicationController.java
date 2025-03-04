@@ -1,6 +1,7 @@
 package com.ginkgooai.core.project.controller;
 
 import com.ginkgooai.core.common.constant.RedisKey;
+import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.domain.application.Application;
 import com.ginkgooai.core.project.domain.application.ApplicationStatus;
 import com.ginkgooai.core.project.dto.request.ApplicationCreateRequest;
@@ -18,10 +19,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -37,9 +36,6 @@ public class ApplicationController {
 
     private final ApplicationService applicationService;
 
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
-
     @Operation(summary = "Create new application",
             description = "Creates a new application for a talent applying to a specific role")
     @ApiResponses(value = {
@@ -52,9 +48,7 @@ public class ApplicationController {
     public ResponseEntity<ApplicationResponse> createApplication(
             @Valid @RequestBody ApplicationCreateRequest request,
             @AuthenticationPrincipal Jwt jwt) {
-        String key = RedisKey.WORKSPACE_CONTEXT_KEY_PREFIX + jwt.getSubject();
-        String workspaceId = redisTemplate.opsForValue().get(key);
-        return ResponseEntity.ok(applicationService.createApplication(request, workspaceId, jwt.getSubject()));
+        return ResponseEntity.ok(applicationService.createApplication(request, ContextUtils.get().getWorkspaceId(), jwt.getSubject()));
     }
 
     @Operation(summary = "Get application by ID",
@@ -68,9 +62,7 @@ public class ApplicationController {
     public ResponseEntity<ApplicationResponse> getApplication(@Parameter(description = "Application ID", example = "app_12345")
                                                               @PathVariable String id,
                                                               @AuthenticationPrincipal Jwt jwt) {
-        String key = RedisKey.WORKSPACE_CONTEXT_KEY_PREFIX + jwt.getSubject();
-        String workspaceId = redisTemplate.opsForValue().get(key);
-        Application application = applicationService.getApplicationById(workspaceId, id);
+        Application application = applicationService.getApplicationById(ContextUtils.get().getWorkspaceId(), id);
         return ResponseEntity.ok(ApplicationResponse.from(application));
     }
 
@@ -89,9 +81,7 @@ public class ApplicationController {
             @ParameterObject Pageable pageable,
             @AuthenticationPrincipal Jwt jwt) {
 
-        String key = RedisKey.WORKSPACE_CONTEXT_KEY_PREFIX + jwt.getSubject();
-        String workspaceId = redisTemplate.opsForValue().get(key);
-        return ResponseEntity.ok(applicationService.listApplications(workspaceId, projectId, roleId, keyword, status, pageable));
+        return ResponseEntity.ok(applicationService.listApplications(ContextUtils.get().getWorkspaceId(), projectId, roleId, keyword, status, pageable));
     }
 
     @Operation(summary = "Add comment to application",
@@ -104,8 +94,7 @@ public class ApplicationController {
             @RequestParam String content,
             @AuthenticationPrincipal Jwt jwt) {
         String key = RedisKey.WORKSPACE_CONTEXT_KEY_PREFIX + jwt.getSubject();
-        String workspaceId = redisTemplate.opsForValue().get(key);
-        return ResponseEntity.ok(applicationService.addComment(workspaceId, id, jwt.getSubject(), content));
+        return ResponseEntity.ok(applicationService.addComment(ContextUtils.get().getWorkspaceId(), id, jwt.getSubject(), content));
     }
 
     @Operation(summary = "Add note to application",
@@ -117,8 +106,6 @@ public class ApplicationController {
             @Parameter(description = "Note content", example = "Internal: Follow up needed")
             @RequestParam String content,
             @AuthenticationPrincipal Jwt jwt) {
-        String key = RedisKey.WORKSPACE_CONTEXT_KEY_PREFIX + jwt.getSubject();
-        String workspaceId = redisTemplate.opsForValue().get(key);
-        return ResponseEntity.ok(applicationService.addNote(workspaceId, id, jwt.getSubject(), content));
+        return ResponseEntity.ok(applicationService.addNote(ContextUtils.get().getWorkspaceId(), id, jwt.getSubject(), content));
     }
 }
