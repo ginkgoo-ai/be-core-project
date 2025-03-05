@@ -46,8 +46,7 @@ public class ProjectRoleController {
     @PostMapping("/{projectId}/roles")
     public ResponseEntity<ProjectRoleResponse> createRole(@PathVariable String projectId, @RequestBody ProjectRoleRequest request) {
         ProjectRole role = projectWriteService.createRole(projectId, request);
-        ProjectRoleResponse response = ProjectRoleResponse.mapToProjectRoleResponse(role);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return new ResponseEntity<>(ProjectRoleResponse.from(role), HttpStatus.CREATED);
     }
 
 
@@ -59,7 +58,7 @@ public class ProjectRoleController {
     @GetMapping("/{projectId}/roles/{roleId}")
     public ResponseEntity<ProjectRoleResponse> getRoleById(@PathVariable String projectId, @PathVariable String roleId) {
         return projectReadService.findRoleById(roleId)
-                .map(role -> new ResponseEntity<>(ProjectRoleResponse.mapToProjectRoleResponse(role), HttpStatus.OK))
+                .map(role -> new ResponseEntity<>(ProjectRoleResponse.from(role), HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
@@ -72,7 +71,7 @@ public class ProjectRoleController {
     public ResponseEntity<List<ProjectRoleResponse>> getProjectRoles(@PathVariable String projectId) {
         List<ProjectRoleResponse> roles = projectReadService.findRolesByProjectId(projectId)
                 .stream()
-                .map(ProjectRoleResponse::mapToProjectRoleResponse)
+                .map(ProjectRoleResponse::from)
                 .collect(Collectors.toList());
         return new ResponseEntity<>(roles, HttpStatus.OK);
     }
@@ -91,7 +90,7 @@ public class ProjectRoleController {
         try {
             ProjectRole updatedRole = projectWriteService.updateRole(roleId, request);
             return new ResponseEntity<>(
-                    ProjectRoleResponse.mapToProjectRoleResponse(updatedRole),
+                    ProjectRoleResponse.from(updatedRole),
                     HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -113,7 +112,7 @@ public class ProjectRoleController {
         try {
             ProjectRole updatedRole = projectWriteService.patchRoleDetails(roleId, request);
             return new ResponseEntity<>(
-                    ProjectRoleResponse.mapToProjectRoleResponse(updatedRole),
+                    ProjectRoleResponse.from(updatedRole),
                     HttpStatus.OK);
         } catch (ResourceNotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
