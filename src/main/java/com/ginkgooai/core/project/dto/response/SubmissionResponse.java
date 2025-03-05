@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.dto.response;
 
+import com.ginkgooai.core.project.domain.application.CommentType;
 import com.ginkgooai.core.project.domain.application.Submission;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -24,9 +25,6 @@ public class SubmissionResponse {
     @Schema(description = "Role identifier for which this submission was made",
             example = "role-789")
     private String roleId;
-    
-    @Schema(description = "Detailed information about the application associated with this submission")
-    private ApplicationResponse application;
     
     // Video related fields
     @Schema(description = "URL of the submitted video",
@@ -63,16 +61,18 @@ public class SubmissionResponse {
             example = "2025-03-03T02:09:57.713Z")
     private LocalDateTime updatedAt;
     
-    @Schema(description = "List of comments associated with this submission")
-    private List<SubmissionCommentResponse> comments;
+    @Schema(description = "List of internal comments associated with this submission")
+    private List<SubmissionCommentResponse> internalComments;
+
+    @Schema(description = "List of public comments associated with this submission")
+    private List<SubmissionCommentResponse> publicComments;
 
     @Schema(description = "Converts a Submission entity to SubmissionResponse DTO")
-    public static SubmissionResponse from(Submission submission) {
+    public static SubmissionResponse from(Submission submission, String userId) {
         return SubmissionResponse.builder()
                 .id(submission.getId())
                 .projectId(submission.getApplication().getProject().getId())
                 .roleId(submission.getApplication().getRole().getId())
-                .application(ApplicationResponse.from(submission.getApplication()))
                 .videoUrl(submission.getVideoUrl())
                 .videoThumbnailUrl(submission.getVideoThumbnailUrl())
                 .videoDuration(submission.getVideoDuration())
@@ -80,9 +80,14 @@ public class SubmissionResponse {
                 .createdBy(submission.getCreatedBy())
                 .createdAt(submission.getCreatedAt())
                 .updatedAt(submission.getUpdatedAt())
-                .comments(submission.getComments().stream()
+                .internalComments(submission.getComments().stream()
+                        .filter(comment -> CommentType.INTERNAL.equals(comment.getType()))
                         .map(SubmissionCommentResponse::from)
-                        .collect(Collectors.toList()))
+                        .toList())
+                .publicComments(userId.equals(submission.getCreatedBy()) ? submission.getComments().stream()
+                        .filter(comment -> CommentType.PUBLIC.equals(comment.getType()))
+                        .map(SubmissionCommentResponse::from)
+                        .toList() : null)
                 .build();
     }
 }

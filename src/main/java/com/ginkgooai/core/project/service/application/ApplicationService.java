@@ -1,6 +1,7 @@
 package com.ginkgooai.core.project.service.application;
 
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
+import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.domain.application.*;
 import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.project.ProjectRole;
@@ -25,6 +26,9 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
+import static com.ginkgooai.core.common.constant.ContextsConstant.USER_ID;
 
 @Service
 @Slf4j
@@ -37,12 +41,20 @@ public class ApplicationService {
     private final TalentRepository talentRepository;
     private final SubmissionRepository submissionRepository;
     private final ApplicationStateMachine stateMachine;
+    private final TalentService talentService;
 
     @Transactional
     public ApplicationResponse createApplication(ApplicationCreateRequest request, String workspaceId, String userId) {
-        // First check if talent exists
-        Talent talent = talentRepository.findById(request.getTalentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Talent", "id", request.getTalentId()));
+        // Create the talent if not exits
+        Talent talent;
+        if (!ObjectUtils.isEmpty(request.getTalentId())) {
+            talent = talentRepository.findById(request.getTalentId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Talent", "id", request.getTalentId()));
+        } else if (Objects.nonNull(request.getTalent())) 
+            talent = talentService.createTalentFromProfiles(request.getTalent(), workspaceId, userId);
+        else {
+            throw new IllegalArgumentException("Talent ID or Talent object must be provided");
+        }
 
         Project project = projectRepository.findById(request.getProjectId())
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", request.getProjectId()));
@@ -62,14 +74,21 @@ public class ApplicationService {
 
         Application savedApplication = applicationRepository.save(application);
 
-        // Deal with optional submissions
-        if (!ObjectUtils.isEmpty(request.getSubmissionIds())) {
-            List<Submission> submissions = submissionRepository.findAllById(request.getSubmissionIds());
-            submissions.forEach(t -> t.setApplication(savedApplication));
-            submissionRepository.saveAll(submissions);
+        // Create submissions if provided
+        if (!ObjectUtils.isEmpty(request.getVideoUrls())) {
+            List<Submission> submissions = request.getVideoUrls().stream().map(url -> Submission.builder()
+                    .workspaceId(workspaceId)
+                    .application(savedApplication)
+                    .videoUrl(url)
+                    .createdBy(userId)
+                    .build()).toList();
+            List<Submission> savedSubmissions = submissionRepository.saveAll(submissions);
+
+            savedApplication.setSubmissions(savedSubmissions);
+            savedApplication.setStatus(ApplicationStatus.SUBMITTED);
         }
 
-        return ApplicationResponse.from(savedApplication);
+        return ApplicationResponse.from(savedApplication, userId);
     }
 
     @Transactional(readOnly = true)
@@ -88,7 +107,7 @@ public class ApplicationService {
         return applicationRepository.findAll(
                 buildSpecification(workspaceId, projectId, roleId, keyword, status),
                 pageable
-        ).map(ApplicationResponse::from);
+        ).map(application -> ApplicationResponse.from(application, ContextUtils.get(USER_ID, String.class, null)));
     }
 
     private Specification<Application> buildSpecification(String workspaceId,

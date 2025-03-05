@@ -2,10 +2,10 @@ package com.ginkgooai.core.project.dto.response;
 
 import com.ginkgooai.core.project.domain.application.Application;
 import com.ginkgooai.core.project.domain.application.ApplicationStatus;
-import com.ginkgooai.core.project.domain.project.ProjectRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.util.ObjectUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -51,15 +51,15 @@ public class ApplicationResponse {
     @Schema(description = "Last update timestamp")
     private LocalDateTime updatedAt;
 
-    public static ApplicationResponse from(Application application) {
+    public static ApplicationResponse from(Application application, String userId) {
         return ApplicationResponse.builder()
                 .id(application.getId())
                 .workspaceId(application.getWorkspaceId())
                 .projectId(application.getProject().getId())
                 .role(ProjectRoleResponse.from(application.getRole()))
                 .talent(TalentResponse.from(application.getTalent()))
-                .submissions(application.getSubmissions().stream()
-                        .map(SubmissionResponse::from)
+                .submissions(ObjectUtils.isEmpty(application.getSubmissions()) ? null : application.getSubmissions().stream()
+                        .map(submission -> SubmissionResponse.from(submission, userId))
                         .toList())
                 .status(application.getStatus())
                 .notes(application.getNotes().stream()

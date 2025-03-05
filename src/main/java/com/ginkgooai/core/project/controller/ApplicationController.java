@@ -9,6 +9,7 @@ import com.ginkgooai.core.project.dto.response.ApplicationCommentResponse;
 import com.ginkgooai.core.project.dto.response.ApplicationNoteResponse;
 import com.ginkgooai.core.project.dto.response.ApplicationResponse;
 import com.ginkgooai.core.project.service.application.ApplicationService;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -27,6 +28,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static com.ginkgooai.core.common.constant.ContextsConstant.USER_ID;
 
 @RestController
 @RequestMapping("/applications")
@@ -63,7 +66,7 @@ public class ApplicationController {
                                                               @PathVariable String id,
                                                               @AuthenticationPrincipal Jwt jwt) {
         Application application = applicationService.getApplicationById(ContextUtils.get().getWorkspaceId(), id);
-        return ResponseEntity.ok(ApplicationResponse.from(application));
+        return ResponseEntity.ok(ApplicationResponse.from(application, ContextUtils.get(USER_ID, String.class, null)));
     }
 
     @Operation(summary = "List applications",
@@ -87,6 +90,7 @@ public class ApplicationController {
     @Operation(summary = "Add comment to application",
             description = "Adds a new comment to the application")
     @PostMapping("/{id}/comments")
+    @Hidden
     public ResponseEntity<List<ApplicationCommentResponse>> addComment(
             @Parameter(description = "Application ID", example = "app_12345")
             @PathVariable String id,
@@ -100,6 +104,7 @@ public class ApplicationController {
     @Operation(summary = "Add note to application",
             description = "Adds a private note to the application")
     @PostMapping("/{id}/notes")
+    @Hidden
     public ResponseEntity<List<ApplicationNoteResponse>> addNote(
             @Parameter(description = "Application ID", example = "app_12345")
             @PathVariable String id,

@@ -21,6 +21,12 @@ public class SubmissionComment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
+
+    private String workspaceId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CommentType type;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "submission_id")

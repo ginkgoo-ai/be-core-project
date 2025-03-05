@@ -19,10 +19,13 @@ public class ApplicationCreateRequest {
     private String roleId;
 
     // Talent Information
-    @Schema(description = "Identity of the talent", required = true)
-    @NotBlank(message = "Talent ID is required")
+    @Schema(description = "A existed talent for this application")
     private String talentId;
+
+    @Schema(description = "A new talent for this application. " +
+            "Must provide either talentId or talent, but not both.")
+    public TalentRequest talent;
    
-    @Schema(description = "List of video submission IDs associated with this application")
-    private List<String> submissionIds;
+    @Schema(description = "List of video urls associated with this application")
+    private List<String> videoUrls;
 }

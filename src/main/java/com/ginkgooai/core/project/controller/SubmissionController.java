@@ -1,6 +1,8 @@
 package com.ginkgooai.core.project.controller;
 
 import com.ginkgooai.core.common.constant.RedisKey;
+import com.ginkgooai.core.common.utils.ContextUtils;
+import com.ginkgooai.core.project.dto.request.CommentCreateRequest;
 import com.ginkgooai.core.project.dto.request.SubmissionCreateRequest;
 import com.ginkgooai.core.project.dto.response.SubmissionCommentResponse;
 import com.ginkgooai.core.project.dto.response.SubmissionResponse;
@@ -68,7 +70,7 @@ public class SubmissionController {
             @Parameter(description = "ID of the submission to retrieve", required = true,
                     example = "submission_123")
             @PathVariable String submissionId) {
-        return ResponseEntity.ok(submissionService.getSubmission(submissionId));
+        return ResponseEntity.ok(submissionService.getSubmission(ContextUtils.get().getWorkspaceId(), submissionId));
     }
 
     @Operation(summary = "Add comment to submission",
@@ -85,13 +87,9 @@ public class SubmissionController {
             @Parameter(description = "ID of the submission", required = true,
                     example = "submission_123")
             @PathVariable String submissionId,
-            @Parameter(description = "ID of the commenting user", required = true,
-                    example = "user_456")
-            @RequestParam String userId,
-            @Parameter(description = "Content of the comment", required = true,
-                    example = "Great performance, very natural delivery")
-            @RequestBody String content) {
-        return ResponseEntity.ok(submissionService.addComment(submissionId, userId, content));
+            @Valid @RequestBody CommentCreateRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+        return ResponseEntity.ok(submissionService.addComment(submissionId, ContextUtils.get().getWorkspaceId(), request, jwt.getSubject()));
     }
 
     @Operation(summary = "Delete submission comment",
