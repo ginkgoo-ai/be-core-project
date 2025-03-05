@@ -10,9 +10,7 @@ import io.hypersistence.utils.hibernate.type.json.JsonType;
 
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 @Builder
 @Data
@@ -49,10 +47,7 @@ public class Talent {
     private String profilePhotoUrl;
 
     @Type(StringArrayType.class)
-    @Column(
-            name = "known_for_movie_ids",
-            columnDefinition = "text[]"
-    )
+    @Column(name = "known_for_movie_ids", columnDefinition = "text[]")
     private String[] knownForMovieIds;
     
     @Type(JsonType.class)

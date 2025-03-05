@@ -13,6 +13,9 @@ public class ProjectRoleResponse {
     @Schema(description = "Name of the role", example = "Lead Character")
     private String name;
 
+    @Schema(description = "Sides for the role", example = "['side1', 'side2']")
+    private String[] sides;
+
     @Schema(description = "Character description", example = "A brave young hero")
     private String characterDescription;
 
@@ -35,10 +38,11 @@ public class ProjectRoleResponse {
     private String projectId;
 
     // Mapping methods (simplified, can use ModelMapper or MapStruct in practice)
-    public static ProjectRoleResponse mapToProjectRoleResponse(ProjectRole role) {
+    public static ProjectRoleResponse from(ProjectRole role) {
         ProjectRoleResponse response = new ProjectRoleResponse();
         response.setId(role.getId());
         response.setName(role.getName());
+        response.setSides(role.getSides());
         response.setCharacterDescription(role.getCharacterDescription());
         response.setSelfTapeInstructions(role.getSelfTapeInstructions());
         response.setIsActive(role.getIsActive());

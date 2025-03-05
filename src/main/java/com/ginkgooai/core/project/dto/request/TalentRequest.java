@@ -48,12 +48,12 @@ public class TalentRequest {
     private String profilePhotoUrl;
 
     @Schema(description = "Name of the talent's agency",
-            example = "Creative Artists Agency",
-            required = true)
+            example = "Creative Artists Agency") 
     private String agencyName;
 
     @Schema(description = "Name of the talent's agent",
-            example = "Jane Wilson")
+            example = "Jane Wilson",
+            required = true)
     private String agentName;
 
     @Schema(description = "Contact email of the talent's agent",

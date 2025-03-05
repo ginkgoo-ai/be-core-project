@@ -56,9 +56,6 @@ public class ApplicationService {
                 .project(project)
                 .role(role)
                 .talent(talent)
-                .agencyName(request.getAgencyName())
-                .agentName(request.getAgentName())
-                .agentEmail(request.getAgentEmail())
                 .status(ApplicationStatus.ADDED)
                 .createdBy(userId)
                 .build();

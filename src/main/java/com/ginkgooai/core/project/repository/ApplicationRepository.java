@@ -19,14 +19,9 @@ public interface ApplicationRepository extends JpaRepository<Application, String
 
     List<Application> findByProjectIdOrderByCreatedAtDesc(String projectId);
 
-    List<Application> findByProjectIdAndRoleIdOrderByCreatedAtDesc(
-            String projectId,
-            String roleId
-    );
+    List<Application> findByProjectIdAndRoleIdOrderByCreatedAtDesc(String projectId, String roleId);
 
     List<Application> findByTalentEmailOrderByCreatedAtDesc(String talentEmail);
-
-    List<Application> findByAgencyNameOrderByCreatedAtDesc(String agencyName);
 
     long countByProjectIdAndStatus(String projectId, ApplicationStatus status);
 

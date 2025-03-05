@@ -42,22 +42,8 @@ public class Application {
     @OneToMany(mappedBy = "application")
     private List<Submission> submissions;
 
-    private String agencyName;
-
-    private String agentName;
-
-    private String agentEmail;
-
     @Enumerated(EnumType.STRING)
     private ApplicationStatus status;
-
-    private String reviewedBy;
-    
-    private LocalDateTime reviewedAt;
-    
-    private String reviewNotes;
-
-    private boolean shortlisted;
 
     @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -74,7 +60,4 @@ public class Application {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-
-    @Version
-    private Long version;
 }

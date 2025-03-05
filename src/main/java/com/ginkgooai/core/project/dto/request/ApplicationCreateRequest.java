@@ -1,7 +1,6 @@
 package com.ginkgooai.core.project.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
@@ -26,15 +25,4 @@ public class ApplicationCreateRequest {
    
     @Schema(description = "List of video submission IDs associated with this application")
     private List<String> submissionIds;
-
-    // Agent Information
-    @Schema(description = "Name of the talent's agent")
-    private String agentName;
-
-    @Schema(description = "Email address of the talent's agent")
-    @Email(message = "Invalid agent email format")
-    private String agentEmail;
-
-    @Schema(description = "Name of the talent agency")
-    private String agencyName;
 }
