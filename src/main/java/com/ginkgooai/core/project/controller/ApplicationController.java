@@ -66,7 +66,7 @@ public class ApplicationController {
                                                               @PathVariable String id,
                                                               @AuthenticationPrincipal Jwt jwt) {
         Application application = applicationService.getApplicationById(ContextUtils.get().getWorkspaceId(), id);
-        return ResponseEntity.ok(ApplicationResponse.from(application, ContextUtils.get(USER_ID, String.class, null)));
+        return ResponseEntity.ok(ApplicationResponse.from(application, jwt.getSubject()));
     }
 
     @Operation(summary = "List applications",
@@ -84,7 +84,7 @@ public class ApplicationController {
             @ParameterObject Pageable pageable,
             @AuthenticationPrincipal Jwt jwt) {
 
-        return ResponseEntity.ok(applicationService.listApplications(ContextUtils.get().getWorkspaceId(), projectId, roleId, keyword, status, pageable));
+        return ResponseEntity.ok(applicationService.listApplications(ContextUtils.get().getWorkspaceId(), jwt.getSubject(), projectId, roleId, keyword, status, pageable));
     }
 
     @Operation(summary = "Add comment to application",

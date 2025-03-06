@@ -1,7 +1,7 @@
 package com.ginkgooai.core.project.service.application;
 
-import com.ginkgooai.core.common.context.WorkspaceContext;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
+import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.domain.application.Application;
 import com.ginkgooai.core.project.domain.application.Shortlist;
 import com.ginkgooai.core.project.domain.application.ShortlistItem;
@@ -50,7 +50,7 @@ public class ShortlistService {
                 .orElseGet(() -> {
                     // If shortlist doesn't exist, create a new one
                     Shortlist shortlistNew = Shortlist.builder()
-                            .workspaceId(WorkspaceContext.getWorkspaceId())
+                            .workspaceId(ContextUtils.get().getWorkspaceId())
                             .projectId(application.getProject().getId())
                             .ownerId(userId)
                             .name("Shortlist")
@@ -92,7 +92,7 @@ public class ShortlistService {
 
     @Transactional(readOnly = true)
     public Page<ShortlistItemResponse> listShortlistItems(String projectId, String keyword, Pageable pageable) {
-        String workspaceId = WorkspaceContext.getWorkspaceId();
+        String workspaceId = ContextUtils.get().getWorkspaceId();
         String userId = null;
 
         // First get the user's shortlist for this project

@@ -24,6 +24,9 @@ public class ProjectRoleRequest {
     @Schema(description = "Gender for the role", example = "Any")
     private String gender;
 
+    @Schema(description = "Sides for the role", example = "['side1', 'side2']")
+    private String[] sides;
+
     @Schema(description = "Whether the role is active", example = "true")
     private Boolean isActive;
 }

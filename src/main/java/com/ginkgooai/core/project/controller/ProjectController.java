@@ -18,7 +18,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -60,11 +59,7 @@ public class ProjectController {
     })
     @PostMapping
     public ResponseEntity<ProjectResponse> createProject(@RequestBody ProjectRequest request, @AuthenticationPrincipal Jwt jwt) {
-
-        String key = RedisKey.WORKSPACE_CONTEXT_KEY_PREFIX  + jwt.getSubject();
-        String workspaceId = redisTemplate.opsForValue().get(key);
-
-        Project project = projectWriteService.createProject(request, workspaceId);
+        Project project = projectWriteService.createProject(request, ContextUtils.get().getWorkspaceId(), jwt.getSubject());
         Map<String, Object> variables = Map.of(
                 "user", jwt.getSubject(),
                 "project", project.getName(),
@@ -141,7 +136,7 @@ public class ProjectController {
     @PutMapping("/{id}")
     public ResponseEntity<ProjectResponse> updateProject(@PathVariable String id, @RequestBody ProjectRequest request) {
         try {
-            Project updatedProject = projectWriteService.updateProject(id, request);
+            Project updatedProject = projectWriteService.updateProject(id, request, ContextUtils.get().getWorkspaceId());
             return new ResponseEntity<>(ProjectResponse.from(updatedProject), HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

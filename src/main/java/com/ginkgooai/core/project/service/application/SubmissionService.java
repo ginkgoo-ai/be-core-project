@@ -1,6 +1,5 @@
 package com.ginkgooai.core.project.service.application;
 
-import com.ginkgooai.core.common.context.WorkspaceContext;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.domain.application.Application;
@@ -60,7 +59,7 @@ public class SubmissionService {
 
         submission = submissionRepository.save(submission);
 
-        return SubmissionResponse.from(submission, ContextUtils.get(USER_ID, String.class, null));
+        return SubmissionResponse.from(submission, userId);
     }
 
     @Transactional(readOnly = true)
@@ -115,7 +114,7 @@ public class SubmissionService {
     }
 
     private Submission findSubmissionById(String id) {
-        String workspaceId = WorkspaceContext.getWorkspaceId();
+        String workspaceId = ContextUtils.get().getWorkspaceId();
 
         return submissionRepository.findOne(
                 (root, query, cb) -> cb.and(

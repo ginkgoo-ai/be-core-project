@@ -2,9 +2,7 @@ package com.ginkgooai.core.project.domain.project;
 
 import com.ginkgooai.core.project.dto.request.ProjectRequest;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -12,10 +10,12 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+@Entity
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
-@Entity
+@AllArgsConstructor
 @Table(name = "project")
 public class Project {
 
@@ -50,19 +50,21 @@ public class Project {
 
     private String workspaceId;
 
+    private String createdBy;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    public Project(ProjectRequest request, String workspaceId) {
+    public Project(ProjectRequest request, String workspaceId, String userId) {
         this.name = request.getName();
         this.description = request.getDescription();
         this.plotLine = request.getPlotLine();
-        this.ownerId = request.getOwnerId();
         this.status = ProjectStatus.DRAFTING;
         this.workspaceId = workspaceId;
+        this.createdBy = userId;
         this.createdAt = LocalDateTime.now();
     }
 

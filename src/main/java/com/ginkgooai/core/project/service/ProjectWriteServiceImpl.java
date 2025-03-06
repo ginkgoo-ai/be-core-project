@@ -33,14 +33,12 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
 
     @Override
     @Transactional
-    public Project createProject(ProjectRequest request, String workspaceId) {
+    public Project createProject(ProjectRequest request, String workspaceId, String userId) {
         log.debug("Creating new project with request: {}", request);
 
         validateProjectRequest(request);
 
-        validateOwner(request.getOwnerId());
-
-        Project project = new Project(request, workspaceId);
+        Project project = new Project(request, workspaceId, userId);
         Project savedProject = projectRepository.save(project);
 
         // Set optional status if provided (override default DRAFTING if necessary)
@@ -51,32 +49,14 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         // Initialize roles and bind to project
         if (request.getRoles() != null && !request.getRoles().isEmpty()) {
             request.getRoles().forEach(roleRequest -> {
-                ProjectRole role = new ProjectRole();
-                role.setName(roleRequest.getName());
-                role.setCharacterDescription(roleRequest.getCharacterDescription());
-                role.setSelfTapeInstructions(roleRequest.getSelfTapeInstructions());
-                role.setIsActive(true);
-                role.setProject(savedProject);
-//                project.addRole(role);
+                ProjectRole role = ProjectRole.builder()
+                        .name(roleRequest.getName())
+                        .characterDescription(roleRequest.getCharacterDescription())
+                        .selfTapeInstructions(roleRequest.getSelfTapeInstructions())
+                        .sides(roleRequest.getSides())
+                        .project(savedProject)
+                        .build();
                 projectRoleRepository.save(role);
-            });
-        }
-
-//        if (request.getNdaIds() != null && !request.getNdaIds().isEmpty()) {
-//            request.getNdaIds().forEach(ndaId -> {
-//                ProjectNda nda = new ProjectNda(); // Placeholder, replace with actual entity from DB
-//                nda.setProject(savedProject);
-//                projectNdaRepository.save(nda);
-//                project.addNda(nda);
-//            });
-//        }
-
-        if (request.getMemberIds() != null && !request.getMemberIds().isEmpty()) {
-            request.getMemberIds().forEach(memberId -> {
-                ProjectMember member = new ProjectMember(); // Placeholder, replace with actual entity from DB
-                member.setUserId(memberId);
-                member.setProject(savedProject);
-                projectMemberRepository.save(member);
             });
         }
 
@@ -90,46 +70,18 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         if (StringUtils.isBlank(request.getName())) {
             throw new IllegalArgumentException("Project name cannot be empty");
         }
-        if (StringUtils.isBlank(request.getOwnerId())) {
-            throw new IllegalArgumentException("Owner ID cannot be empty");
-        }
     }
-
-    private void validateOwner(String ownerId) {
-//        if (!userService.isUserActive(ownerId)) {
-//            throw new IllegalArgumentException("Invalid owner ID or owner is not active");
-//        }
-    }
-
 
     @Override
     @Transactional
-    public Project updateProject(String id, ProjectRequest request) {
-        String lockKey = LOCK_PREFIX + id; // Lock based on project ID
-        RLock lock = redissonClient.getLock(lockKey);
+    public Project updateProject(String projectId, ProjectRequest request, String workspaceId) {
+        Project project = projectRepository.findByIdAndWorkspaceId(projectId, workspaceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id&workspaceId", projectId + ":" + workspaceId));
 
-        try {
-            if (lock.tryLock(10, 30, TimeUnit.SECONDS)) {
-                Project project = projectRepository.findById(id)
-                        .orElseThrow(() -> new RuntimeException("Project not found"));
+        project.updateDetails(request.getName(), request.getDescription(), request.getPlotLine(), request.getStatus());
+        
 
-                project.updateDetails(request.getName(), request.getDescription(), request.getPlotLine(), request.getStatus());
-
-                // Update relationships (handled by Project's methods)
-                updateRelationships(project, request);
-
-                return projectRepository.save(project);
-            } else {
-                throw new RuntimeException("Failed to acquire lock for updating project with ID: " + id);
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Lock acquisition interrupted for updating project with ID: " + id, e);
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
-        }
+        return projectRepository.save(project);
     }
 
     @Override
@@ -148,33 +100,6 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         return projectRepository.save(project);
     }
 
-
-    private void updateRelationships(Project project, ProjectRequest request) {
-        // Clear and re-add roles
-        project.getRoles().clear();
-//        request.getRoleIds().forEach(roleId -> {
-//            ProjectRole role = projectRoleRepository.findById(roleId)
-//                    .orElseThrow(() -> new RuntimeException("Role not found"));
-//            project.addRole(role);
-//        });
-
-        // Clear and re-add NDAs
-//        project.getNdas().clear();
-//        request.getNdaIds().forEach(ndaId -> {
-//            ProjectNda nda = projectNdaRepository.findById(ndaId)
-//                    .orElseThrow(() -> new RuntimeException("NDA not found"));
-//            project.addNda(nda);
-//        });
-
-        // Clear and re-add members
-        project.getMembers().clear();
-        request.getMemberIds().forEach(memberId -> {
-            ProjectMember member = projectMemberRepository.findById(memberId)
-                    .orElseThrow(() -> new RuntimeException("Member not found"));
-            project.addMember(member);
-        });
-
-    }
 
     @Override
     @Transactional
@@ -267,6 +192,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         projectRepository.save(project);
         projectRoleRepository.delete(role);
     }
+
     @Override
     @Transactional
     public ProjectNda createNda(String projectId, ProjectNdaRequest request) {
@@ -292,6 +218,6 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
     @Override
     @Transactional
     public ProjectMember addMember(String projectId, ProjectMemberRequest request) {
-       return new ProjectMember(); 
+        return new ProjectMember();
     }
 }

@@ -98,6 +98,7 @@ public class ApplicationService {
 
     @Transactional(readOnly = true)
     public Page<ApplicationResponse> listApplications(String workspaceId,
+                                                      String userId,
                                                       String projectId,
                                                       String roleId,
                                                       String keyword,
@@ -107,7 +108,7 @@ public class ApplicationService {
         return applicationRepository.findAll(
                 buildSpecification(workspaceId, projectId, roleId, keyword, status),
                 pageable
-        ).map(application -> ApplicationResponse.from(application, ContextUtils.get(USER_ID, String.class, null)));
+        ).map(application -> ApplicationResponse.from(application, userId));
     }
 
     private Specification<Application> buildSpecification(String workspaceId,

@@ -23,21 +23,9 @@ public class ProjectRequest {
     @Schema(description = "Status of the project", example = "IN_PROGRESS")
     private ProjectStatus status;
 
-    @Schema(description = "Owner ID of the project", example = "user123")
-    private String ownerId;
-
     @Schema(description = "List of roles associated with the project")
     private List<ProjectRoleRequest> roles;
     
     @Schema(description = "Producer of the project", example = "Mark Ronson")
     private String producer;
-
-    @Schema(description = "List of NDA IDs associated with the project")
-    private Set<String> ndaIds;
-
-    @Schema(description = "List of member IDs associated with the project")
-    private Set<String> memberIds;
-
-    @Schema(description = "List of activity IDs associated with the project")
-    private Set<String> activityIds;
 }
