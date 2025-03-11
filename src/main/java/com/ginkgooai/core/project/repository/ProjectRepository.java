@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface ProjectRepository extends JpaRepository<Project, String>, JpaSpecificationExecutor<Project> {
     Optional<Project> findByIdAndWorkspaceId(String id, String workspaceId);
     
-    List<Project> findByOwnerId(String ownerId);
+    List<Project> findByCreatedBy(String ownerId);
     
     List<Project> findByStatus(ProjectStatus status);
 }
