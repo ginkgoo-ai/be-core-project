@@ -66,7 +66,7 @@ public class ProjectReadServiceImpl implements ProjectReadService {
 
     @Override
     public List<ProjectResponse> findByOwnerId(String ownerId) {
-        return projectRepository.findByOwnerId(ownerId).stream()
+        return projectRepository.findByCreatedBy(ownerId).stream()
                 .map(ProjectResponse::from)
                 .collect(Collectors.toList());
     }
