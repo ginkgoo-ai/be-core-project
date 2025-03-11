@@ -1,5 +1,6 @@
-package com.ginkgooai.core.project.domain.project;
+package com.ginkgooai.core.project.domain.role;
 
+import com.ginkgooai.core.project.domain.project.Project;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -30,6 +31,8 @@ public class ProjectRole {
     private String[] sides;
     
     private Boolean isActive = true;
+    
+    private RoleStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)

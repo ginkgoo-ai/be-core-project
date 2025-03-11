@@ -1,10 +1,9 @@
 package com.ginkgooai.core.project.service.application;
 
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
-import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.domain.application.*;
 import com.ginkgooai.core.project.domain.project.Project;
-import com.ginkgooai.core.project.domain.project.ProjectRole;
+import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.domain.talent.Talent;
 import com.ginkgooai.core.project.dto.request.ApplicationCreateRequest;
 import com.ginkgooai.core.project.dto.response.ApplicationCommentResponse;
@@ -27,8 +26,6 @@ import org.springframework.util.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import static com.ginkgooai.core.common.constant.ContextsConstant.USER_ID;
 
 @Service
 @Slf4j

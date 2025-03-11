@@ -6,7 +6,7 @@ import com.ginkgooai.core.project.domain.application.Application;
 import com.ginkgooai.core.project.domain.application.Shortlist;
 import com.ginkgooai.core.project.domain.application.ShortlistItem;
 import com.ginkgooai.core.project.domain.application.Submission;
-import com.ginkgooai.core.project.domain.project.ProjectRole;
+import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.domain.talent.Talent;
 import com.ginkgooai.core.project.dto.response.ShortlistItemResponse;
 import com.ginkgooai.core.project.dto.response.ShortlistResponse;

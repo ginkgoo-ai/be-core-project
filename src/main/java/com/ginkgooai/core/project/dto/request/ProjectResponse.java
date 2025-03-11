@@ -1,6 +1,7 @@
 package com.ginkgooai.core.project.dto.request;
 
 import com.ginkgooai.core.project.domain.project.*;
+import com.ginkgooai.core.project.domain.role.ProjectRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -28,7 +29,7 @@ public class ProjectResponse {
     private ProjectStatus status;
 
     @Schema(description = "Owner ID of the project", example = "user123")
-    private String ownerId;
+    private String createdBy;
 
     @Schema(description = "Last activity timestamp", example = "2025-02-20T10:00:00")
     private LocalDateTime lastActivityAt;
@@ -61,7 +62,7 @@ public class ProjectResponse {
         response.setDescription(project.getDescription());
         response.setPlotLine(project.getPlotLine());
         response.setStatus(project.getStatus());
-        response.setOwnerId(project.getOwnerId());
+        response.setCreatedBy(project.getCreatedBy());
         response.setLastActivityAt(project.getLastActivityAt());
         response.setCreatedAt(project.getCreatedAt());
         response.setUpdatedAt(project.getUpdatedAt());

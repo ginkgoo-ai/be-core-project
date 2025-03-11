@@ -1,7 +1,7 @@
 package com.ginkgooai.core.project.domain.application;
 
 import com.ginkgooai.core.project.domain.project.Project;
-import com.ginkgooai.core.project.domain.project.ProjectRole;
+import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.domain.talent.Talent;
 import jakarta.persistence.*;
 import lombok.*;

@@ -1,7 +1,7 @@
 package com.ginkgooai.core.project.controller;
 
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
-import com.ginkgooai.core.project.domain.project.ProjectRole;
+import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.dto.request.*;
 import com.ginkgooai.core.project.dto.response.ProjectRoleResponse;
 import com.ginkgooai.core.project.dto.response.ProjectRoleStatisticsResponse;
@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;

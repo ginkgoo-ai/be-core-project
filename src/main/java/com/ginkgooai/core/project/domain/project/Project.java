@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.domain.project;
 
+import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.dto.request.ProjectRequest;
 import jakarta.persistence.*;
 import lombok.*;
@@ -31,8 +32,6 @@ public class Project {
 
     @Enumerated(EnumType.STRING)
     private ProjectStatus status = ProjectStatus.DRAFTING;
-
-    private String ownerId;
 
     private String producer;
 

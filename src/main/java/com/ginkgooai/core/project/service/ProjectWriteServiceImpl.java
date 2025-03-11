@@ -2,6 +2,7 @@ package com.ginkgooai.core.project.service;
 
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.project.domain.project.*;
+import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.dto.request.*;
 import com.ginkgooai.core.project.repository.*;
 import lombok.extern.slf4j.Slf4j;
