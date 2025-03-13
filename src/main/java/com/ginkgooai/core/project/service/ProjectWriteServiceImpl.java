@@ -54,6 +54,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
                         .name(roleRequest.getName())
                         .characterDescription(roleRequest.getCharacterDescription())
                         .selfTapeInstructions(roleRequest.getSelfTapeInstructions())
+                        .isActive(roleRequest.getIsActive()!= null ? roleRequest.getIsActive() : true)
                         .sides(roleRequest.getSides())
                         .project(savedProject)
                         .build();
