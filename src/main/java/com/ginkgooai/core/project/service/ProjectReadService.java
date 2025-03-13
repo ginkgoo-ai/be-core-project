@@ -31,4 +31,6 @@ public interface ProjectReadService {
 
     List<ProjectRole> findRolesByProjectId(String projectId);
 
+    Page<ProjectRole> findRolesByProjectIdPaginated(String projectId, Pageable pageable);
+
 }

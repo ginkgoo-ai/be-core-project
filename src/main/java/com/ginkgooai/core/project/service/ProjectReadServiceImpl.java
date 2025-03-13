@@ -92,4 +92,10 @@ public class ProjectReadServiceImpl implements ProjectReadService {
     public List<ProjectRole> findRolesByProjectId(String projectId) {
         return projectRoleRepository.findByProjectId(projectId);
     }
+
+    @Override
+public Page<ProjectRole> findRolesByProjectIdPaginated(String projectId, Pageable pageable) {
+        return projectRoleRepository.findByProjectId(projectId, pageable);
+    }
+
 }

@@ -14,13 +14,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/projects")
@@ -61,18 +62,31 @@ public class ProjectRoleController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @Operation(summary = "Get all roles for a project", description = "Retrieves all roles associated with a specific project")
+    @Operation(summary = "Get all roles for a project", description = "Retrieves all roles associated with a specific project with pagination support")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Roles retrieved successfully"),
-            @ApiResponse(responseCode = "404", description = "Project not found")
+            @ApiResponse(responseCode = "404", description = "Project not found"),
+            @ApiResponse(responseCode = "400", description = "Invalid pagination parameters")
     })
     @GetMapping("/{projectId}/roles")
-    public ResponseEntity<List<ProjectRoleResponse>> getProjectRoles(@PathVariable String projectId) {
-        List<ProjectRoleResponse> roles = projectReadService.findRolesByProjectId(projectId)
-                .stream()
-                .map(ProjectRoleResponse::from)
-                .collect(Collectors.toList());
-        return new ResponseEntity<>(roles, HttpStatus.OK);
+    public ResponseEntity<Page<ProjectRoleResponse>> getProjectRoles(
+            @PathVariable String projectId,
+            @Parameter(description = "Page number (zero-based)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "10") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Sort direction (ASC/DESC)", example = "DESC") @RequestParam(defaultValue = "DESC") String sortDirection,
+            @Parameter(description = "Sort field (e.g., updatedAt)", example = "updatedAt") @RequestParam(defaultValue = "updatedAt") String sortField) {
+        try {
+            Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
+            Pageable pageable = PageRequest.of(page, size, sort);
+            
+            Page<ProjectRole> rolesPage = projectReadService.findRolesByProjectIdPaginated(projectId, pageable);
+            
+            Page<ProjectRoleResponse> responseRolesPage = rolesPage.map(ProjectRoleResponse::from);
+            
+            return new ResponseEntity<>(responseRolesPage, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
     @Operation(summary = "Update a role", description = "Updates an existing role with the provided details")

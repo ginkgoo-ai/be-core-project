@@ -1,7 +1,6 @@
 package com.ginkgooai.core.project.controller;
 
 import com.ginkgooai.core.common.bean.ActivityType;
-import com.ginkgooai.core.common.constant.RedisKey;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.utils.ActivityLogger;
 import com.ginkgooai.core.common.utils.ContextUtils;
@@ -50,7 +49,6 @@ public class ProjectController {
 
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
-
 
     @Operation(summary = "Create a new project", description = "Creates a new project with the provided details")
     @ApiResponses(value = {
@@ -157,15 +155,15 @@ public class ProjectController {
                     required = true,
                     schema = @Schema(implementation = ProjectStatus.class, example = "IN_PROGRESS")
             )
-            @RequestBody ProjectStatus status,
+            @RequestBody ProjectUpdateStatusRequest request,
             @AuthenticationPrincipal Jwt jwt) {
         try {
-            Project updatedProject = projectWriteService.updateProjectStatus(id, status);
+            Project updatedProject = projectWriteService.updateProjectStatus(id, request.getStatus());
             // Log activity to message queue
             Map<String, Object> variables = Map.of(
                     "project", updatedProject.getName(),
                     "previousStatus", updatedProject.getStatus().name(),
-                    "newStatus", status.name(),
+                    "newStatus", request.getStatus().name(),
                     "time", System.currentTimeMillis() 
             );
 
