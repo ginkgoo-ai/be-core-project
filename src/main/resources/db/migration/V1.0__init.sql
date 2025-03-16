@@ -1,6 +1,6 @@
 -- V1__Initial_Schema.sql
 
-CREATE TABLE project (
+CREATE TABLE project.project (
                          id VARCHAR(255) PRIMARY KEY,
                          name VARCHAR(255) NOT NULL,
                          description VARCHAR(255),
@@ -14,7 +14,7 @@ CREATE TABLE project (
                          created_by VARCHAR(255)
 );
 
-CREATE TABLE project_role (
+CREATE TABLE project.project_role (
                               id VARCHAR(255) PRIMARY KEY,
                               name VARCHAR(255) NOT NULL,
                               character_description VARCHAR(255),
@@ -30,7 +30,7 @@ CREATE TABLE project_role (
                               status SMALLINT CHECK (status >= 0 AND status <= 4)
 );
 
-CREATE TABLE imdb_movie_item (
+CREATE TABLE project.imdb_movie_item (
                                  id VARCHAR(255) PRIMARY KEY,
                                  cover VARCHAR(255),
                                  media_type VARCHAR(255),
@@ -41,7 +41,7 @@ CREATE TABLE imdb_movie_item (
                                  year VARCHAR(255)
 );
 
-CREATE TABLE shortlist (
+CREATE TABLE project.shortlist (
                            id VARCHAR(255) PRIMARY KEY,
                            created_at TIMESTAMP(6),
                            created_by VARCHAR(255),
@@ -54,7 +54,7 @@ CREATE TABLE shortlist (
                            workspace_id VARCHAR(255)
 );
 
-CREATE TABLE talent_profile_meta (
+CREATE TABLE project.talent_profile_meta (
                                      id VARCHAR(255) PRIMARY KEY,
                                      created_at TIMESTAMP(6),
                                      created_by VARCHAR(255),
@@ -64,7 +64,7 @@ CREATE TABLE talent_profile_meta (
                                      updated_at TIMESTAMP(6)
 );
 
-CREATE TABLE talent (
+CREATE TABLE project.talent (
                         id VARCHAR(255) PRIMARY KEY,
                         agency_name VARCHAR(255),
                         agent_email VARCHAR(255),
@@ -86,7 +86,7 @@ CREATE TABLE talent (
                         profile_meta_id VARCHAR(255)
 );
 
-CREATE TABLE application (
+CREATE TABLE project.application (
                              id VARCHAR(255) PRIMARY KEY,
                              agency_name VARCHAR(255),
                              agent_email VARCHAR(255),
@@ -105,7 +105,7 @@ CREATE TABLE application (
                              talent_id VARCHAR(255) UNIQUE
 );
 
-CREATE TABLE submission (
+CREATE TABLE project.submission (
                             id VARCHAR(255) PRIMARY KEY,
                             created_at TIMESTAMP(6),
                             created_by VARCHAR(255),
@@ -124,7 +124,7 @@ CREATE TABLE submission (
                             application_id VARCHAR(255)
 );
 
-CREATE TABLE application_comment (
+CREATE TABLE project.application_comment (
                                      id VARCHAR(255) PRIMARY KEY,
                                      content TEXT,
                                      created_at TIMESTAMP(6),
@@ -134,7 +134,7 @@ CREATE TABLE application_comment (
                                      parent_comment_id VARCHAR(255)
 );
 
-CREATE TABLE application_note (
+CREATE TABLE project.application_note (
                                   id VARCHAR(255) PRIMARY KEY,
                                   content TEXT,
                                   created_at TIMESTAMP(6),
@@ -144,7 +144,7 @@ CREATE TABLE application_note (
 );
 
 
-CREATE TABLE submission_comment (
+CREATE TABLE project.submission_comment (
                                     id VARCHAR(255) PRIMARY KEY,
                                     content TEXT,
                                     created_at TIMESTAMP(6),
@@ -156,7 +156,7 @@ CREATE TABLE submission_comment (
                                     workspace_id VARCHAR(255)
 );
 
-CREATE TABLE shortlist_item (
+CREATE TABLE project.shortlist_item (
                                 id VARCHAR(255) PRIMARY KEY,
                                 added_at TIMESTAMP(6),
                                 added_by VARCHAR(255),
@@ -166,66 +166,49 @@ CREATE TABLE shortlist_item (
                                 submission_id VARCHAR(255)
 );
 
-CREATE TABLE shortlist_item_submission_mapping (
+CREATE TABLE project.shortlist_item_submission_mapping (
                                                    shortlist_item_id VARCHAR(36) NOT NULL,
                                                    submission_id VARCHAR(36) NOT NULL,
                                                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                                                    PRIMARY KEY (shortlist_item_id, submission_id)
 );
 
-CREATE INDEX idx_shortlist_item_submission_mapping_submission_id ON shortlist_item_submission_mapping (submission_id);
-CREATE INDEX idx_shortlist_item_submission_mapping_shortlist_item_id ON shortlist_item_submission_mapping (shortlist_item_id);
+CREATE INDEX idx_shortlist_item_submission_mapping_submission_id ON project.shortlist_item_submission_mapping (submission_id);
+CREATE INDEX idx_shortlist_item_submission_mapping_shortlist_item_id ON project.shortlist_item_submission_mapping (shortlist_item_id);
 
-CREATE INDEX idx_project_name ON project (name);
-CREATE INDEX idx_project_status ON project (status);
-CREATE INDEX idx_project_workspace_id ON project (workspace_id);
-CREATE INDEX idx_project_created_at ON project (created_at);
-CREATE INDEX idx_project_updated_at ON project (updated_at);
+CREATE INDEX idx_project_name ON project.project (name);
+CREATE INDEX idx_project_status ON project.project (status);
+CREATE INDEX idx_project_workspace_id ON project.project (workspace_id);
+CREATE INDEX idx_project_created_at ON project.project (created_at);
+CREATE INDEX idx_project_updated_at ON project.project (updated_at);
 
-CREATE INDEX idx_project_role_project_id ON project_role (project_id);
-CREATE INDEX idx_project_role_name ON project_role (name);
-CREATE INDEX idx_project_role_created_at ON project_role (created_at);
-CREATE INDEX idx_project_role_updated_at ON project_role (updated_at);
+CREATE INDEX idx_project_role_project_id ON project.project_role (project_id);
+CREATE INDEX idx_project_role_name ON project.project_role (name);
+CREATE INDEX idx_project_role_created_at ON project.project_role (created_at);
+CREATE INDEX idx_project_role_updated_at ON project.project_role (updated_at);
 
-CREATE INDEX idx_project_nda_project_id ON project_nda (project_id);
-CREATE INDEX idx_project_nda_created_at ON project_nda (created_at);
-CREATE INDEX idx_project_nda_updated_at ON project_nda (updated_at);
+CREATE INDEX idx_talent_name ON project.talent (name);
+CREATE INDEX idx_talent_status ON project.talent (status);
+CREATE INDEX idx_talent_workspace_id ON project.talent (workspace_id);
+CREATE INDEX idx_talent_created_at ON project.talent (created_at);
+CREATE INDEX idx_talent_updated_at ON project.talent (updated_at);
 
-CREATE INDEX idx_project_member_project_id ON project_member (project_id);
-CREATE INDEX idx_project_member_user_id ON project_member (user_id);
-CREATE INDEX idx_project_member_status ON project_member (status);
-CREATE INDEX idx_project_member_role_id ON project_member (role_id);
-CREATE INDEX idx_project_member_created_at ON project_member (created_at);
-CREATE INDEX idx_project_member_updated_at ON project_member (updated_at);
+CREATE INDEX idx_application_project_id ON project.application (project_id);
+CREATE INDEX idx_application_role_id ON project.application (role_id);
+CREATE INDEX idx_application_talent_id ON project.application (talent_id);
+CREATE INDEX idx_application_status ON project.application (status);
+CREATE INDEX idx_application_workspace_id ON project.application (workspace_id);
+CREATE INDEX idx_application_created_at ON project.application (created_at);
+CREATE INDEX idx_application_updated_at ON project.application (updated_at);
 
-CREATE INDEX idx_project_activity_project_id ON project_activity (project_id);
-CREATE INDEX idx_project_activity_type ON project_activity (activity_type);
-CREATE INDEX idx_project_activity_status ON project_activity (status);
-CREATE INDEX idx_project_activity_created_at ON project_activity (created_at);
-CREATE INDEX idx_project_activity_updated_at ON project_activity (updated_at);
+CREATE INDEX idx_submission_application_id ON project.submission (application_id);
+CREATE INDEX idx_submission_processing_status ON project.submission (processing_status);
+CREATE INDEX idx_submission_workspace_id ON project.submission (workspace_id);
+CREATE INDEX idx_submission_created_at ON project.submission (created_at);
+CREATE INDEX idx_submission_updated_at ON project.submission (updated_at);
 
-CREATE INDEX idx_talent_name ON talent (name);
-CREATE INDEX idx_talent_status ON talent (status);
-CREATE INDEX idx_talent_workspace_id ON talent (workspace_id);
-CREATE INDEX idx_talent_created_at ON talent (created_at);
-CREATE INDEX idx_talent_updated_at ON talent (updated_at);
-
-CREATE INDEX idx_application_project_id ON application (project_id);
-CREATE INDEX idx_application_role_id ON application (role_id);
-CREATE INDEX idx_application_talent_id ON application (talent_id);
-CREATE INDEX idx_application_status ON application (status);
-CREATE INDEX idx_application_workspace_id ON application (workspace_id);
-CREATE INDEX idx_application_created_at ON application (created_at);
-CREATE INDEX idx_application_updated_at ON application (updated_at);
-
-CREATE INDEX idx_submission_application_id ON submission (application_id);
-CREATE INDEX idx_submission_processing_status ON submission (processing_status);
-CREATE INDEX idx_submission_workspace_id ON submission (workspace_id);
-CREATE INDEX idx_submission_created_at ON submission (created_at);
-CREATE INDEX idx_submission_updated_at ON submission (updated_at);
-
-CREATE INDEX idx_application_comment_application_id ON application_comment (application_id);
-CREATE INDEX idx_application_note_application_id ON application_note (application_id);
-CREATE INDEX idx_submission_comment_submission_id ON submission_comment (submission_id);
-CREATE INDEX idx_shortlist_item_shortlist_id ON shortlist_item (shortlist_id);
-CREATE INDEX idx_shortlist_item_submission_id ON shortlist_item (submission_id);
+CREATE INDEX idx_application_comment_application_id ON project.application_comment (application_id);
+CREATE INDEX idx_application_note_application_id ON project.application_note (application_id);
+CREATE INDEX idx_submission_comment_submission_id ON project.submission_comment (submission_id);
+CREATE INDEX idx_shortlist_item_shortlist_id ON project.shortlist_item (shortlist_id);
+CREATE INDEX idx_shortlist_item_submission_id ON project.shortlist_item (submission_id);
