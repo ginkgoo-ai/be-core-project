@@ -30,6 +30,31 @@ CREATE TABLE project.project_role (
                               status SMALLINT CHECK (status >= 0 AND status <= 4)
 );
 
+CREATE TABLE project.project_nda (
+                             id VARCHAR(255) PRIMARY KEY,
+                             requires_nda BOOLEAN NOT NULL,
+                             apply_to_all BOOLEAN NOT NULL,
+                             version VARCHAR(255) NOT NULL,
+                             full_name VARCHAR(255),
+                             title VARCHAR(255),
+                             company VARCHAR(255),
+                             signature_url VARCHAR(255),
+                             project_id VARCHAR(255) NOT NULL,
+                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE project.project_member (
+                                id VARCHAR(255) PRIMARY KEY,
+                                user_id VARCHAR(255) NOT NULL,
+                                status VARCHAR(255) DEFAULT 'ACTIVE' NOT NULL,
+                                project_id VARCHAR(255) NOT NULL,
+                                role_id VARCHAR(36),
+                                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
 CREATE TABLE project.imdb_movie_item (
                                  id VARCHAR(255) PRIMARY KEY,
                                  cover VARCHAR(255),
@@ -181,6 +206,9 @@ CREATE INDEX idx_project_status ON project.project (status);
 CREATE INDEX idx_project_workspace_id ON project.project (workspace_id);
 CREATE INDEX idx_project_created_at ON project.project (created_at);
 CREATE INDEX idx_project_updated_at ON project.project (updated_at);
+
+CREATE INDEX idx_project_member_project_id ON project.project_member(project_id);
+CREATE INDEX idx_project_nda_project_id ON project.project_nda (project_id);
 
 CREATE INDEX idx_project_role_project_id ON project.project_role (project_id);
 CREATE INDEX idx_project_role_name ON project.project_role (name);
