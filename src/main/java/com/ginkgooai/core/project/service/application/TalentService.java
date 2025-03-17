@@ -53,9 +53,13 @@ public class TalentService {
 
         // Merge profiles with manual input
         Talent talent = mergeTalentData(request, imdbProfile.getData(), spotlightProfile.getData());
+        talent.setEmail(request.getEmail());
         talent.setProfileMetaId(Optional.ofNullable(imdbProfile.getId()).orElse(null));
         talent.setCreatedBy(userId);
         talent.setWorkspaceId(workspaceId);
+        talent.setAgencyName(request.getAgencyName());
+        talent.setAgentName(request.getAgentName());
+        talent.setAgentEmail(request.getAgentEmail());
         Talent saved = talentRepository.save(talent);
 
         // Log activity
