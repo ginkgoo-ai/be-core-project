@@ -26,6 +26,6 @@ public class ApplicationCreateRequest {
             "Must provide either talentId or talent, but not both.")
     public TalentRequest talent;
    
-    @Schema(description = "List of video urls associated with this application")
-    private List<String> videoUrls;
+    @Schema(description = "List of video file Ids associated with this application")
+    private List<String> videoIds;
 }

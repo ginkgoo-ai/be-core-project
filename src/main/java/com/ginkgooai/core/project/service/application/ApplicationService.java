@@ -1,6 +1,8 @@
 package com.ginkgooai.core.project.service.application;
 
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
+import com.ginkgooai.core.project.client.storage.StorageClient;
+import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
 import com.ginkgooai.core.project.domain.application.*;
 import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
@@ -39,6 +41,7 @@ public class ApplicationService {
     private final SubmissionRepository submissionRepository;
     private final ApplicationStateMachine stateMachine;
     private final TalentService talentService;
+    private final StorageClient storageClient;
 
     @Transactional
     public ApplicationResponse createApplication(ApplicationCreateRequest request, String workspaceId, String userId) {
@@ -72,11 +75,17 @@ public class ApplicationService {
         Application savedApplication = applicationRepository.save(application);
 
         // Create submissions if provided
-        if (!ObjectUtils.isEmpty(request.getVideoUrls())) {
-            List<Submission> submissions = request.getVideoUrls().stream().map(url -> Submission.builder()
+        if (!ObjectUtils.isEmpty(request.getVideoIds())) {
+            List<CloudFileResponse> videoFiles = storageClient.getFileDetails(request.getVideoIds()).getBody();
+            List<Submission> submissions = videoFiles.stream().map(video -> Submission.builder()
                     .workspaceId(workspaceId)
                     .application(savedApplication)
-                    .videoUrl(url)
+                    .videoName(video.getOriginalName())
+                    .videoUrl(video.getStoragePath())
+                    .videoDuration(video.getVideoDuration())
+                    .videoThumbnailUrl(video.getVideoThumbnailUrl())
+                    .videoResolution(video.getVideoResolution())
+                    .mimeType(video.getFileType())
                     .createdBy(userId)
                     .build()).toList();
             List<Submission> savedSubmissions = submissionRepository.saveAll(submissions);

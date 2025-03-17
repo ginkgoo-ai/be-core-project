@@ -31,6 +31,8 @@ public class Submission {
     @JoinColumn(name = "application_id")
     private Application application;
 
+    private String videoName;
+    
     private String videoUrl;
     
     private String videoThumbnailUrl;
