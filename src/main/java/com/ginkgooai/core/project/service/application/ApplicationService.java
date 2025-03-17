@@ -75,8 +75,10 @@ public class ApplicationService {
         Application savedApplication = applicationRepository.save(application);
 
         // Create submissions if provided
+        log.debug("Video files: {}", request.getVideoIds());
         if (!ObjectUtils.isEmpty(request.getVideoIds())) {
             List<CloudFileResponse> videoFiles = storageClient.getFileDetails(request.getVideoIds()).getBody();
+            log.debug("Video files: {}", videoFiles);
             List<Submission> submissions = videoFiles.stream().map(video -> Submission.builder()
                     .workspaceId(workspaceId)
                     .application(savedApplication)
