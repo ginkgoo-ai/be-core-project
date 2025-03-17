@@ -17,15 +17,15 @@ CREATE TABLE project.project
 
 CREATE TABLE project.project_role
 (
-    id                     VARCHAR(255) PRIMARY KEY,
+    id                     VARCHAR(36) PRIMARY KEY,
     name                   VARCHAR(255)                        NOT NULL,
-    character_description  VARCHAR(255),
-    self_tape_instructions VARCHAR(255),
+    character_description  TEXT,
+    self_tape_instructions TEXT,
     audition_notes         TEXT,
     age_range              VARCHAR(50),
     gender                 VARCHAR(20),
     is_active              BOOLEAN   DEFAULT TRUE              NOT NULL,
-    project_id             VARCHAR(255)                        NOT NULL,
+    project_id             VARCHAR(36)                         NOT NULL,
     created_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     sides                  TEXT[],
@@ -200,13 +200,13 @@ CREATE TABLE project.submission_comment
 
 CREATE TABLE project.shortlist_item
 (
-    id            VARCHAR(36) PRIMARY KEY,
-    created_at    TIMESTAMP(6),
-    created_by    VARCHAR(36),
-    updated_at    TIMESTAMP(6),
-    notes         VARCHAR(255),
-    sort_order    INTEGER,
-    shortlist_id  VARCHAR(36),
+    id             VARCHAR(36) PRIMARY KEY,
+    created_at     TIMESTAMP(6),
+    created_by     VARCHAR(36),
+    updated_at     TIMESTAMP(6),
+    notes          VARCHAR(255),
+    sort_order     INTEGER,
+    shortlist_id   VARCHAR(36),
     application_id VARCHAR(36)
 );
 
