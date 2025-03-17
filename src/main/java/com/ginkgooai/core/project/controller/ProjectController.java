@@ -56,7 +56,7 @@ public class ProjectController {
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     @PostMapping
-    public ResponseEntity<ProjectResponse> createProject(@RequestBody ProjectRequest request, @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<ProjectResponse> createProject(@RequestBody ProjectCreateRequest request, @AuthenticationPrincipal Jwt jwt) {
         Project project = projectWriteService.createProject(request, ContextUtils.get().getWorkspaceId(), jwt.getSubject());
         Map<String, Object> variables = Map.of(
                 "user", jwt.getSubject(),
@@ -132,7 +132,7 @@ public class ProjectController {
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     @PutMapping("/{id}")
-    public ResponseEntity<ProjectResponse> updateProject(@PathVariable String id, @RequestBody ProjectRequest request) {
+    public ResponseEntity<ProjectResponse> updateProject(@PathVariable String id, @RequestBody ProjectUpdateRequest request) {
         try {
             Project updatedProject = projectWriteService.updateProject(id, request, ContextUtils.get().getWorkspaceId());
             return new ResponseEntity<>(ProjectResponse.from(updatedProject), HttpStatus.OK);

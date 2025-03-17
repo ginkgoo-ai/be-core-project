@@ -1,0 +1,51 @@
+package com.ginkgooai.core.project.filter;
+
+import com.ginkgooai.core.project.service.ProjectWorkspaceContextService;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class WorkspaceAuthFilter extends OncePerRequestFilter {
+    
+    private final ProjectWorkspaceContextService projectWorkspaceContextService;
+    
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request, 
+            HttpServletResponse response, 
+            FilterChain chain) throws ServletException, IOException {
+        
+        String workspaceId = request.getHeader("x-workspace-id");
+        if (workspaceId == null || workspaceId.isEmpty()) {
+            chain.doFilter(request, response);
+            return;
+        }
+        
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        try {
+            boolean hasAccess = projectWorkspaceContextService.validateUserWorkspaceAccess(jwt.getSubject(), workspaceId);
+            
+            if (!hasAccess) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+            
+            chain.doFilter(request, response);
+        } catch (Exception e) {
+            log.error("Failed to validate workspace access: {}", e.getMessage());
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+}

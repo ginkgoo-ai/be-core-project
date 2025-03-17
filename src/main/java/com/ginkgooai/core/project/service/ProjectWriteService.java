@@ -6,9 +6,9 @@ import com.ginkgooai.core.project.dto.request.*;
 
 public interface ProjectWriteService {
 
-    Project createProject(ProjectRequest request, String workspaceId, String userId);
+    Project createProject(ProjectCreateRequest request, String workspaceId, String userId);
 
-    Project updateProject(String id, ProjectRequest request, String workspaceId);
+    Project updateProject(String id, ProjectUpdateRequest request, String workspaceId);
 
     Project updateProjectStatus(String id, ProjectStatus status);
 
