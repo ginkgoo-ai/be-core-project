@@ -26,6 +26,9 @@ public class Shortlist {
     private String projectId;
     
     private String ownerId;
+
+    @Enumerated(EnumType.STRING)
+    private OwnerType ownerType;
     
     private String name;
     
@@ -33,6 +36,7 @@ public class Shortlist {
     
     @OneToMany(mappedBy = "shortlist", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ShortlistItem> items;
+
     
     private String createdBy;
     
