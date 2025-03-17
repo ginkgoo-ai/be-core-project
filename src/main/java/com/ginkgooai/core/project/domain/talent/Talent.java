@@ -46,7 +46,6 @@ public class Talent {
     
     private String profilePhotoUrl;
 
-    @Type(StringArrayType.class)
     @Column(name = "known_for_movie_ids", columnDefinition = "text[]")
     private String[] knownForMovieIds;
     

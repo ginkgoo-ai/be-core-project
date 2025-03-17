@@ -67,10 +67,8 @@ public class ShortlistService {
 
         ShortlistItem item = ShortlistItem.builder()
                 .shortlist(shortlist)
-                .submission(submission)
-                .notes(notes)
                 .sortOrder(maxOrder + 1)
-                .addedBy(userId)
+                .createdBy(userId)
                 .build();
 
         shortlist.getItems().add(item);
@@ -80,8 +78,8 @@ public class ShortlistService {
     @Transactional
     public void removeVideo(String shortlistId, String submissionId) {
         Shortlist shortlist = findShortlistById(shortlistId);
-        shortlist.getItems().removeIf(item -> 
-                item.getSubmission().getId().equals(submissionId));
+//        shortlist.getItems().removeIf(item -> 
+//                item.getSubmission().getId().equals(submissionId));
         shortlistRepository.save(shortlist);
     }
 
@@ -167,10 +165,10 @@ public class ShortlistService {
     private ShortlistItemResponse convertItemToResponse(ShortlistItem item) {
         return ShortlistItemResponse.builder()
                 .id(item.getId())
-                .notes(item.getNotes())
+//                .notes(item.getNotes())
                 .order(item.getSortOrder())
-                .addedBy(item.getAddedBy())
-                .addedAt(item.getAddedAt())
+//                .addedBy(item.getAddedBy())
+//                .addedAt(item.getAddedAt())
                 .build();
     }
 }
