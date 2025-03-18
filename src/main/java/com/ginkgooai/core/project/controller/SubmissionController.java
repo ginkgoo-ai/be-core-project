@@ -45,12 +45,9 @@ public class SubmissionController {
     })
     @PostMapping
     public ResponseEntity<SubmissionResponse> createSubmission(
-            @Parameter(description = "Application ID", example = "app_12345")
-            @PathVariable String id,
-            @Parameter(description = "Submission details", required = true)
             @Valid @RequestBody SubmissionCreateRequest request,
             @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(submissionService.createSubmission(ContextUtils.get().getWorkspaceId(), id, request, jwt.getSubject()));
+        return ResponseEntity.ok(submissionService.createSubmission(ContextUtils.get().getWorkspaceId(), request, jwt.getSubject()));
     }
 
     @Operation(summary = "Get submission details",

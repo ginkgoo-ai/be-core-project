@@ -39,11 +39,12 @@ public class SubmissionService {
     private final StorageClient storageClient;
 
     @Transactional
-    public SubmissionResponse createSubmission(String workspaceId, String applicationId,
-                                               SubmissionCreateRequest request, String userId) {
+    public SubmissionResponse createSubmission(String workspaceId, 
+                                               SubmissionCreateRequest request, 
+                                               String userId) {
 
-        Application application = applicationRepository.findById(applicationId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Application", "id", applicationId));
+        Application application = applicationRepository.findById(request.getApplicationId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Application", "id", request.getApplicationId()));
 
         List<CloudFileResponse> videoFiles = storageClient.getFileDetails(Arrays.asList(request.getVideoId())).getBody();
         log.debug("Video files: {}", videoFiles);

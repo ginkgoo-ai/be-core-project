@@ -35,6 +35,7 @@ import java.util.Objects;
 public class ApplicationService {
 
     private final ApplicationRepository applicationRepository;
+    private final ApplicationNoteRepository applicationNoteRepository;
     private final ProjectRepository projectRepository;
     private final ProjectRoleRepository projectRoleRepository;
     private final TalentRepository talentRepository;
@@ -195,14 +196,16 @@ public class ApplicationService {
     public List<ApplicationNoteResponse> addNote(String workspaceId, String id, String userId, String content) {
         Application application = findApplicationById(workspaceId, id);
 
-        ApplicationNote note = ApplicationNote.builder()
+        ApplicationNote note = applicationNoteRepository.save(ApplicationNote.builder()
                 .application(application)
                 .content(content)
                 .createdBy(userId)
-                .build();
+                .build());
 
-        application.getNotes().add(note);
-        return applicationRepository.save(application).getNotes().stream()
+        ApplicationNote savedNote = applicationNoteRepository.findById(note.getId()).get();
+        application.getNotes().add(savedNote);
+        
+        return application.getNotes().stream()
                 .map(ApplicationNoteResponse::from)
                 .toList();
     }
