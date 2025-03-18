@@ -4,6 +4,7 @@ import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.domain.application.Application;
 import com.ginkgooai.core.project.domain.application.ApplicationStatus;
 import com.ginkgooai.core.project.dto.request.ApplicationCreateRequest;
+import com.ginkgooai.core.project.dto.request.NoteCreateRequest;
 import com.ginkgooai.core.project.dto.response.ApplicationCommentResponse;
 import com.ginkgooai.core.project.dto.response.ApplicationNoteResponse;
 import com.ginkgooai.core.project.dto.response.ApplicationResponse;
@@ -105,13 +106,11 @@ public class ApplicationController {
     @Operation(summary = "Add note to application",
             description = "Adds a private note to the application")
     @PostMapping("/{id}/notes")
-    @Hidden
     public ResponseEntity<List<ApplicationNoteResponse>> addNote(
             @Parameter(description = "Application ID", example = "app_12345")
             @PathVariable String id,
-            @Parameter(description = "Note content", example = "Internal: Follow up needed")
-            @RequestParam String content,
+            @RequestBody NoteCreateRequest request,
             @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(applicationService.addNote(ContextUtils.get().getWorkspaceId(), id, jwt.getSubject(), content));
+        return ResponseEntity.ok(applicationService.addNote(ContextUtils.get().getWorkspaceId(), id, jwt.getSubject(), request.getContent()));
     }
 }
