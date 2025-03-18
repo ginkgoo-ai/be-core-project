@@ -1,50 +1,67 @@
 package com.ginkgooai.core.project.service.application;
 
+import com.ginkgooai.core.common.constant.ContextsConstant;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.utils.ContextUtils;
-import com.ginkgooai.core.project.domain.application.Application;
-import com.ginkgooai.core.project.domain.application.Shortlist;
-import com.ginkgooai.core.project.domain.application.ShortlistItem;
-import com.ginkgooai.core.project.domain.application.Submission;
+import com.ginkgooai.core.project.client.identity.IdentityClient;
+import com.ginkgooai.core.project.client.identity.dto.GuestCodeRequest;
+import com.ginkgooai.core.project.client.identity.dto.GuestCodeResponse;
+import com.ginkgooai.core.project.domain.application.*;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.domain.talent.Talent;
+import com.ginkgooai.core.project.dto.request.ShareShortlistRequest;
 import com.ginkgooai.core.project.dto.response.ShortlistItemResponse;
-import com.ginkgooai.core.project.dto.response.ShortlistResponse;
 import com.ginkgooai.core.project.repository.ShortlistItemRepository;
 import com.ginkgooai.core.project.repository.ShortlistRepository;
 import com.ginkgooai.core.project.repository.SubmissionRepository;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class ShortlistService {
 
     private final ShortlistRepository shortlistRepository;
     private final ShortlistItemRepository shortlistItemRepository;
     private final SubmissionRepository submissionRepository;
+    private final IdentityClient identityClient;
+    private final String guestLoginUri;
+
+    public ShortlistService(
+            ShortlistRepository shortlistRepository,
+            ShortlistItemRepository shortlistItemRepository,
+            SubmissionRepository submissionRepository,
+            IdentityClient identityClient,
+            @Value("${spring.security.oauth2.guest_login_uri}") String guestLoginUri) {
+        this.shortlistRepository = shortlistRepository;
+        this.shortlistItemRepository = shortlistItemRepository;
+        this.submissionRepository = submissionRepository;
+        this.identityClient = identityClient;
+        this.guestLoginUri = guestLoginUri;
+    }
 
     @Transactional
-    public ShortlistResponse addShortlistItem(String userId, String submissionId, String notes) {
+    public void addShortlistItem(String userId, String submissionId, String notes) {
         Submission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Submission", "id", submissionId));
 
         Application application = submission.getApplication();
-        
+
         // Try to find existing shortlist
         Shortlist shortlist = shortlistRepository.findByWorkspaceIdAndProjectIdAndOwnerId(application.getWorkspaceId(), application.getProject().getId(), userId)
                 .orElseGet(() -> {
@@ -53,6 +70,7 @@ public class ShortlistService {
                             .workspaceId(ContextUtils.get().getWorkspaceId())
                             .projectId(application.getProject().getId())
                             .ownerId(userId)
+                            .ownerType(OwnerType.INTERNAL)
                             .name("Shortlist")
                             .createdBy(userId)
                             .build();
@@ -60,27 +78,53 @@ public class ShortlistService {
                 });
 
         // Get the maximum order value
-        Integer maxOrder = shortlist.getItems().stream()
+        Integer maxOrder = CollectionUtils.isEmpty(shortlist.getItems()) ? 0 : shortlist.getItems().stream()
                 .map(ShortlistItem::getSortOrder)
                 .max(Integer::compareTo)
                 .orElse(0);
 
-        ShortlistItem item = ShortlistItem.builder()
-                .shortlist(shortlist)
-                .sortOrder(maxOrder + 1)
-                .createdBy(userId)
-                .build();
+        ShortlistItem shortlistItem = shortlistItemRepository
+                .findByApplicationIdAndShortlistId(application.getId(), shortlist.getId())
+                .orElseGet(() -> {
+                    // Create new shortlist item if not exists
+                    ShortlistItem newItem = ShortlistItem.builder()
+                            .application(application)
+                            .shortlist(shortlist)
+                            .submissions(new ArrayList<>())
+                            .createdBy(userId)
+                            .sortOrder(maxOrder + 1)
+                            .submissions(new ArrayList<>())
+                            .build();
+                    return shortlistItemRepository.save(newItem);
+                });
 
-        shortlist.getItems().add(item);
-        return convertToResponse(shortlistRepository.save(shortlist));
+        // Add submission to existing shortlist item if not already present
+        if (!shortlistItem.getSubmissions().contains(submission)) {
+            shortlistItem.getSubmissions().add(submission);
+            shortlistItemRepository.save(shortlistItem);
+            log.debug("Added submission {} to shortlist item {}", submissionId, shortlistItem.getId());
+        }
     }
 
     @Transactional
-    public void removeVideo(String shortlistId, String submissionId) {
-        Shortlist shortlist = findShortlistById(shortlistId);
-//        shortlist.getItems().removeIf(item -> 
-//                item.getSubmission().getId().equals(submissionId));
-        shortlistRepository.save(shortlist);
+    public void removeSubmission(String submissionId, String userId) {
+        Submission submission = submissionRepository.findById(submissionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Submission", "id", submissionId));
+
+        List<ShortlistItem> shortlistItems = shortlistItemRepository.findAllBySubmissionId(submissionId, userId);
+        if (shortlistItems.size() < 1) {
+            throw new ResourceNotFoundException("ShortlistItem", "submissionId-userId", String.join("-", submissionId, userId));
+        }
+
+        ShortlistItem shortlistItem = shortlistItems.get(0);
+        shortlistItem.getSubmissions().remove(submission);
+        if (shortlistItem.getSubmissions().isEmpty()) {
+            shortlistItemRepository.delete(shortlistItem);
+            log.debug("Deleted empty shortlist item: {}", shortlistItem.getId());
+        } else {
+            shortlistItemRepository.save(shortlistItem);
+            log.debug("Removed submission {} from shortlist item {}", submissionId, shortlistItem.getId());
+        }
     }
 
     private Shortlist findShortlistById(String shortlistId) {
@@ -91,7 +135,7 @@ public class ShortlistService {
     @Transactional(readOnly = true)
     public Page<ShortlistItemResponse> listShortlistItems(String projectId, String keyword, Pageable pageable) {
         String workspaceId = ContextUtils.get().getWorkspaceId();
-        String userId = null;
+        String userId = ContextUtils.get(ContextsConstant.USER_ID, String.class, null);
 
         // First get the user's shortlist for this project
         Shortlist shortlist = shortlistRepository.findByWorkspaceIdAndProjectIdAndOwnerId(workspaceId, projectId, userId)
@@ -101,10 +145,10 @@ public class ShortlistService {
             return Page.empty(pageable);
         }
 
-        return shortlistItemRepository.findShortlistItems(
+        return shortlistItemRepository.findAll(
                 buildShortlistItemSpecification(shortlist.getId(), keyword),
                 pageable
-        ).map(this::convertItemToResponse);
+        ).map(t -> ShortlistItemResponse.from(t, userId));
     }
 
     private Specification<ShortlistItem> buildShortlistItemSpecification(String shortlistId, String keyword) {
@@ -138,37 +182,49 @@ public class ShortlistService {
             }
 
             // Sort by order
-            query.orderBy(cb.asc(root.get("order")));
+            query.orderBy(cb.asc(root.get("sortOrder")));
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
 
-    private ShortlistResponse convertToResponse(Shortlist shortlist) {
-        return ShortlistResponse.builder()
-                .id(shortlist.getId())
-                .workspaceId(shortlist.getWorkspaceId())
-                .name(shortlist.getName())
-                .description(shortlist.getDescription())
-                .projectId(shortlist.getProjectId())
-//                .roleId(shortlist.getRole().getId())
-                .items(shortlist.getItems().stream()
-                        .sorted(Comparator.comparing(ShortlistItem::getSortOrder))
-                        .map(this::convertItemToResponse)
-                        .collect(Collectors.toList()))
-                .createdBy(shortlist.getCreatedBy())
-                .createdAt(shortlist.getCreatedAt())
-                .updatedAt(shortlist.getUpdatedAt())
-                .build();
-    }
+    public String shareShortlist(ShareShortlistRequest request, String userId) {
+        List<Submission> submissions = submissionRepository.findAllById(request.getSubmissionIds());
+        Submission tempSubmission = submissions.get(0);
 
-    private ShortlistItemResponse convertItemToResponse(ShortlistItem item) {
-        return ShortlistItemResponse.builder()
-                .id(item.getId())
-//                .notes(item.getNotes())
-                .order(item.getSortOrder())
-//                .addedBy(item.getAddedBy())
-//                .addedAt(item.getAddedAt())
-                .build();
+        Shortlist shortlist = shortlistRepository.save(
+                Shortlist.builder()
+                        .workspaceId(ContextUtils.get().getWorkspaceId())
+                        .projectId(tempSubmission.getApplication().getProject().getId())
+                        .ownerId(request.getRecipientEmail())
+                        .ownerType(OwnerType.EXTERNAL)
+                        .name("ShareShortlist")
+                        .createdBy(userId)
+                        .build());
+
+        //group submissions by application
+        Map<Application, List<Submission>> submissionMap = submissions.stream()
+                .collect(Collectors.groupingBy(submission -> submission.getApplication()));
+
+        AtomicInteger sortOrder = new AtomicInteger(1);
+        submissionMap.forEach((k, v) -> {
+                    ShortlistItem newItem = ShortlistItem.builder()
+                            .application(k)
+                            .shortlist(shortlist)
+                            .submissions(v)
+                            .createdBy(userId)
+                            .sortOrder(sortOrder.getAndIncrement())
+                            .build();
+                    shortlistItemRepository.save(newItem);
+                });
+
+        GuestCodeResponse response = identityClient.generateGuestCode(GuestCodeRequest.builder()
+                        .expiryHours(request.getExpiresInDays() * 24)
+                        .guestEmail(userId)
+                        .resourceId(shortlist.getId())
+                        .ownerEmail(request.getRecipientEmail())
+                .build()).getBody();
+        
+        return guestLoginUri + "?guest_code=" + response.getGuestCode() + "&resource_id=" + shortlist.getId();
     }
 }

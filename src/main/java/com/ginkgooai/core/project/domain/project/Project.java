@@ -1,7 +1,7 @@
 package com.ginkgooai.core.project.domain.project;
 
 import com.ginkgooai.core.project.domain.role.ProjectRole;
-import com.ginkgooai.core.project.dto.request.ProjectRequest;
+import com.ginkgooai.core.project.dto.request.ProjectCreateRequest;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -57,7 +57,7 @@ public class Project {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    public Project(ProjectRequest request, String workspaceId, String userId) {
+    public Project(ProjectCreateRequest request, String workspaceId, String userId) {
         this.name = request.getName();
         this.description = request.getDescription();
         this.plotLine = request.getPlotLine();

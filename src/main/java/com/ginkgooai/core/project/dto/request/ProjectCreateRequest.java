@@ -5,11 +5,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.util.List;
-import java.util.Set;
 
 @Data
 @Schema(description = "Request payload for creating or updating a project")
-public class ProjectRequest {
+public class ProjectCreateRequest {
 
     @Schema(description = "Name of the project", example = "Summer Feature 2025")
     private String name;

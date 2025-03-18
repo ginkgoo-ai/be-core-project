@@ -25,7 +25,11 @@ public class SubmissionResponse {
     @Schema(description = "Role identifier for which this submission was made",
             example = "role-789")
     private String roleId;
-    
+
+    @Schema(description = "Name of the submitted video", 
+            example = "My Submission")
+    private String videoName;
+
     // Video related fields
     @Schema(description = "URL of the submitted video",
             example = "https://storage.example.com/videos/submission-123.mp4")
@@ -73,6 +77,7 @@ public class SubmissionResponse {
                 .id(submission.getId())
                 .projectId(submission.getApplication().getProject().getId())
                 .roleId(submission.getApplication().getRole().getId())
+                .videoName(submission.getVideoName())
                 .videoUrl(submission.getVideoUrl())
                 .videoThumbnailUrl(submission.getVideoThumbnailUrl())
                 .videoDuration(submission.getVideoDuration())

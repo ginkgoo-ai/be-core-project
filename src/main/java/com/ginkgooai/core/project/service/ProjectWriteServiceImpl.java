@@ -34,7 +34,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
 
     @Override
     @Transactional
-    public Project createProject(ProjectRequest request, String workspaceId, String userId) {
+    public Project createProject(ProjectCreateRequest request, String workspaceId, String userId) {
         log.debug("Creating new project with request: {}", request);
 
         validateProjectRequest(request);
@@ -65,7 +65,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         return savedProject;
     }
 
-    private void validateProjectRequest(ProjectRequest request) {
+    private void validateProjectRequest(ProjectCreateRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("Project request cannot be null");
         }
@@ -76,7 +76,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
 
     @Override
     @Transactional
-    public Project updateProject(String projectId, ProjectRequest request, String workspaceId) {
+    public Project updateProject(String projectId, ProjectUpdateRequest request, String workspaceId) {
         Project project = projectRepository.findByIdAndWorkspaceId(projectId, workspaceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id&workspaceId", projectId + ":" + workspaceId));
 
