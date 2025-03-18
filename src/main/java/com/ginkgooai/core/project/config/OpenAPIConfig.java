@@ -17,7 +17,8 @@ public class OpenAPIConfig {
 
     private static final String COOKIE_AUTH_NAME = "cookieAuth";
     private static final String WORKSPACE_HEADER = "x-workspace-id";
-    @Value("${core-gateway-public-uri}")
+    
+    @Value("${AUTH_CLIENT}")
     private String gatewayUri;
 
     @Bean
