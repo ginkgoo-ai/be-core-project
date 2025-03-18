@@ -30,7 +30,6 @@ import java.util.List;
 @Tag(name = "Submission Management", description = "Endpoints for managing video submissions and their comments")
 public class SubmissionController {
 
-    private final RedisTemplate<String, String> redisTemplate;
     private final SubmissionService submissionService;
 
     @Operation(summary = "Create new submission",
@@ -51,9 +50,7 @@ public class SubmissionController {
             @Parameter(description = "Submission details", required = true)
             @Valid @RequestBody SubmissionCreateRequest request,
             @AuthenticationPrincipal Jwt jwt) {
-        String key = RedisKey.WORKSPACE_CONTEXT_KEY_PREFIX + jwt.getSubject();
-        String workspaceId = redisTemplate.opsForValue().get(key);
-        return ResponseEntity.ok(submissionService.createSubmission(workspaceId, id, request, jwt.getSubject()));
+        return ResponseEntity.ok(submissionService.createSubmission(ContextUtils.get().getWorkspaceId(), id, request, jwt.getSubject()));
     }
 
     @Operation(summary = "Get submission details",
@@ -70,7 +67,7 @@ public class SubmissionController {
             @Parameter(description = "ID of the submission to retrieve", required = true,
                     example = "submission_123")
             @PathVariable String submissionId) {
-        return ResponseEntity.ok(submissionService.getSubmission(ContextUtils.get().getWorkspaceId(), submissionId));
+        return ResponseEntity.ok(submissionService.getSubmission(submissionId));
     }
 
     @Operation(summary = "Add comment to submission",

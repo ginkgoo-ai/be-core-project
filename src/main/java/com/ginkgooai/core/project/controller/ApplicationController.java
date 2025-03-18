@@ -1,6 +1,5 @@
 package com.ginkgooai.core.project.controller;
 
-import com.ginkgooai.core.common.constant.RedisKey;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.domain.application.Application;
 import com.ginkgooai.core.project.domain.application.ApplicationStatus;
@@ -19,17 +18,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
-import static com.ginkgooai.core.common.constant.ContextsConstant.USER_ID;
 
 @RestController
 @RequestMapping("/applications")
@@ -81,9 +79,13 @@ public class ApplicationController {
             @RequestParam(required = false) String keyword,
             @Parameter(description = "Filter by application status")
             @RequestParam(required = false) ApplicationStatus status,
-            @ParameterObject Pageable pageable,
+            @Parameter(description = "Page number (zero-based)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "10") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Sort direction (ASC/DESC)", example = "DESC") @RequestParam(defaultValue = "DESC") String sortDirection,
+            @Parameter(description = "Sort field (e.g., updatedAt)", example = "updatedAt") @RequestParam(defaultValue = "updatedAt") String sortField,
             @AuthenticationPrincipal Jwt jwt) {
-
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
+        Pageable pageable = PageRequest.of(page, size, sort);
         return ResponseEntity.ok(applicationService.listApplications(ContextUtils.get().getWorkspaceId(), jwt.getSubject(), projectId, roleId, keyword, status, pageable));
     }
 
@@ -97,7 +99,6 @@ public class ApplicationController {
             @Parameter(description = "Comment content", example = "Excellent performance in the audition")
             @RequestParam String content,
             @AuthenticationPrincipal Jwt jwt) {
-        String key = RedisKey.WORKSPACE_CONTEXT_KEY_PREFIX + jwt.getSubject();
         return ResponseEntity.ok(applicationService.addComment(ContextUtils.get().getWorkspaceId(), id, jwt.getSubject(), content));
     }
 
