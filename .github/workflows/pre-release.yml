@@ -20,7 +20,6 @@ jobs:
         run: |
           repo_name=$(echo ${{github.repository}} | awk -F '/' '{print $2}')
           echo "repo_name=$repo_name" >> $GITHUB_OUTPUT
-          echo "---- Current repo: $repo_name"
         shell: bash
 
 
@@ -39,6 +38,5 @@ jobs:
 
       - name: deploy to railway environment - staging
         run: |
-          echo "Deployed to Railway - staging environment"
           railway up --service=${{ env.RAILWAY_SERVICE_NAME }} --env=${{ env.RAILWAY_ENV_NAME }} --no-logs
 
