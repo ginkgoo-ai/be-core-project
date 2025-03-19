@@ -9,6 +9,8 @@ jobs:
   get-some-vars:
     name: Get some vars
     runs-on: ubuntu-latest
+    outputs:
+      repo_name: ${{ steps.get_repo_name.outputs.repo_name }}
     steps:
       - name: Dump Github context
         env:
