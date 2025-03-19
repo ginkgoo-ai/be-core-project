@@ -1,0 +1,38 @@
+# Deploy to Railway staging environment after creating a pre-release on Github
+name: Deploy to Railway - staging environment
+
+on: 
+  release: 
+    types: [published]
+
+jobs:
+  deploy-to-railway:
+    name: Deploy to Railway - staging environment
+    runs-on: ubuntu-latest
+    container: ghcr.io/railwayapp/cli:latest     
+    steps:
+      - name: Dump Github context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "GITHUB_CONTEXT: $GITHUB_CONTEXT"
+
+      - id: get_repo_name
+        run: |
+          repo_name=$(echo ${{github.repository}} | awk -F '/' '{print $2}')
+          echo "repo_name=$repo_name" >> $GITHUB_OUTPUT
+          echo "---- Current repo: $repo_name"
+        shell: bash
+
+      - name: Checkout Self
+        uses: actions/checkout@v4
+
+      - name: deploy to railway environment - staging
+        env:
+          RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+          RAILWAY_SERVICE_NAME: ${{ steps.get_repo_name.outputs.repo_name }}
+          RAILWAY_ENV_NAME: "staging"
+        run: |
+          echo "Deployed to Railway - staging environment"
+          railway up --service=${{ env.RAILWAY_SERVICE_NAME }} --env=${{ env.RAILWAY_ENV_NAME }} --no-logs
+
