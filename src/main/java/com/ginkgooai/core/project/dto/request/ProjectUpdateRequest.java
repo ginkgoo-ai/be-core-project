@@ -22,4 +22,7 @@ public class ProjectUpdateRequest {
 
     @Schema(description = "Producer of the project", example = "Mark Ronson")
     private String producer;
+
+    @Schema(description = "Project poster Url", example = "www.example.com/poster.jpg")
+    private String posterUrl;
 }

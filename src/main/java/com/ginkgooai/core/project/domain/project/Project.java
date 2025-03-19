@@ -49,6 +49,8 @@ public class Project {
 
     private String workspaceId;
 
+    private String posterUrl;
+
     private String createdBy;
 
     @CreationTimestamp
@@ -62,12 +64,13 @@ public class Project {
         this.description = request.getDescription();
         this.plotLine = request.getPlotLine();
         this.status = ProjectStatus.DRAFTING;
+        this.posterUrl = request.getPosterUrl();
         this.workspaceId = workspaceId;
         this.createdBy = userId;
         this.createdAt = LocalDateTime.now();
     }
 
-    public void updateDetails(String name, String description, String plotLine, ProjectStatus status) {
+    public void updateDetails(String name, String description, String plotLine, ProjectStatus status, String posterUrl) {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Project name cannot be null or empty");
         }
@@ -77,6 +80,7 @@ public class Project {
         if (status != null) {
             this.status = status;
         }
+        this.posterUrl = posterUrl;
         this.lastActivityAt = LocalDateTime.now();
     }
 
