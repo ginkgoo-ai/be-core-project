@@ -46,7 +46,7 @@ jobs:
             exit 1
           fi
 
-      - name: Checkout code
+      - name: Checkout Self
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -55,46 +55,23 @@ jobs:
         id: create_pre_release
         uses: softprops/action-gh-release@v1
         with:
-          draft: false
+          name: "Pre-release ${{ needs.get-some-vars.outputs.tag }}"
           prerelease: true
           generate_release_notes: true
 
-      # - name: Create Pre-release
-      #   run: |
-      #     gh release create ${{ needs.get-some-vars.outputs.tag }} \
-      #       --prerelease \
-      #       --title "Pre-release ${{ needs.get-some-vars.outputs.tag }}" \
-      #       --generate-notes
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  deploy-to-railway:
+    name: Deploy to Railway - staging environment
+    needs: [get-some-vars,create-pre-release]
+    runs-on: ubuntu-latest
+    container: ghcr.io/railwayapp/cli:latest
+    env:
+      SVC_ID: ${{ needs.get-some-vars.outputs.repo_name }}
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    steps:
+      - name: Checkout Self
+        uses: actions/checkout@v4
 
-
-      # - name: Create Pre-release
-      #   id: create_pre_release
-      #   run: |
-      #     echo "Creating Pre-release for tag ${{ needs.get-some-vars.outputs.tag }}"
-      #     # Create Pre-release here
-      #     # For example, create a GitHub release
-      #     # https://developer.github.com/v3/repos/releases/#create-a-release
-      #     # https://developer.github.com/v3/repos/releases/#upload-a-release-asset
-      #     # https://developer.github.com/v3/repos/releases/#edit-a-release
-      #     # https://developer.github.com/v3/repos/releases/#delete-a-release
-      #     # https://developer.github.com/v3/repos/releases/#delete-a-release-asset
-      #     # https://developer.github.com/v3/repos/releases/#get-a-release-by-tag-name
-      #     # https://developer.github.com/v3/repos/releases/#list-releases
-      #     # https://developer.github.com/v3/repos/releases/#get-a-release-asset
-      #     # https://developer.github.com/v3/repos/releases/#list-release-assets
-
-
-  # deploy-to-railway:
-  #   name: Deploy to Railway - staging environment
-  #   needs: [get-some-vars,create-pre-release]
-  #   runs-on: ubuntu-latest
-  #   container: ghcr.io/railwayapp/cli:latest
-  #   env:
-  #     SVC_ID: ${{ needs.get-some-vars.outputs.repo_name }}
-  #     RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - run: railway up --service=${{ env.SVC_ID }}
+      - name: deploy to railway environment - staging
+        run: |
+          railway up --service=${{ env.SVC_ID }}
 
