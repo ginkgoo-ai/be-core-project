@@ -39,6 +39,7 @@ jobs:
 
       - name: deploy to railway environment - staging
         run: |
-          railway up --service=${{ env.RAILWAY_SERVICE_NAME }}     
+          railway up --service=${{ env.RAILWAY_SERVICE_NAME }}
+
 
 
