@@ -21,19 +21,16 @@ jobs:
 
       - id: get_tag_version
         run: |
-          current_tag=$(echo $GITHUB_REF | sed 's/refs\/tags\///g')
-          echo "---- current_tag: $current_tag"
-          echo "CURRENT_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-          CURRENT_TAG=${GITHUB_REF#refs/tags/}
-          echo "---- CURRENT_TAG: $CURRENT_TAG"
-          echo "tag=$current_tag" >> $GITHUB_OUTPUT
+          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          echo "---- Current tag: ${GITHUB_REF#refs/tags/}"
         shell: bash
 
       - id: get_repo_name
         run: |
           repo_name=$(echo ${{github.repository}} | awk -F '/' '{print $2}')
           echo "repo_name=$repo_name" >> $GITHUB_OUTPUT
-
+          echo "---- Current repo: $repo_name"
+        shell: bash
 
   create-pre-release:
     name: Create Pre-release
@@ -54,22 +51,22 @@ jobs:
         with:
           fetch-depth: 0
 
-      # - name: Create Pre-release
-      #   id: create_pre_release
-      #   uses: softprops/action-gh-release@v1
-      #   with:
-      #     draft: false
-      #     prerelease: true
-      #     generate_release_notes: true
-
       - name: Create Pre-release
-        run: |
-          gh release create ${{ needs.get-some-vars.outputs.tag }} \
-            --prerelease \
-            --title "Pre-release ${{ needs.get-some-vars.outputs.tag }}" \
-            --generate-notes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        id: create_pre_release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: false
+          prerelease: true
+          generate_release_notes: true
+
+      # - name: Create Pre-release
+      #   run: |
+      #     gh release create ${{ needs.get-some-vars.outputs.tag }} \
+      #       --prerelease \
+      #       --title "Pre-release ${{ needs.get-some-vars.outputs.tag }}" \
+      #       --generate-notes
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
       # - name: Create Pre-release
