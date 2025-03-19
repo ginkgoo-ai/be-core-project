@@ -54,13 +54,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Create Pre-release
-        id: create_pre_release
-        uses: softprops/action-gh-release@v1
-        with:
-          draft: false
-          prerelease: true
-          generate_release_notes: true
+      # - name: Create Pre-release
+      #   id: create_pre_release
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     draft: false
+      #     prerelease: true
+      #     generate_release_notes: true
 
       - name: Create Pre-release
         run: |
