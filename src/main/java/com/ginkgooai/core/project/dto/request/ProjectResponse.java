@@ -55,6 +55,9 @@ public class ProjectResponse {
     @Schema(description = "Workspace Id of this project", example = "work123")
     private String workspaceId;
 
+    @Schema(description = "Project poster Url", example = "www.example.com/poster.jpg")
+    private String posterUrl;
+
     public static ProjectResponse from(Project project) {
         ProjectResponse response = new ProjectResponse();
         response.setId(project.getId());
@@ -70,6 +73,7 @@ public class ProjectResponse {
         response.setNdaIds(project.getNdas().stream().map(ProjectNda::getId).collect(Collectors.toSet()));
         response.setMemberIds(project.getMembers().stream().map(ProjectMember::getId).collect(Collectors.toSet()));
         response.setWorkspaceId(project.getWorkspaceId());
+        response.setPosterUrl(project.getPosterUrl());
         return response;
     }
     

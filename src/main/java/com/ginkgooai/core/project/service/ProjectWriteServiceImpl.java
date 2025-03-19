@@ -80,8 +80,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         Project project = projectRepository.findByIdAndWorkspaceId(projectId, workspaceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id&workspaceId", projectId + ":" + workspaceId));
 
-        project.updateDetails(request.getName(), request.getDescription(), request.getPlotLine(), request.getStatus());
-        
+        project.updateDetails(request.getName(), request.getDescription(), request.getPlotLine(), request.getStatus(), request.getPosterUrl());
 
         return projectRepository.save(project);
     }

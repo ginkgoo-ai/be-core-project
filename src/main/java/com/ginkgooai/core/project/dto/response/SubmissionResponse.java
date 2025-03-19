@@ -22,6 +22,10 @@ public class SubmissionResponse {
             example = "project-456")
     private String projectId;
 
+    @Schema(description = "Application identifier associated with this submission",
+            example = "application-456")
+    private String applicationId;
+
     @Schema(description = "Role identifier for which this submission was made",
             example = "role-789")
     private String roleId;
@@ -76,6 +80,7 @@ public class SubmissionResponse {
         return SubmissionResponse.builder()
                 .id(submission.getId())
                 .projectId(submission.getApplication().getProject().getId())
+                .applicationId(submission.getApplication().getId())
                 .roleId(submission.getApplication().getRole().getId())
                 .videoName(submission.getVideoName())
                 .videoUrl(submission.getVideoUrl())
