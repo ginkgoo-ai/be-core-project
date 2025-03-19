@@ -12,5 +12,7 @@ public class GuestCodeRequest {
     
     private String guestEmail;
     
+    private String redirectUrl;
+    
     private int expiryHours;
 }
