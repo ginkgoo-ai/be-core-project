@@ -16,6 +16,10 @@ public class ShortlistItemResponse {
     @Schema(description = "Unique identifier of the shortlist item", 
             example = "sli_12345")
     private String id;
+
+    @Schema(description = "Application identifier associated with this submission",
+            example = "application-456")
+    private String applicationId;
     
     @Schema(description = "Submission lists")
     private List<SubmissionResponse> submissions;
@@ -34,6 +38,7 @@ public class ShortlistItemResponse {
     public static ShortlistItemResponse from(ShortlistItem shortlistItem, String userId) {
         return ShortlistItemResponse.builder()
                 .id(shortlistItem.getId())
+                .applicationId(shortlistItem.getApplication().getId())
                 .submissions(shortlistItem.getSubmissions().stream().map(t -> SubmissionResponse.from(t, userId)).toList())
                 .order(shortlistItem.getSortOrder())
                 .createdBy(shortlistItem.getCreatedBy())
