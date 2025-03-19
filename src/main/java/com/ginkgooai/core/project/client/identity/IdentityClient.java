@@ -10,10 +10,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.List;
+
 @FeignClient(name = "identity-service", url="${core-identity-uri}", configuration = FeignConfig.class)
 public interface IdentityClient {
     @GetMapping("/users/{id}")
-    UserInfo getUserById(@PathVariable String id);
+    ResponseEntity<UserInfo> getUserById(@PathVariable String id);
+
+    @GetMapping("/users")
+    ResponseEntity<List<UserInfo>> getUsersByIds(List<String> userIds);
     
     @GetMapping("/users/validate/{id}")
     boolean validateUser(@PathVariable String id);

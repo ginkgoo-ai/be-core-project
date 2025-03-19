@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.dto.response;
 
+import com.ginkgooai.core.project.client.identity.dto.UserInfo;
 import com.ginkgooai.core.project.domain.application.SubmissionComment;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -24,6 +25,12 @@ public class SubmissionCommentResponse {
             example = "user-123")
     private String createdBy;
 
+    @Schema(description = "User's name")
+    private String userName;
+
+    @Schema(description = "User's avatar URL")
+    private String userPicture;
+
     @Schema(description = "Timestamp when the comment was created",
             example = "2025-03-03T02:09:57.713Z")
     private LocalDateTime createdAt;
@@ -33,11 +40,13 @@ public class SubmissionCommentResponse {
     private LocalDateTime updatedAt;
 
     @Schema(description = "Converts a SubmissionComment entity to SubmissionCommentResponse DTO")
-    public static SubmissionCommentResponse from(SubmissionComment comment) {
+    public static SubmissionCommentResponse from(SubmissionComment comment, UserInfo userInfo) {
         return SubmissionCommentResponse.builder()
                 .id(comment.getId())
                 .content(comment.getContent())
                 .createdBy(comment.getCreatedBy())
+                .userName(userInfo.getName())
+                .userPicture(userInfo.getPicture())
                 .createdAt(comment.getCreatedAt())
                 .updatedAt(comment.getUpdatedAt())
                 .build();

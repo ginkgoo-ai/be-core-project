@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.dto.response;
 
+import com.ginkgooai.core.project.client.identity.dto.UserInfo;
 import com.ginkgooai.core.project.domain.application.CommentType;
 import com.ginkgooai.core.project.domain.application.Submission;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -8,6 +9,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Data
@@ -76,7 +78,10 @@ public class SubmissionResponse {
     private List<SubmissionCommentResponse> publicComments;
 
     @Schema(description = "Converts a Submission entity to SubmissionResponse DTO")
-    public static SubmissionResponse from(Submission submission, String userId) {
+    public static SubmissionResponse from(Submission submission, List<UserInfo> users, String userId) {
+        Map<String, UserInfo> userInfoMap = users.stream()
+                .collect(Collectors.toMap(UserInfo::getId, user -> user));
+        
         return SubmissionResponse.builder()
                 .id(submission.getId())
                 .projectId(submission.getApplication().getProject().getId())
@@ -92,11 +97,11 @@ public class SubmissionResponse {
                 .updatedAt(submission.getUpdatedAt())
                 .internalComments(submission.getComments().stream()
                         .filter(comment -> CommentType.INTERNAL.equals(comment.getType()))
-                        .map(SubmissionCommentResponse::from)
+                        .map(t -> SubmissionCommentResponse.from(t, userInfoMap.get(t.getCreatedBy())))
                         .toList())
                 .publicComments(userId.equals(submission.getCreatedBy()) ? submission.getComments().stream()
                         .filter(comment -> CommentType.PUBLIC.equals(comment.getType()))
-                        .map(SubmissionCommentResponse::from)
+                        .map(t -> SubmissionCommentResponse.from(t, userInfoMap.get(t.getCreatedBy())))
                         .toList() : null)
                 .build();
     }

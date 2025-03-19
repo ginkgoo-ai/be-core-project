@@ -97,6 +97,7 @@ public class ShortlistService {
                             .build();
                     return shortlistItemRepository.save(newItem);
                 });
+        application.setStatus(ApplicationStatus.SHORTLISTED);
 
         // Add submission to existing shortlist item if not already present
         if (!shortlistItem.getSubmissions().contains(submission)) {

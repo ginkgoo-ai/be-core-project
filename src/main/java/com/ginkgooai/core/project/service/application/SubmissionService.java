@@ -2,9 +2,12 @@ package com.ginkgooai.core.project.service.application;
 
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.utils.ContextUtils;
+import com.ginkgooai.core.project.client.identity.IdentityClient;
+import com.ginkgooai.core.project.client.identity.dto.UserInfo;
 import com.ginkgooai.core.project.client.storage.StorageClient;
 import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
 import com.ginkgooai.core.project.domain.application.Application;
+import com.ginkgooai.core.project.domain.application.ShortlistItem;
 import com.ginkgooai.core.project.domain.application.Submission;
 import com.ginkgooai.core.project.domain.application.SubmissionComment;
 import com.ginkgooai.core.project.dto.request.CommentCreateRequest;
@@ -12,16 +15,16 @@ import com.ginkgooai.core.project.dto.request.SubmissionCreateRequest;
 import com.ginkgooai.core.project.dto.response.SubmissionCommentResponse;
 import com.ginkgooai.core.project.dto.response.SubmissionResponse;
 import com.ginkgooai.core.project.repository.ApplicationRepository;
+import com.ginkgooai.core.project.repository.ShortlistItemRepository;
 import com.ginkgooai.core.project.repository.SubmissionCommentRepository;
 import com.ginkgooai.core.project.repository.SubmissionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.ginkgooai.core.common.constant.ContextsConstant.USER_ID;
@@ -33,10 +36,14 @@ public class SubmissionService {
     private final ApplicationRepository applicationRepository;
 
     private final SubmissionRepository submissionRepository;
+    
+    private final ShortlistItemRepository shortlistItemRepository;
 
     private final SubmissionCommentRepository submissionCommentRepository;
 
     private final StorageClient storageClient;
+    
+    private final IdentityClient identityClient;
 
     @Transactional
     public SubmissionResponse createSubmission(String workspaceId, 
@@ -64,13 +71,37 @@ public class SubmissionService {
                 .build();
         Submission savedSubmission = submissionRepository.save(submission);
 
-        return SubmissionResponse.from(savedSubmission, userId);
+        return SubmissionResponse.from(savedSubmission, Collections.EMPTY_LIST, userId);
     }
 
     @Transactional(readOnly = true)
     public SubmissionResponse getSubmission(String submissionId) {
         Submission submission = findSubmissionById(submissionId);
-        return SubmissionResponse.from(submission, ContextUtils.get(USER_ID, String.class, null));
+        return SubmissionResponse.from(submission, Collections.EMPTY_LIST, ContextUtils.get(USER_ID, String.class, null));
+    }
+
+    @Transactional
+    public void deleteSubmission(String submissionId, String userId) {
+        Submission submission = findSubmissionById(submissionId);
+
+        if (!submission.getCreatedBy().equals(userId)) {
+            throw new AccessDeniedException("Not authorized to delete this submission");
+        }
+
+        // 删除相关的 shortlist items 引用
+        List<ShortlistItem> shortlistItems = shortlistItemRepository.findAllBySubmissionId(submissionId, userId);
+        for (ShortlistItem item : shortlistItems) {
+            item.getSubmissions().remove(submission);
+            if (item.getSubmissions().isEmpty()) {
+                shortlistItemRepository.delete(item);
+            } else {
+                shortlistItemRepository.save(item);
+            }
+        }
+
+        submissionRepository.delete(submission);
+
+        log.info("Deleted submission: {}", submissionId);
     }
 
     public SubmissionResponse addComment(String submissionId, String workspaceId,
@@ -94,7 +125,9 @@ public class SubmissionService {
         submission.getComments().add(comment);
         submissionRepository.save(submission);
 
-        return SubmissionResponse.from(submission, ContextUtils.get(USER_ID, String.class, null));
+        List<UserInfo> users = identityClient.getUsersByIds(submission.getComments().stream().map(SubmissionComment::getCreatedBy).distinct().toList()).getBody();
+
+        return SubmissionResponse.from(submission, users, ContextUtils.get(USER_ID, String.class, null));
     }
 
     @Transactional
@@ -112,9 +145,12 @@ public class SubmissionService {
     public List<SubmissionCommentResponse> listComments(String submissionId) {
         Submission submission = findSubmissionById(submissionId);
 
+        Map<String, UserInfo> usersMap = identityClient.getUsersByIds(submission.getComments().stream().map(SubmissionComment::getCreatedBy).distinct().toList())
+                .getBody().stream().collect(Collectors.toMap(UserInfo::getId, user -> user));
+
         return submission.getComments().stream()
                 .sorted(Comparator.comparing(SubmissionComment::getCreatedAt))
-                .map(SubmissionCommentResponse::from)
+                .map(t -> SubmissionCommentResponse.from(t, usersMap.get(t.getCreatedBy())))
                 .collect(Collectors.toList());
     }
 

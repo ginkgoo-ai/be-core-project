@@ -66,6 +66,26 @@ public class SubmissionController {
             @PathVariable String submissionId) {
         return ResponseEntity.ok(submissionService.getSubmission(submissionId));
     }
+    
+    @Operation(summary = "Delete submission",
+            description = "Deletes a submission and its associated comments")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204",
+                    description = "Submission successfully deleted"),
+            @ApiResponse(responseCode = "404",
+                    description = "Submission not found"),
+            @ApiResponse(responseCode = "403",
+                    description = "Not authorized to delete submission")
+    })
+    @DeleteMapping("/{submissionId}")
+    public ResponseEntity<Void> deleteSubmission(
+            @Parameter(description = "ID of the submission to delete", required = true,
+                    example = "submission_123")
+            @PathVariable String submissionId,
+            @AuthenticationPrincipal Jwt jwt) {
+        submissionService.deleteSubmission(submissionId, jwt.getSubject());
+        return ResponseEntity.noContent().build();
+    }
 
     @Operation(summary = "Add comment to submission",
             description = "Adds a new comment to an existing submission")

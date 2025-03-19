@@ -187,6 +187,7 @@ public class ApplicationService {
                 .build();
 
         application.getComments().add(comment);
+        application.setStatus(ApplicationStatus.REVIEWED);
         return applicationRepository.save(application).getComments().stream()
                 .map(ApplicationCommentResponse::from)
                 .toList();
@@ -204,6 +205,8 @@ public class ApplicationService {
 
         ApplicationNote savedNote = applicationNoteRepository.findById(note.getId()).get();
         application.getNotes().add(savedNote);
+
+        List<String> userIds = application.getNotes().stream().filter(t -> !ObjectUtils.isEmpty(t.getCreatedBy())).map(ApplicationNote::getCreatedBy).distinct().toList();
         
         return application.getNotes().stream()
                 .map(ApplicationNoteResponse::from)
