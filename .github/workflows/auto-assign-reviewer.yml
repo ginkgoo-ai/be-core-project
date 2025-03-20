@@ -31,7 +31,7 @@ jobs:
           curl -L -s \
             -X POST \
             -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: Bearer ${{ secrets.MANAGE_PR_PAT }}" \
             "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/requested_reviewers" \
             -d "{\"team_reviewers\":[\"$reviewer_team\"]}"
 
@@ -40,6 +40,6 @@ jobs:
           curl -L -s \
               -X POST \
               -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Authorization: Bearer ${{ secrets.MANAGE_PR_PAT }}" \
               "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/assignees" \
               -d '{"assignees":["${{ github.actor }}"]}'
