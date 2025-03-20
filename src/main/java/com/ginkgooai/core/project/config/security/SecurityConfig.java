@@ -32,6 +32,9 @@ public class SecurityConfig {
                                 "/api/project/swagger-ui/**",
                                 "/webjars/**"
                         ).permitAll()
+                        .requestMatchers(
+                                "/health"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
