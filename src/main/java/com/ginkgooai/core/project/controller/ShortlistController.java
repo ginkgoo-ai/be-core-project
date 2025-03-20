@@ -32,8 +32,7 @@ public class ShortlistController {
             description = "Adds a submission to the user's shortlist with optional notes")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200",
-                    description = "Item added to shortlist successfully",
-                    content = @Content(schema = @Schema(implementation = ShortlistResponse.class))),
+                    description = "Item added to shortlist successfully"),
             @ApiResponse(responseCode = "400",
                     description = "Invalid input parameters"),
             @ApiResponse(responseCode = "404",
