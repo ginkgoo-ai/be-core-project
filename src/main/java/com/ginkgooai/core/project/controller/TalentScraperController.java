@@ -6,7 +6,6 @@ import com.ginkgooai.core.project.dto.TalentProfileData;
 import com.ginkgooai.core.project.dto.response.TalentProfileResponse;
 import com.ginkgooai.core.project.service.scraper.ImdbScraper;
 import com.ginkgooai.core.project.service.scraper.SpotlightScraper;
-import com.ginkgooai.core.project.service.application.TalentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,11 +15,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
@@ -45,8 +44,7 @@ public class TalentScraperController {
     public ResponseEntity<TalentProfileResponse> scrapeImdbProfile(
             @Parameter(description = "IMDB profile URL", required = true, 
                     example = "https://www.imdb.com/name/nm0000614/")
-            @RequestParam String imdbUrl,
-            @AuthenticationPrincipal Jwt jwt) {
+            @RequestParam String imdbUrl) {
         try {
             TalentProfileMeta profile = imdbScraper.scrapeProfile(imdbUrl);
             return ResponseEntity.ok(TalentProfileResponse.fromTalentProfileData(profile.getData()));

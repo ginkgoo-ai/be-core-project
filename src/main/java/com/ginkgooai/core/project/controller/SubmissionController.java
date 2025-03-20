@@ -45,9 +45,8 @@ public class SubmissionController {
     })
     @PostMapping
     public ResponseEntity<SubmissionResponse> createSubmission(
-            @Valid @RequestBody SubmissionCreateRequest request,
-            @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(submissionService.createSubmission(ContextUtils.get().getWorkspaceId(), request, jwt.getSubject()));
+            @Valid @RequestBody SubmissionCreateRequest request) {
+        return ResponseEntity.ok(submissionService.createSubmission(ContextUtils.getWorkspaceId(), request, ContextUtils.getUserId()));
     }
 
     @Operation(summary = "Get submission details",
@@ -81,9 +80,8 @@ public class SubmissionController {
             @Parameter(description = "ID of the submission", required = true,
                     example = "submission_123")
             @PathVariable String submissionId,
-            @Valid @RequestBody CommentCreateRequest request,
-            @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(submissionService.addComment(submissionId, ContextUtils.get().getWorkspaceId(), request, jwt.getSubject()));
+            @Valid @RequestBody CommentCreateRequest request) {
+        return ResponseEntity.ok(submissionService.addComment(submissionId, ContextUtils.getWorkspaceId(), request, ContextUtils.getUserId()));
     }
 
     @Operation(summary = "Delete submission comment",
