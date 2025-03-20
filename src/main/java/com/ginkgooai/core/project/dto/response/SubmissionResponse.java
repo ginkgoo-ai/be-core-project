@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.dto.response;
 
+import com.ginkgooai.core.project.client.identity.dto.UserInfo;
 import com.ginkgooai.core.project.domain.application.CommentType;
 import com.ginkgooai.core.project.domain.application.Submission;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -7,12 +8,14 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Data
 @Builder
-@Schema(description = "Submission response containing submission details, video information, and comments")
+@Schema(description = "Submission response containing submission details and status")
 public class SubmissionResponse {
     @Schema(description = "Unique identifier of the submission",
             example = "123e4567-e89b-12d3-a456-426614174000")
@@ -30,7 +33,7 @@ public class SubmissionResponse {
             example = "role-789")
     private String roleId;
 
-    @Schema(description = "Name of the submitted video", 
+    @Schema(description = "Name of the submitted video",
             example = "My Submission")
     private String videoName;
 
@@ -55,7 +58,11 @@ public class SubmissionResponse {
             example = "PROCESSED",
             allowableValues = {"PROCESSING", "PROCESSED", "FAILED"})
     private String videoStatus;
-    
+
+    @Schema(description = "Whether this submission is shortlisted by current user",
+            example = "true")
+    private Boolean shortlisted;
+
     // Metadata
     @Schema(description = "User ID of the submission creator",
             example = "user-123")
@@ -68,15 +75,17 @@ public class SubmissionResponse {
     @Schema(description = "Timestamp when the submission was last updated",
             example = "2025-03-03T02:09:57.713Z")
     private LocalDateTime updatedAt;
-    
+
     @Schema(description = "List of internal comments associated with this submission")
     private List<SubmissionCommentResponse> internalComments;
 
     @Schema(description = "List of public comments associated with this submission")
     private List<SubmissionCommentResponse> publicComments;
 
-    @Schema(description = "Converts a Submission entity to SubmissionResponse DTO")
-    public static SubmissionResponse from(Submission submission, String userId) {
+    public static SubmissionResponse from(Submission submission, List<UserInfo> users, String userId) {
+        Map<String, UserInfo> userInfoMap = users.stream()
+                .collect(Collectors.toMap(UserInfo::getId, user -> user));
+
         return SubmissionResponse.builder()
                 .id(submission.getId())
                 .projectId(submission.getApplication().getProject().getId())
@@ -92,12 +101,22 @@ public class SubmissionResponse {
                 .updatedAt(submission.getUpdatedAt())
                 .internalComments(submission.getComments().stream()
                         .filter(comment -> CommentType.INTERNAL.equals(comment.getType()))
-                        .map(SubmissionCommentResponse::from)
+                        .map(t -> SubmissionCommentResponse.from(t, userInfoMap.get(t.getCreatedBy())))
                         .toList())
                 .publicComments(userId.equals(submission.getCreatedBy()) ? submission.getComments().stream()
                         .filter(comment -> CommentType.PUBLIC.equals(comment.getType()))
-                        .map(SubmissionCommentResponse::from)
+                        .map(t -> SubmissionCommentResponse.from(t, userInfoMap.get(t.getCreatedBy())))
                         .toList() : null)
+                .shortlisted(submission.getShortlistItems() != null &&
+                        submission.getShortlistItems().stream()
+                                .anyMatch(item -> item.getShortlist().getOwnerId().equals(userId)))
                 .build();
     }
+
+    public static SubmissionResponse from(Submission submission, String userId) {
+        return SubmissionResponse.from(submission, Collections.EMPTY_LIST, userId); 
+    }
+
 }
+
+        

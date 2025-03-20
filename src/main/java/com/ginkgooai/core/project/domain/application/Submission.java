@@ -31,6 +31,9 @@ public class Submission {
     @JoinColumn(name = "application_id")
     private Application application;
 
+    @ManyToMany(mappedBy = "submissions")
+    private List<ShortlistItem> shortlistItems;
+
     private String videoName;
     
     private String videoUrl;
