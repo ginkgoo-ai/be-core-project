@@ -45,10 +45,8 @@ public class TalentController {
     @PostMapping
     public ResponseEntity<TalentResponse> createTalent(
             @Parameter(description = "Talent creation details", required = true)
-            @Valid @RequestBody TalentRequest request,
-            @Parameter(description = "JWT token containing user information", hidden = true)
-            @AuthenticationPrincipal Jwt jwt) {
-        Talent talent = talentService.createTalentFromProfiles(request, ContextUtils.get().getWorkspaceId(), jwt.getSubject());
+            @Valid @RequestBody TalentRequest request) {
+        Talent talent = talentService.createTalentFromProfiles(request, ContextUtils.getWorkspaceId(), ContextUtils.getUserId());
         return ResponseEntity.ok(TalentResponse.from(talent));
     }
 
@@ -106,6 +104,6 @@ public class TalentController {
             @Parameter(description = "Pagination parameters")
             @ParameterObject Pageable pageable) {
 
-        return ResponseEntity.ok(talentService.searchTalents(ContextUtils.get().getWorkspaceId(), request, pageable));
+        return ResponseEntity.ok(talentService.searchTalents(ContextUtils.getWorkspaceId(), request, pageable));
     }
 }

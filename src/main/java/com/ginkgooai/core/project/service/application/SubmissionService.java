@@ -119,7 +119,7 @@ public class SubmissionService {
     }
 
     private Submission findSubmissionById(String id) {
-        String workspaceId = ContextUtils.get().getWorkspaceId();
+        String workspaceId = ContextUtils.getWorkspaceId(); // 修改为静态方法调用
 
         return submissionRepository.findOne(
                 (root, query, cb) -> cb.and(
