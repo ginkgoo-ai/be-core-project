@@ -11,6 +11,8 @@ public class UserInfo {
     private String sub;
     
     private String email;
+
+    private String name;
     
     private String firstName;
     
@@ -19,5 +21,8 @@ public class UserInfo {
     private boolean enabled;
     
     private Set<String> roles;
+
+    private String picture;
+
 }
 
