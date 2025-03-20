@@ -87,7 +87,7 @@ public class ShortlistController {
             @ApiResponse(responseCode = "403",
                     description = "Not authorized to modify shortlist")
     })
-    @DeleteMapping("/{shortlistId}/items/{submissionId}")
+    @DeleteMapping("/items/{submissionId}")
     public ResponseEntity<Void> removeShortlistItem(
             @Parameter(description = "ID of the shortlist", required = true,
                     example = "shortlist_123")
@@ -95,7 +95,7 @@ public class ShortlistController {
             @Parameter(description = "ID of the submission to remove", required = true,
                     example = "submission_456")
             @PathVariable String submissionId) {
-        shortlistService.removeSubmission(shortlistId, submissionId);
+        shortlistService.removeSubmission(submissionId);
         return ResponseEntity.noContent().build();
     }
 

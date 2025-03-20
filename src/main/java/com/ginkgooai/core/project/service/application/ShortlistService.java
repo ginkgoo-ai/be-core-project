@@ -108,13 +108,13 @@ public class ShortlistService {
     }
 
     @Transactional
-    public void removeSubmission(String submissionId, String userId) {
+    public void removeSubmission(String submissionId) {
         Submission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Submission", "id", submissionId));
 
-        List<ShortlistItem> shortlistItems = shortlistItemRepository.findAllBySubmissionId(submissionId, userId);
+        List<ShortlistItem> shortlistItems = shortlistItemRepository.findAllBySubmissionId(submissionId, ContextUtils.getUserId());
         if (shortlistItems.size() < 1) {
-            throw new ResourceNotFoundException("ShortlistItem", "submissionId-userId", String.join("-", submissionId, userId));
+            throw new ResourceNotFoundException("ShortlistItem", "submissionId-userId", String.join("-", submissionId, ContextUtils.getUserId()));
         }
 
         ShortlistItem shortlistItem = shortlistItems.get(0);

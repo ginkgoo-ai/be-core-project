@@ -7,30 +7,23 @@ import com.ginkgooai.core.project.dto.request.*;
 import com.ginkgooai.core.project.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
 public class ProjectWriteServiceImpl implements ProjectWriteService {
 
-    private static final String LOCK_PREFIX = "lock:project:"; // Prefix for Redisson lock keys
     @Autowired
     private ProjectRepository projectRepository;
     @Autowired
     private ProjectRoleRepository projectRoleRepository;
     @Autowired
     private ProjectNdaRepository projectNdaRepository;
-    @Autowired
-    private ProjectMemberRepository projectMemberRepository;
-    @Autowired
-    private RedissonClient redissonClient; // Inject Redisson client
 
     @Override
     @Transactional
@@ -54,7 +47,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
                         .name(roleRequest.getName())
                         .characterDescription(roleRequest.getCharacterDescription())
                         .selfTapeInstructions(roleRequest.getSelfTapeInstructions())
-                        .isActive(roleRequest.getIsActive()!= null ? roleRequest.getIsActive() : true)
+                        .isActive(roleRequest.getIsActive() != null ? roleRequest.getIsActive() : true)
                         .sides(roleRequest.getSides())
                         .project(savedProject)
                         .build();
@@ -105,25 +98,9 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
     @Override
     @Transactional
     public void deleteProject(String id) {
-        String lockKey = LOCK_PREFIX + id; // Lock based on project ID
-        RLock lock = redissonClient.getLock(lockKey);
-
-        try {
-            if (lock.tryLock(10, 30, TimeUnit.SECONDS)) {
-                Project project = projectRepository.findById(id)
-                        .orElseThrow(() -> new RuntimeException("Project not found"));
-                projectRepository.delete(project);
-            } else {
-                throw new RuntimeException("Failed to acquire lock for deleting project with ID: " + id);
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Lock acquisition interrupted for deleting project with ID: " + id, e);
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
-        }
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
+        projectRepository.delete(project);
     }
 
     @Override
