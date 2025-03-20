@@ -114,7 +114,23 @@ public class SubmissionResponse {
     }
 
     public static SubmissionResponse from(Submission submission, String userId) {
-        return SubmissionResponse.from(submission, Collections.EMPTY_LIST, userId); 
+        return SubmissionResponse.builder()
+                .id(submission.getId())
+                .projectId(submission.getApplication().getProject().getId())
+                .applicationId(submission.getApplication().getId())
+                .roleId(submission.getApplication().getRole().getId())
+                .videoName(submission.getVideoName())
+                .videoUrl(submission.getVideoUrl())
+                .videoThumbnailUrl(submission.getVideoThumbnailUrl())
+                .videoDuration(submission.getVideoDuration())
+                .videoResolution(submission.getVideoResolution())
+                .createdBy(submission.getCreatedBy())
+                .createdAt(submission.getCreatedAt())
+                .updatedAt(submission.getUpdatedAt())
+                .shortlisted(submission.getShortlistItems() != null &&
+                        submission.getShortlistItems().stream()
+                                .anyMatch(item -> item.getShortlist().getOwnerId().equals(userId)))
+                .build();
     }
 
 }
