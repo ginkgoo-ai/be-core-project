@@ -56,10 +56,10 @@ public class ProjectController {
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     @PostMapping
-    public ResponseEntity<ProjectResponse> createProject(@RequestBody ProjectCreateRequest request, @AuthenticationPrincipal Jwt jwt) {
-        Project project = projectWriteService.createProject(request, ContextUtils.get().getWorkspaceId(), jwt.getSubject());
+    public ResponseEntity<ProjectResponse> createProject(@RequestBody ProjectCreateRequest request) {
+        Project project = projectWriteService.createProject(request, ContextUtils.getWorkspaceId(), ContextUtils.getUserId());
         Map<String, Object> variables = Map.of(
-                "user", jwt.getSubject(),
+                "user", ContextUtils.getUserId(),
                 "project", project.getName(),
                 "timeAgo", "just now"
         );
@@ -71,7 +71,7 @@ public class ProjectController {
                 ActivityType.PROJECT_CREATED,
                 variables,
                 null,
-                jwt.getSubject()
+                ContextUtils.getUserId()
         );
         return new ResponseEntity<>(ProjectResponse.from(project), HttpStatus.CREATED);
     }
@@ -83,7 +83,7 @@ public class ProjectController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<ProjectResponse> getProjectById(@PathVariable String id) {
-        return projectReadService.findById(ContextUtils.get().getWorkspaceId(), id)
+        return projectReadService.findById(ContextUtils.getWorkspaceId(), id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -107,7 +107,7 @@ public class ProjectController {
             Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
             Pageable pageable = PageRequest.of(page, size, sort);
 
-            Page<ProjectResponse> projects = projectReadService.findProjects(ContextUtils.get().getWorkspaceId(), name, status, pageable);
+            Page<ProjectResponse> projects = projectReadService.findProjects(ContextUtils.getWorkspaceId(), name, status, pageable);
 
             return new ResponseEntity<>(projects, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
@@ -134,7 +134,7 @@ public class ProjectController {
     @PutMapping("/{id}")
     public ResponseEntity<ProjectResponse> updateProject(@PathVariable String id, @RequestBody ProjectUpdateRequest request) {
         try {
-            Project updatedProject = projectWriteService.updateProject(id, request, ContextUtils.get().getWorkspaceId());
+            Project updatedProject = projectWriteService.updateProject(id, request, ContextUtils.getWorkspaceId());
             return new ResponseEntity<>(ProjectResponse.from(updatedProject), HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -174,7 +174,7 @@ public class ProjectController {
                     ActivityType.PROJECT_STATUS_CHANGE,
                     variables,
                     null,
-                    jwt.getSubject()
+                    ContextUtils.getUserId()
             );
 
             return new ResponseEntity<>(ProjectResponse.from(updatedProject), HttpStatus.OK);

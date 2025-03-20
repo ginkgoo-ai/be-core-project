@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.controller;
 
+import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.dto.request.ShareShortlistRequest;
 import com.ginkgooai.core.project.dto.response.ShortlistItemResponse;
 import com.ginkgooai.core.project.dto.response.ShortlistResponse;
@@ -47,9 +48,8 @@ public class ShortlistController {
             @RequestParam String submissionId,
             @Parameter(description = "Optional notes about the shortlisted item",
                     example = "Great performance, consider for callback")
-            @RequestParam(required = false) String notes,
-            @AuthenticationPrincipal Jwt jwt) {
-        shortlistService.addShortlistItem(jwt.getSubject(), submissionId, notes);
+            @RequestParam(required = false) String notes) {
+        shortlistService.addShortlistItem(ContextUtils.getUserId(), submissionId, notes);
         return ResponseEntity.ok().build();
     }
 
@@ -112,8 +112,7 @@ public class ShortlistController {
     })
     @PostMapping("/share")
     public ResponseEntity<String> shareShortlist(
-            @RequestBody ShareShortlistRequest request,
-            @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(shortlistService.shareShortlist(request, jwt.getSubject()));
+            @RequestBody ShareShortlistRequest request) {
+        return ResponseEntity.ok(shortlistService.shareShortlist(request, ContextUtils.getUserId()));
     }
 }

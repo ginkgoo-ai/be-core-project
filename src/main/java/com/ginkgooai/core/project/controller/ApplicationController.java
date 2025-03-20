@@ -48,9 +48,8 @@ public class ApplicationController {
     })
     @PostMapping
     public ResponseEntity<ApplicationResponse> createApplication(
-            @Valid @RequestBody ApplicationCreateRequest request,
-            @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(applicationService.createApplication(request, ContextUtils.get().getWorkspaceId(), jwt.getSubject()));
+            @Valid @RequestBody ApplicationCreateRequest request) {
+        return ResponseEntity.ok(applicationService.createApplication(request, ContextUtils.getWorkspaceId(), ContextUtils.getUserId()));
     }
 
     @Operation(summary = "Get application by ID",
@@ -62,10 +61,9 @@ public class ApplicationController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<ApplicationResponse> getApplication(@Parameter(description = "Application ID", example = "app_12345")
-                                                              @PathVariable String id,
-                                                              @AuthenticationPrincipal Jwt jwt) {
-        Application application = applicationService.getApplicationById(ContextUtils.get().getWorkspaceId(), id);
-        return ResponseEntity.ok(ApplicationResponse.from(application, jwt.getSubject()));
+                                                              @PathVariable String id) {
+        Application application = applicationService.getApplicationById(ContextUtils.getWorkspaceId(), id);
+        return ResponseEntity.ok(ApplicationResponse.from(application, ContextUtils.getUserId()));
     }
 
     @Operation(summary = "List applications",
@@ -83,11 +81,10 @@ public class ApplicationController {
             @Parameter(description = "Page number (zero-based)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size", example = "10") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "Sort direction (ASC/DESC)", example = "DESC") @RequestParam(defaultValue = "DESC") String sortDirection,
-            @Parameter(description = "Sort field (e.g., updatedAt)", example = "updatedAt") @RequestParam(defaultValue = "updatedAt") String sortField,
-            @AuthenticationPrincipal Jwt jwt) {
+            @Parameter(description = "Sort field (e.g., updatedAt)", example = "updatedAt") @RequestParam(defaultValue = "updatedAt") String sortField) {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
         Pageable pageable = PageRequest.of(page, size, sort);
-        return ResponseEntity.ok(applicationService.listApplications(ContextUtils.get().getWorkspaceId(), jwt.getSubject(), projectId, roleId, keyword, status, pageable));
+        return ResponseEntity.ok(applicationService.listApplications(ContextUtils.getWorkspaceId(), ContextUtils.getUserId(), projectId, roleId, keyword, status, pageable));
     }
 
     @Operation(summary = "Add comment to application",
@@ -98,9 +95,8 @@ public class ApplicationController {
             @Parameter(description = "Application ID", example = "app_12345")
             @PathVariable String id,
             @Parameter(description = "Comment content", example = "Excellent performance in the audition")
-            @RequestParam String content,
-            @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(applicationService.addComment(ContextUtils.get().getWorkspaceId(), id, jwt.getSubject(), content));
+            @RequestParam String content) {
+        return ResponseEntity.ok(applicationService.addComment(ContextUtils.getWorkspaceId(), id, ContextUtils.getUserId(), content));
     }
 
     @Operation(summary = "Add note to application",
@@ -109,8 +105,7 @@ public class ApplicationController {
     public ResponseEntity<List<ApplicationNoteResponse>> addNote(
             @Parameter(description = "Application ID", example = "app_12345")
             @PathVariable String id,
-            @RequestBody NoteCreateRequest request,
-            @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(applicationService.addNote(ContextUtils.get().getWorkspaceId(), id, jwt.getSubject(), request.getContent()));
+            @RequestBody NoteCreateRequest request) {
+        return ResponseEntity.ok(applicationService.addNote(ContextUtils.getWorkspaceId(), id, ContextUtils.getUserId(), request.getContent()));
     }
 }
