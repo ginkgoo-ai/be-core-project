@@ -19,7 +19,7 @@ public interface ShortlistItemRepository extends JpaRepository<ShortlistItem, St
     @Query(value = """
             SELECT si.* FROM shortlist_item si 
             INNER JOIN shortlist_item_submission_mapping sm ON si.id = sm.shortlist_item_id 
-            WHERE sm.submission_id = :submissionId AND si.owner_id = :ownerId
+            WHERE sm.submission_id = :submissionId AND si.created_by = :ownerId
             """, nativeQuery = true)
     List<ShortlistItem> findAllBySubmissionId(@Param("submissionId") String submissionId, @Param("ownerId") String ownerId);
 }

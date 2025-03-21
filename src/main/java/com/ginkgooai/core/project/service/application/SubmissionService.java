@@ -106,7 +106,6 @@ public class SubmissionService {
             throw new AccessDeniedException("Not authorized to delete this submission");
         }
 
-        // 删除相关的 shortlist items 引用
         List<ShortlistItem> shortlistItems = shortlistItemRepository.findAllBySubmissionId(submissionId, userId);
         for (ShortlistItem item : shortlistItems) {
             item.getSubmissions().remove(submission);
