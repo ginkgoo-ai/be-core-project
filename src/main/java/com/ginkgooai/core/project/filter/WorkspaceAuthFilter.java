@@ -1,6 +1,8 @@
 package com.ginkgooai.core.project.filter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -23,9 +25,25 @@ public class WorkspaceAuthFilter extends OncePerRequestFilter {
 
     private final ProjectWorkspaceContextService projectWorkspaceContextService;
 
+    // 需要排除的路径模式
+    private static final List<String> EXCLUDE_PATH_PATTERNS = Arrays.asList(
+            "/swagger-ui",
+            "/v3/api-docs",
+            "/swagger-resources",
+            "/health",
+            "/api/project/v3/api-docs",
+            "/api/project/swagger-ui");
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
+
+        boolean isExcludedPath = EXCLUDE_PATH_PATTERNS.stream()
+                .anyMatch(pattern -> path.startsWith(pattern));
+
+        if (isExcludedPath) {
+            return true;
+        }
 
         return !path.startsWith("/api");
     }
