@@ -2,7 +2,6 @@ package com.ginkgooai.core.project.service.application;
 
 import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
-import com.ginkgooai.core.common.utils.ActivityLogger;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.client.identity.IdentityClient;
 import com.ginkgooai.core.project.client.identity.dto.UserInfo;
@@ -20,6 +19,7 @@ import com.ginkgooai.core.project.repository.ApplicationRepository;
 import com.ginkgooai.core.project.repository.ShortlistItemRepository;
 import com.ginkgooai.core.project.repository.SubmissionCommentRepository;
 import com.ginkgooai.core.project.repository.SubmissionRepository;
+import com.ginkgooai.core.project.service.ActivityLoggerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
@@ -47,7 +47,7 @@ public class SubmissionService {
     
     private final IdentityClient identityClient;
 
-    private final ActivityLogger activityLogger;
+    private final ActivityLoggerService activityLogger;
 
     @Transactional
     public SubmissionResponse createSubmission(String workspaceId, 
@@ -95,7 +95,9 @@ public class SubmissionService {
     @Transactional(readOnly = true)
     public SubmissionResponse getSubmission(String submissionId) {
         Submission submission = findSubmissionById(submissionId);
-        return SubmissionResponse.from(submission, Collections.EMPTY_LIST, ContextUtils.get(USER_ID, String.class, null));
+
+        List<UserInfo> users = identityClient.getUsersByIds(submission.getComments().stream().map(SubmissionComment::getCreatedBy).distinct().toList()).getBody();
+        return SubmissionResponse.from(submission, users, ContextUtils.get(USER_ID, String.class, null));
     }
 
     @Transactional

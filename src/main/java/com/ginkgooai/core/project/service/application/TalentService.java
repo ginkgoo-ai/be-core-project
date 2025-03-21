@@ -2,7 +2,6 @@ package com.ginkgooai.core.project.service.application;
 
 import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
-import com.ginkgooai.core.common.utils.ActivityLogger;
 import com.ginkgooai.core.project.domain.talent.ImdbMovieItem;
 import com.ginkgooai.core.project.domain.talent.Talent;
 import com.ginkgooai.core.project.domain.talent.TalentProfileMeta;
@@ -14,6 +13,7 @@ import com.ginkgooai.core.project.dto.request.TalentSearchRequest;
 import com.ginkgooai.core.project.dto.response.TalentResponse;
 import com.ginkgooai.core.project.repository.ImdbMovieItemRepository;
 import com.ginkgooai.core.project.repository.TalentRepository;
+import com.ginkgooai.core.project.service.ActivityLoggerService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ public class TalentService {
     private final TalentRepository talentRepository;
     private final ImdbMovieItemRepository movieItemRepository;
     private final TalentProfileScraperService profileScraperService;
-    private final ActivityLogger activityLogger;
+    private final ActivityLoggerService activityLogger;
 
     @Transactional
     public Talent createTalentFromProfiles(TalentRequest request, String workspaceId, String userId) {

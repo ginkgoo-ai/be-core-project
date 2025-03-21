@@ -26,6 +26,14 @@ public class ImdbScraper {
 
     public TalentProfileMeta scrapeProfile(String imdbUrl) throws Exception {
         log.info("Scraping profile from: {}", imdbUrl);
+      
+        //TODO: Remove this block when needed
+        if (true) {
+            return TalentProfileMeta.builder()
+                    .source("IMDB")
+                    .sourceUrl(imdbUrl)
+                    .build();
+        }
 
         Document doc = Jsoup.connect(imdbUrl)
                 .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")

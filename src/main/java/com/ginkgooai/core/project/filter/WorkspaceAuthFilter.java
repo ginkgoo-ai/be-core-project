@@ -64,11 +64,11 @@ public class WorkspaceAuthFilter extends OncePerRequestFilter {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 return;
             }
-
-            chain.doFilter(request, response);
         } catch (Exception e) {
             log.error("Failed to validate workspace access: {}", e.getMessage());
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
+        
+        chain.doFilter(request, response);
     }
 }

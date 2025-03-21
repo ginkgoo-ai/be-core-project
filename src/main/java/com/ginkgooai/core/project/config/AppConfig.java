@@ -1,6 +1,7 @@
 package com.ginkgooai.core.project.config;
 
-import com.ginkgooai.core.common.utils.ActivityLogger;
+import com.ginkgooai.core.common.queue.QueueInterface;
+import com.ginkgooai.core.common.queue.RedissonMQ;
 import org.redisson.api.RedissonClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,8 +10,8 @@ import org.springframework.context.annotation.Configuration;
 public class AppConfig {
     
     @Bean
-    public ActivityLogger activityLogger(RedissonClient redissonClient) {
-        return new ActivityLogger(redissonClient);
+    public QueueInterface redissonMQ(RedissonClient redissonClient) {
+        return new RedissonMQ(redissonClient);
     }
 
 }

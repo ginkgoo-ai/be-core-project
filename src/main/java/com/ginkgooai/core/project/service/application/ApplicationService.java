@@ -2,7 +2,6 @@ package com.ginkgooai.core.project.service.application;
 
 import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
-import com.ginkgooai.core.common.utils.ActivityLogger;
 import com.ginkgooai.core.project.client.identity.IdentityClient;
 import com.ginkgooai.core.project.client.identity.dto.UserInfo;
 import com.ginkgooai.core.project.client.storage.StorageClient;
@@ -17,6 +16,7 @@ import com.ginkgooai.core.project.dto.response.ApplicationCommentResponse;
 import com.ginkgooai.core.project.dto.response.ApplicationNoteResponse;
 import com.ginkgooai.core.project.dto.response.ApplicationResponse;
 import com.ginkgooai.core.project.repository.*;
+import com.ginkgooai.core.project.service.ActivityLoggerService;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -47,11 +47,10 @@ public class ApplicationService {
     private final ProjectRoleRepository projectRoleRepository;
     private final TalentRepository talentRepository;
     private final SubmissionRepository submissionRepository;
-    private final ApplicationStateMachine stateMachine;
     private final TalentService talentService;
     private final StorageClient storageClient;
     private final IdentityClient identityClient;
-    private final ActivityLogger activityLogger;
+    private final ActivityLoggerService activityLogger;
 
     @Transactional
     public ApplicationResponse createApplication(ApplicationCreateRequest request, String workspaceId, String userId) {
@@ -109,7 +108,7 @@ public class ApplicationService {
                 ActivityType.ROLE_STATUS_UPDATE,
                 Map.of(
                         "roleName", role.getName(),
-                        "newStatus", role.getStatus()
+                        "newStatus", role.getStatus().getValue()
                 ),
                 null,
                 userId

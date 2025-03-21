@@ -4,8 +4,6 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 import com.ginkgooai.core.common.bean.ActivityType;
-import com.ginkgooai.core.common.utils.ActivityLogger;
-import com.ginkgooai.core.common.utils.ContextUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,8 +31,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
     @Autowired
     private ProjectRoleRepository projectRoleRepository;
     @Autowired
-    private ActivityLogger activityLogger;
-
+    private ActivityLoggerService activityLogger;
 
     @Override
     @Transactional

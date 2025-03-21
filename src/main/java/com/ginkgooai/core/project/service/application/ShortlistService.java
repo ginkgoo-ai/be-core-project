@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.ginkgooai.core.project.service.ActivityLoggerService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,7 +18,6 @@ import org.springframework.util.CollectionUtils;
 
 import com.ginkgooai.core.common.constant.ContextsConstant;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
-import com.ginkgooai.core.common.utils.ActivityLogger;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.client.identity.IdentityClient;
 import com.ginkgooai.core.project.client.identity.dto.GuestCodeRequest;
@@ -49,7 +49,7 @@ public class ShortlistService {
     private final ShortlistItemRepository shortlistItemRepository;
     private final SubmissionRepository submissionRepository;
     private final IdentityClient identityClient;
-    private final ActivityLogger activityLogger;
+    private final ActivityLoggerService activityLogger;
     private final String guestLoginUri;
 
     public ShortlistService(
@@ -57,7 +57,7 @@ public class ShortlistService {
             ShortlistItemRepository shortlistItemRepository,
             SubmissionRepository submissionRepository,
             IdentityClient identityClient,
-            ActivityLogger activityLogger,
+            ActivityLoggerService activityLogger,
             @Value("${spring.security.oauth2.guest_login_uri}") String guestLoginUri) {
         this.shortlistRepository = shortlistRepository;
         this.shortlistItemRepository = shortlistItemRepository;

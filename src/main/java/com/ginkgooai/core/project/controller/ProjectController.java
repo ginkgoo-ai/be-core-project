@@ -2,12 +2,12 @@ package com.ginkgooai.core.project.controller;
 
 import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
-import com.ginkgooai.core.common.utils.ActivityLogger;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.project.ProjectStatus;
 import com.ginkgooai.core.project.dto.request.*;
 import com.ginkgooai.core.project.dto.response.*;
+import com.ginkgooai.core.project.service.ActivityLoggerService;
 import com.ginkgooai.core.project.service.ProjectReadService;
 import com.ginkgooai.core.project.service.ProjectWriteService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,7 +44,7 @@ public class ProjectController {
     private ProjectWriteService projectWriteService;
 
     @Autowired
-    private ActivityLogger activityLogger;
+    private ActivityLoggerService activityLogger;
 
     @Operation(summary = "Create a new project", description = "Creates a new project with the provided details")
     @ApiResponses(value = {
