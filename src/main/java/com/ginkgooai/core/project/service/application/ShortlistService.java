@@ -1,23 +1,12 @@
 package com.ginkgooai.core.project.service.application;
 
-import com.ginkgooai.core.common.constant.ContextsConstant;
-import com.ginkgooai.core.common.exception.ResourceNotFoundException;
-import com.ginkgooai.core.common.utils.ContextUtils;
-import com.ginkgooai.core.project.client.identity.IdentityClient;
-import com.ginkgooai.core.project.client.identity.dto.GuestCodeRequest;
-import com.ginkgooai.core.project.client.identity.dto.GuestCodeResponse;
-import com.ginkgooai.core.project.domain.application.*;
-import com.ginkgooai.core.project.domain.role.ProjectRole;
-import com.ginkgooai.core.project.domain.talent.Talent;
-import com.ginkgooai.core.project.dto.request.ShareShortlistRequest;
-import com.ginkgooai.core.project.dto.response.ShortlistItemResponse;
-import com.ginkgooai.core.project.repository.ShortlistItemRepository;
-import com.ginkgooai.core.project.repository.ShortlistRepository;
-import com.ginkgooai.core.project.repository.SubmissionRepository;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Predicate;
-import lombok.extern.slf4j.Slf4j;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,11 +15,31 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
+import com.ginkgooai.core.common.constant.ContextsConstant;
+import com.ginkgooai.core.common.exception.ResourceNotFoundException;
+import com.ginkgooai.core.common.utils.ActivityLogger;
+import com.ginkgooai.core.common.utils.ContextUtils;
+import com.ginkgooai.core.project.client.identity.IdentityClient;
+import com.ginkgooai.core.project.client.identity.dto.GuestCodeRequest;
+import com.ginkgooai.core.project.client.identity.dto.GuestCodeResponse;
+import com.ginkgooai.core.project.domain.application.Application;
+import com.ginkgooai.core.project.domain.application.ApplicationStatus;
+import com.ginkgooai.core.project.domain.application.OwnerType;
+import com.ginkgooai.core.project.domain.application.Shortlist;
+import com.ginkgooai.core.project.domain.application.ShortlistItem;
+import com.ginkgooai.core.project.domain.application.Submission;
+import com.ginkgooai.core.project.domain.role.ProjectRole;
+import com.ginkgooai.core.project.domain.talent.Talent;
+import com.ginkgooai.core.project.dto.request.ShareShortlistRequest;
+import com.ginkgooai.core.project.dto.response.ShortlistItemResponse;
+import com.ginkgooai.core.project.repository.ShortlistItemRepository;
+import com.ginkgooai.core.project.repository.ShortlistRepository;
+import com.ginkgooai.core.project.repository.SubmissionRepository;
+
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
@@ -40,6 +49,7 @@ public class ShortlistService {
     private final ShortlistItemRepository shortlistItemRepository;
     private final SubmissionRepository submissionRepository;
     private final IdentityClient identityClient;
+    private final ActivityLogger activityLogger;
     private final String guestLoginUri;
 
     public ShortlistService(
@@ -47,11 +57,13 @@ public class ShortlistService {
             ShortlistItemRepository shortlistItemRepository,
             SubmissionRepository submissionRepository,
             IdentityClient identityClient,
+            ActivityLogger activityLogger,
             @Value("${spring.security.oauth2.guest_login_uri}") String guestLoginUri) {
         this.shortlistRepository = shortlistRepository;
         this.shortlistItemRepository = shortlistItemRepository;
         this.submissionRepository = submissionRepository;
         this.identityClient = identityClient;
+        this.activityLogger = activityLogger;
         this.guestLoginUri = guestLoginUri;
     }
 
@@ -63,7 +75,9 @@ public class ShortlistService {
         Application application = submission.getApplication();
 
         // Try to find existing shortlist
-        Shortlist shortlist = shortlistRepository.findByWorkspaceIdAndProjectIdAndOwnerId(application.getWorkspaceId(), application.getProject().getId(), userId)
+        Shortlist shortlist = shortlistRepository
+                .findByWorkspaceIdAndProjectIdAndOwnerId(application.getWorkspaceId(), application.getProject().getId(),
+                        userId)
                 .orElseGet(() -> {
                     // If shortlist doesn't exist, create a new one
                     Shortlist shortlistNew = Shortlist.builder()
@@ -78,7 +92,8 @@ public class ShortlistService {
                 });
 
         // Get the maximum order value
-        Integer maxOrder = CollectionUtils.isEmpty(shortlist.getItems()) ? 0 : shortlist.getItems().stream()
+        Integer maxOrder = CollectionUtils.isEmpty(shortlist.getItems()) ? 0
+                : shortlist.getItems().stream()
                 .map(ShortlistItem::getSortOrder)
                 .max(Integer::compareTo)
                 .orElse(0);
@@ -112,9 +127,11 @@ public class ShortlistService {
         Submission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Submission", "id", submissionId));
 
-        List<ShortlistItem> shortlistItems = shortlistItemRepository.findAllBySubmissionId(submissionId, ContextUtils.getUserId());
+        List<ShortlistItem> shortlistItems = shortlistItemRepository.findAllBySubmissionId(submissionId,
+                ContextUtils.getUserId());
         if (shortlistItems.size() < 1) {
-            throw new ResourceNotFoundException("ShortlistItem", "submissionId-userId", String.join("-", submissionId, ContextUtils.getUserId()));
+            throw new ResourceNotFoundException("ShortlistItem", "submissionId-userId",
+                    String.join("-", submissionId, ContextUtils.getUserId()));
         }
 
         ShortlistItem shortlistItem = shortlistItems.get(0);
@@ -139,7 +156,8 @@ public class ShortlistService {
         String userId = ContextUtils.get(ContextsConstant.USER_ID, String.class, null);
 
         // First get the user's shortlist for this project
-        Shortlist shortlist = shortlistRepository.findByWorkspaceIdAndProjectIdAndOwnerId(workspaceId, projectId, userId)
+        Shortlist shortlist = shortlistRepository
+                .findByWorkspaceIdAndProjectIdAndOwnerId(workspaceId, projectId, userId)
                 .orElse(null);
 
         if (shortlist == null) {
@@ -148,8 +166,7 @@ public class ShortlistService {
 
         return shortlistItemRepository.findAll(
                 buildShortlistItemSpecification(shortlist.getId(), keyword),
-                pageable
-        ).map(t -> ShortlistItemResponse.from(t, userId));
+                pageable).map(t -> ShortlistItemResponse.from(t, userId));
     }
 
     private Specification<ShortlistItem> buildShortlistItemSpecification(String shortlistId, String keyword) {
@@ -172,12 +189,10 @@ public class ShortlistService {
                 // Create OR conditions for roleName and talentName
                 Predicate roleNamePredicate = cb.like(
                         cb.lower(roleJoin.get("name")),
-                        likePattern
-                );
+                        likePattern);
                 Predicate talentNamePredicate = cb.like(
                         cb.lower(talentJoin.get("name")),
-                        likePattern
-                );
+                        likePattern);
 
                 predicates.add(cb.or(roleNamePredicate, talentNamePredicate));
             }
@@ -189,43 +204,68 @@ public class ShortlistService {
         };
     }
 
-    public String shareShortlist(ShareShortlistRequest request, String userId) {
+    public Map<String, String> shareShortlist(ShareShortlistRequest request, String userId) {
+        Map<String, String> shareLinks = new HashMap<>();
+        String workspaceId = ContextUtils.get().getWorkspaceId();
+
         List<Submission> submissions = submissionRepository.findAllById(request.getSubmissionIds());
+        if (submissions.isEmpty()) {
+            throw new ResourceNotFoundException("Submissions", "ids", request.getSubmissionIds().toString());
+        }
+
         Submission tempSubmission = submissions.get(0);
+        String projectId = tempSubmission.getApplication().getProject().getId();
 
-        Shortlist shortlist = shortlistRepository.save(
-                Shortlist.builder()
-                        .workspaceId(ContextUtils.get().getWorkspaceId())
-                        .projectId(tempSubmission.getApplication().getProject().getId())
-                        .ownerId(request.getRecipientEmail())
-                        .ownerType(OwnerType.EXTERNAL)
-                        .name("ShareShortlist")
-                        .createdBy(userId)
-                        .build());
-
-        //group submissions by application
+        // Group submissions by application
         Map<Application, List<Submission>> submissionMap = submissions.stream()
                 .collect(Collectors.groupingBy(submission -> submission.getApplication()));
 
-        AtomicInteger sortOrder = new AtomicInteger(1);
-        submissionMap.forEach((k, v) -> {
-                    ShortlistItem newItem = ShortlistItem.builder()
-                            .application(k)
-                            .shortlist(shortlist)
-                            .submissions(v)
+        for (ShareShortlistRequest.Recipient recipient : request.getRecipients()) {
+            Shortlist shortlist = shortlistRepository.save(
+                    Shortlist.builder()
+                            .workspaceId(workspaceId)
+                            .projectId(projectId)
+                            .ownerId(recipient.getEmail())
+                            .ownerType(OwnerType.EXTERNAL)
+                            .name(recipient.getName() != null
+                                    ? "ShareShortlist for " + recipient.getName()
+                                    : "ShareShortlist")
                             .createdBy(userId)
-                            .sortOrder(sortOrder.getAndIncrement())
-                            .build();
-                    shortlistItemRepository.save(newItem);
-                });
+                            .build());
 
-        GuestCodeResponse response = identityClient.generateGuestCode(GuestCodeRequest.builder()
-                        .expiryHours(request.getExpiresInDays() * 24)
-                        .guestEmail(userId)
-                        .resourceId(shortlist.getId())
-                        .ownerEmail(request.getRecipientEmail())
-                .build()).getBody();
-        
-        return guestLoginUri + "?guest_code=" + response.getGuestCode() + "&resource_id=" + shortlist.getId();
+            AtomicInteger sortOrder = new AtomicInteger(1);
+            submissionMap.forEach((application, applicationSubmissions) -> {
+                ShortlistItem newItem = ShortlistItem.builder()
+                        .application(application)
+                        .shortlist(shortlist)
+                        .submissions(applicationSubmissions)
+                        .createdBy(userId)
+                        .sortOrder(sortOrder.getAndIncrement())
+                        .build();
+                shortlistItemRepository.save(newItem);
+            });
+
+            Integer expiryHours = request.getExpiresInDays() != null ? request.getExpiresInDays() * 24
+                    : 7 * 24;
+
+            GuestCodeResponse response = identityClient.generateGuestCode(GuestCodeRequest.builder()
+                    .resource("shortlist")
+                    .resourceId(shortlist.getId())
+                    .guestName(recipient.getName())
+                    .guestEmail(recipient.getEmail())
+                    .write(true)
+                    .redirectUrl(guestLoginUri)
+                    .expiryHours(expiryHours)
+                    .build()).getBody();
+
+            String shareLink = guestLoginUri + "?guest_code=" + response.getGuestCode() + "&resource_id="
+                    + shortlist.getId();
+            shareLinks.put(recipient.getEmail(), shareLink);
+
+            log.info("Created shared shortlist for recipient: {}, shortlistId: {}, with {} submissions",
+                    recipient.getEmail(), shortlist.getId(), submissions.size());
+        }
+
+        return shareLinks;
     }
 }

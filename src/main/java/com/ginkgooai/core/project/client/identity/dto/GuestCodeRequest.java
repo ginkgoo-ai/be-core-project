@@ -6,11 +6,15 @@ import lombok.Data;
 @Data
 @Builder
 public class GuestCodeRequest {
+    private String resource;
+    
     private String resourceId;
-    
-    private String ownerEmail;
-    
+
+    private String guestName;
+
     private String guestEmail;
+    
+    private boolean write;
     
     private String redirectUrl;
     

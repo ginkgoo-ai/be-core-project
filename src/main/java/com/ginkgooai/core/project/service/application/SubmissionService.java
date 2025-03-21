@@ -1,6 +1,8 @@
 package com.ginkgooai.core.project.service.application;
 
+import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
+import com.ginkgooai.core.common.utils.ActivityLogger;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.client.identity.IdentityClient;
 import com.ginkgooai.core.project.client.identity.dto.UserInfo;
@@ -45,6 +47,8 @@ public class SubmissionService {
     
     private final IdentityClient identityClient;
 
+    private final ActivityLogger activityLogger;
+
     @Transactional
     public SubmissionResponse createSubmission(String workspaceId, 
                                                SubmissionCreateRequest request, 
@@ -70,6 +74,20 @@ public class SubmissionService {
                 .createdBy(userId)
                 .build();
         Submission savedSubmission = submissionRepository.save(submission);
+
+        activityLogger.log(
+                workspaceId,
+                application.getProject().getId(),
+                application.getId(),
+                ActivityType.SUBMISSION_ADDED_TO_SHORTLIST,
+                Map.of(
+                        "user", userId,
+                        "talentName", application.getTalent().getName(),
+                        "videoName", submission.getOriginalFilename() 
+                ),
+                null,
+                userId
+        );
 
         return SubmissionResponse.from(savedSubmission, Collections.EMPTY_LIST, userId);
     }
