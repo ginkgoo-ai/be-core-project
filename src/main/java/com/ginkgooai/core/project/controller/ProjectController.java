@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/projects")
+@RequestMapping("/projects")
 @Tag(name = "Project Management", description = "APIs for managing projects")
 @Slf4j
 public class ProjectController {

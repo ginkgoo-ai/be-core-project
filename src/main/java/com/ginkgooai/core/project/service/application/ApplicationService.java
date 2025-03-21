@@ -1,6 +1,8 @@
 package com.ginkgooai.core.project.service.application;
 
+import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
+import com.ginkgooai.core.common.utils.ActivityLogger;
 import com.ginkgooai.core.project.client.identity.IdentityClient;
 import com.ginkgooai.core.project.client.identity.dto.UserInfo;
 import com.ginkgooai.core.project.client.storage.StorageClient;
@@ -8,6 +10,7 @@ import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
 import com.ginkgooai.core.project.domain.application.*;
 import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
+import com.ginkgooai.core.project.domain.role.RoleStatus;
 import com.ginkgooai.core.project.domain.talent.Talent;
 import com.ginkgooai.core.project.dto.request.ApplicationCreateRequest;
 import com.ginkgooai.core.project.dto.response.ApplicationCommentResponse;
@@ -48,25 +51,43 @@ public class ApplicationService {
     private final TalentService talentService;
     private final StorageClient storageClient;
     private final IdentityClient identityClient;
+    private final ActivityLogger activityLogger;
 
     @Transactional
     public ApplicationResponse createApplication(ApplicationCreateRequest request, String workspaceId, String userId) {
-        // Create the talent if not exits
-        Talent talent;
-        if (!ObjectUtils.isEmpty(request.getTalentId())) {
-            talent = talentRepository.findById(request.getTalentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Talent", "id", request.getTalentId()));
-        } else if (Objects.nonNull(request.getTalent()))
-            talent = talentService.createTalentFromProfiles(request.getTalent(), workspaceId, userId);
-        else {
-            throw new IllegalArgumentException("Talent ID or Talent object must be provided");
-        }
-
         Project project = projectRepository.findById(request.getProjectId())
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", request.getProjectId()));
 
         ProjectRole role = projectRoleRepository.findById(request.getRoleId())
                 .orElseThrow(() -> new ResourceNotFoundException("ProjectRole", "id", request.getRoleId()));
+
+        // Create the talent if not exits
+        Talent talent;
+        if (!ObjectUtils.isEmpty(request.getTalentId())) {
+            talent = talentRepository.findById(request.getTalentId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Talent", "id", request.getTalentId()));
+        } else if (Objects.nonNull(request.getTalent())) {
+            talent = talentService.createTalentFromProfiles(request.getTalent(), workspaceId, userId);
+
+            activityLogger.log(
+                    workspaceId,
+                    project.getId(),
+                    null,
+                    ActivityType.TALENT_ADDED,
+                    Map.of(
+                            "talentName", talent.getName(),
+                            "user", userId 
+                    ),
+                    null,
+                    userId
+            );
+            
+        } else {
+            throw new IllegalArgumentException("Talent ID or Talent object must be provided");
+        }
+
+        role.setStatus(RoleStatus.CASTING);
+
 
         // Create the application
         Application application = Application.builder()
@@ -79,6 +100,20 @@ public class ApplicationService {
                 .build();
 
         Application savedApplication = applicationRepository.save(application);
+        
+        // Log activity
+        activityLogger.log(
+                project.getWorkspaceId(),
+                project.getId(),
+                savedApplication.getId(),
+                ActivityType.ROLE_STATUS_UPDATE,
+                Map.of(
+                        "roleName", role.getName(),
+                        "newStatus", role.getStatus()
+                ),
+                null,
+                userId
+        );
 
         // Create submissions if provided
         log.debug("Video files: {}", request.getVideoIds());

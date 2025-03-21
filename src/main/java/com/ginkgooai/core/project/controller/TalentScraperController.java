@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/talent-scraper")
+@RequestMapping("/talent-scraper")
 @Tag(name = "Talent Scraper", description = "APIs for scraping talent profiles")
 @RequiredArgsConstructor
 public class TalentScraperController {

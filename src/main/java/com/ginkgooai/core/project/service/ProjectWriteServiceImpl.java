@@ -1,17 +1,28 @@
 package com.ginkgooai.core.project.service;
 
-import com.ginkgooai.core.common.exception.ResourceNotFoundException;
-import com.ginkgooai.core.project.domain.project.*;
-import com.ginkgooai.core.project.domain.role.ProjectRole;
-import com.ginkgooai.core.project.dto.request.*;
-import com.ginkgooai.core.project.repository.*;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDateTime;
+import java.util.Map;
+
+import com.ginkgooai.core.common.bean.ActivityType;
+import com.ginkgooai.core.common.utils.ActivityLogger;
+import com.ginkgooai.core.common.utils.ContextUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import com.ginkgooai.core.common.exception.ResourceNotFoundException;
+import com.ginkgooai.core.project.domain.project.Project;
+import com.ginkgooai.core.project.domain.project.ProjectStatus;
+import com.ginkgooai.core.project.domain.role.ProjectRole;
+import com.ginkgooai.core.project.dto.request.ProjectCreateRequest;
+import com.ginkgooai.core.project.dto.request.ProjectRolePatchRequest;
+import com.ginkgooai.core.project.dto.request.ProjectRoleRequest;
+import com.ginkgooai.core.project.dto.request.ProjectUpdateRequest;
+import com.ginkgooai.core.project.repository.ProjectRepository;
+import com.ginkgooai.core.project.repository.ProjectRoleRepository;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
@@ -21,6 +32,9 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
     private ProjectRepository projectRepository;
     @Autowired
     private ProjectRoleRepository projectRoleRepository;
+    @Autowired
+    private ActivityLogger activityLogger;
+
 
     @Override
     @Transactional
@@ -49,8 +63,35 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
                         .project(savedProject)
                         .build();
                 projectRoleRepository.save(role);
+
+                activityLogger.log(
+                        workspaceId,
+                        savedProject.getId(),
+                        null,
+                        ActivityType.ROLE_CREATED,
+                        Map.of(
+                                "user", userId,
+                                "projectName", savedProject.getName(),
+                                "roleName", role.getName()
+                        ),
+                        null,
+                        userId
+                );
             });
         }
+
+        activityLogger.log(
+                workspaceId,
+                savedProject.getId(),
+                null,
+                ActivityType.PROJECT_CREATED,
+                Map.of(
+                        "user", userId,
+                        "projectName", savedProject.getName()
+                ),
+                null,
+                userId
+        );
 
         return savedProject;
     }
@@ -68,11 +109,15 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
     @Transactional
     public Project updateProject(String projectId, ProjectUpdateRequest request, String workspaceId) {
         Project project = projectRepository.findByIdAndWorkspaceId(projectId, workspaceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Project", "id&workspaceId", projectId + ":" + workspaceId));
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id&workspaceId",
+                        projectId + ":" + workspaceId));
 
-        project.updateDetails(request.getName(), request.getDescription(), request.getPlotLine(), request.getStatus(), request.getPosterUrl());
+        project.updateDetails(request.getName(), request.getDescription(), request.getPlotLine(), request.getStatus(),
+                request.getPosterUrl());
 
-        return projectRepository.save(project);
+        Project updatedProject = projectRepository.save(project);
+
+        return updatedProject;
     }
 
     @Override
@@ -85,12 +130,31 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
             throw new IllegalArgumentException("Status cannot be null");
         }
 
+        if (status == project.getStatus()) {
+            return project;
+        }
+
         project.setStatus(status);
         project.setLastActivityAt(LocalDateTime.now());
 
-        return projectRepository.save(project);
+        Project updatedProject = projectRepository.save(project);
+        activityLogger.log(
+                project.getWorkspaceId(),
+                project.getId(),
+                null,
+                ActivityType.PROJECT_STATUS_CHANGE,
+                Map.of(
+                        "project", updatedProject.getName(),
+                        "previousStatus", project.getStatus().getValue() ,
+                        "newStatus", status,
+                        "newStatus", updatedProject.getStatus().getValue()
+                ),
+                null,
+                updatedProject.getCreatedBy()
+        );
+        
+        return updatedProject;
     }
-
 
     @Override
     @Transactional
@@ -103,7 +167,8 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
     @Override
     @Transactional
     public ProjectRole createRole(String projectId, ProjectRoleRequest request) {
-        Project project = projectRepository.findById(projectId).orElseThrow(() -> new ResourceNotFoundException("Project", "projectId", projectId));
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "projectId", projectId));
 
         ProjectRole role = new ProjectRole();
         role.setName(request.getName());

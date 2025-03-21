@@ -20,7 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/shortlists")
+@RequestMapping("/shortlists")
 @RequiredArgsConstructor
 @Tag(name = "Shortlists", description = "APIs for managing shortlists")
 public class ShortlistController {

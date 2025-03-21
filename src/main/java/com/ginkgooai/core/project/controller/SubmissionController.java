@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/submissions")
+@RequestMapping("/submissions")
 @RequiredArgsConstructor
 @Tag(name = "Submission Management", description = "APIs for managing talent submissions")
 public class SubmissionController {

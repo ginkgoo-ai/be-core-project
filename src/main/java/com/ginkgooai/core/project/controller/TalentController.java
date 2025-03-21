@@ -22,7 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/talents")
+@RequestMapping("/talents")
 @Tag(name = "Talent Management", description = "APIs for managing talents")
 @RequiredArgsConstructor
 public class TalentController {

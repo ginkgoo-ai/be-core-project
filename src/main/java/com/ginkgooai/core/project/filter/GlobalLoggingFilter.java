@@ -36,7 +36,9 @@ public class GlobalLoggingFilter extends OncePerRequestFilter {
             "/favicon.ico",
             "/static",
             "/webjars",
-            "/health");
+            "/health",
+            "/api/project/v3/api-docs",
+            "/api/project/swagger-ui");
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -46,9 +48,13 @@ public class GlobalLoggingFilter extends OncePerRequestFilter {
 
         boolean isExcludedPath = EXCLUDE_PATHS.stream().anyMatch(path::startsWith);
 
+        if (isExcludedPath) {
+            return true;
+        }
+
         boolean isApiPath = path.startsWith("/api");
 
-        return !isApiPath || isExcludedPath;
+        return !isApiPath;
     }
 
     @Override

@@ -25,7 +25,6 @@ public class WorkspaceAuthFilter extends OncePerRequestFilter {
 
     private final ProjectWorkspaceContextService projectWorkspaceContextService;
 
-    // 需要排除的路径模式
     private static final List<String> EXCLUDE_PATH_PATTERNS = Arrays.asList(
             "/swagger-ui",
             "/v3/api-docs",
