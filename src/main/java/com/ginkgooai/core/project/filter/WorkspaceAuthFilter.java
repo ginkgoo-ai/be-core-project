@@ -1,8 +1,6 @@
 package com.ginkgooai.core.project.filter;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -25,18 +23,11 @@ public class WorkspaceAuthFilter extends OncePerRequestFilter {
 
     private final ProjectWorkspaceContextService projectWorkspaceContextService;
 
-    private final List<String> excludedPaths = Arrays.asList(
-            "/swagger-ui/",
-            "/v3/api-docs",
-            "/swagger-resources",
-            "/health");
-
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
 
-        return excludedPaths.stream()
-                .anyMatch(path::startsWith);
+        return !path.startsWith("/api");
     }
 
     @Override

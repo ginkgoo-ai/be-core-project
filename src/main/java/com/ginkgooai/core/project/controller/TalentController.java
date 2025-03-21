@@ -19,13 +19,11 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/talents")
-@Tag(name = "Talent Management", description = "APIs for managing talent profiles and their information")
+@RequestMapping("/api/talents")
+@Tag(name = "Talent Management", description = "APIs for managing talents")
 @RequiredArgsConstructor
 public class TalentController {
 

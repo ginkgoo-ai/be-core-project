@@ -1,6 +1,5 @@
 package com.ginkgooai.core.project.controller;
 
-import com.ginkgooai.core.common.constant.RedisKey;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.dto.request.CommentCreateRequest;
 import com.ginkgooai.core.project.dto.request.SubmissionCreateRequest;
@@ -16,7 +15,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -25,9 +23,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/submissions")
+@RequestMapping("/api/submissions")
 @RequiredArgsConstructor
-@Tag(name = "Submission Management", description = "Endpoints for managing video submissions and their comments")
+@Tag(name = "Submission Management", description = "APIs for managing talent submissions")
 public class SubmissionController {
 
         private final SubmissionService submissionService;

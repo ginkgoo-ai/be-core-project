@@ -17,14 +17,12 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/shortlists")
+@RequestMapping("/api/shortlists")
 @RequiredArgsConstructor
-@Tag(name = "Shortlist Management", description = "Endpoints for managing shortlisted applications and submissions")
+@Tag(name = "Shortlists", description = "APIs for managing shortlists")
 public class ShortlistController {
 
         private final ShortlistService shortlistService;
