@@ -44,11 +44,11 @@ public class ProjectRoleController {
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     @PostMapping("/{projectId}/roles")
-    public ResponseEntity<ProjectRoleResponse> createRole(@PathVariable String projectId, @RequestBody ProjectRoleRequest request) {
+    public ResponseEntity<ProjectRoleResponse> createRole(@PathVariable String projectId,
+            @RequestBody ProjectRoleRequest request) {
         ProjectRole role = projectWriteService.createRole(projectId, request);
         return new ResponseEntity<>(ProjectRoleResponse.from(role), HttpStatus.CREATED);
     }
-
 
     @Operation(summary = "Get a role by ID", description = "Retrieves details of a specific role by its ID")
     @ApiResponses(value = {
@@ -56,7 +56,8 @@ public class ProjectRoleController {
             @ApiResponse(responseCode = "404", description = "Role not found")
     })
     @GetMapping("/{projectId}/roles/{roleId}")
-    public ResponseEntity<ProjectRoleResponse> getRoleById(@PathVariable String projectId, @PathVariable String roleId) {
+    public ResponseEntity<ProjectRoleResponse> getRoleById(@PathVariable String projectId,
+            @PathVariable String roleId) {
         return projectReadService.findRoleById(roleId)
                 .map(role -> new ResponseEntity<>(ProjectRoleResponse.from(role), HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
@@ -78,11 +79,11 @@ public class ProjectRoleController {
         try {
             Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
             Pageable pageable = PageRequest.of(page, size, sort);
-            
+
             Page<ProjectRole> rolesPage = projectReadService.findRolesByProjectIdPaginated(projectId, pageable);
-            
+
             Page<ProjectRoleResponse> responseRolesPage = rolesPage.map(ProjectRoleResponse::from);
-            
+
             return new ResponseEntity<>(responseRolesPage, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -110,8 +111,7 @@ public class ProjectRoleController {
         }
     }
 
-    @Operation(summary = "Update role details",
-            description = "Partially updates specific fields (characterDescription, selfTapeInstructions, sides) of a role")
+    @Operation(summary = "Update role details", description = "Partially updates specific fields (characterDescription, selfTapeInstructions, sides) of a role")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Role details updated successfully"),
             @ApiResponse(responseCode = "404", description = "Role not found"),
@@ -149,18 +149,15 @@ public class ProjectRoleController {
         }
     }
 
-    @Operation(summary = "Get role statistics",
-            description = "Retrieves statistics about talents in different stages for a specific role")
+    @Operation(summary = "Get role statistics", description = "Retrieves statistics about talents in different stages for a specific role")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Statistics retrieved successfully"),
             @ApiResponse(responseCode = "404", description = "Role not found")
     })
     @GetMapping("/{projectId}/roles/{roleId}/statistics")
     public ResponseEntity<ProjectRoleStatisticsResponse> getRoleStatistics(
-            @Parameter(description = "ID of the project", required = true)
-            @PathVariable String projectId,
-            @Parameter(description = "ID of the role", required = true)
-            @PathVariable String roleId) {
+            @Parameter(description = "ID of the project", required = true) @PathVariable String projectId,
+            @Parameter(description = "ID of the role", required = true) @PathVariable String roleId) {
         try {
             ProjectRoleStatisticsResponse statistics = projectReadService.getRoleStatistics(roleId);
 

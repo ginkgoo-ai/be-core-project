@@ -21,7 +21,7 @@ public class ShortlistItem {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shortlist_id")
     private Shortlist shortlist;
@@ -31,17 +31,13 @@ public class ShortlistItem {
     private Application application;
 
     @ManyToMany
-    @JoinTable(
-            name = "shortlist_item_submission_mapping",
-            joinColumns = @JoinColumn(name = "shortlist_item_id"),
-            inverseJoinColumns = @JoinColumn(name = "submission_id")
-    )
+    @JoinTable(name = "shortlist_item_submission_mapping", joinColumns = @JoinColumn(name = "shortlist_item_id"), inverseJoinColumns = @JoinColumn(name = "submission_id"))
     private List<Submission> submissions = new ArrayList<>();
-    
+
     private Integer sortOrder;
 
     private String createdBy;
-    
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

@@ -53,22 +53,21 @@ public class ProjectController {
     })
     @PostMapping
     public ResponseEntity<ProjectResponse> createProject(@RequestBody ProjectCreateRequest request) {
-        Project project = projectWriteService.createProject(request, ContextUtils.getWorkspaceId(), ContextUtils.getUserId());
+        Project project = projectWriteService.createProject(request, ContextUtils.getWorkspaceId(),
+                ContextUtils.getUserId());
         Map<String, Object> variables = Map.of(
                 "user", ContextUtils.getUserId(),
                 "project", project.getName(),
-                "timeAgo", "just now"
-        );
+                "timeAgo", "just now");
 
-        activityLogger.log( 
+        activityLogger.log(
                 project.getWorkspaceId(),
                 project.getId(),
                 null,
                 ActivityType.PROJECT_CREATED,
                 variables,
                 null,
-                ContextUtils.getUserId()
-        );
+                ContextUtils.getUserId());
         return new ResponseEntity<>(ProjectResponse.from(project), HttpStatus.CREATED);
     }
 
@@ -103,7 +102,8 @@ public class ProjectController {
             Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
             Pageable pageable = PageRequest.of(page, size, sort);
 
-            Page<ProjectResponse> projects = projectReadService.findProjects(ContextUtils.getWorkspaceId(), name, status, pageable);
+            Page<ProjectResponse> projects = projectReadService.findProjects(ContextUtils.getWorkspaceId(), name,
+                    status, pageable);
 
             return new ResponseEntity<>(projects, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
@@ -128,7 +128,8 @@ public class ProjectController {
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     @PutMapping("/{id}")
-    public ResponseEntity<ProjectResponse> updateProject(@PathVariable String id, @RequestBody ProjectUpdateRequest request) {
+    public ResponseEntity<ProjectResponse> updateProject(@PathVariable String id,
+            @RequestBody ProjectUpdateRequest request) {
         try {
             Project updatedProject = projectWriteService.updateProject(id, request, ContextUtils.getWorkspaceId());
             return new ResponseEntity<>(ProjectResponse.from(updatedProject), HttpStatus.OK);
@@ -146,12 +147,7 @@ public class ProjectController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<ProjectResponse> updateProjectStatus(
             @PathVariable String id,
-            @Parameter(
-                    description = "New project status",
-                    required = true,
-                    schema = @Schema(implementation = ProjectStatus.class, example = "IN_PROGRESS")
-            )
-            @RequestBody ProjectUpdateStatusRequest request,
+            @Parameter(description = "New project status", required = true, schema = @Schema(implementation = ProjectStatus.class, example = "IN_PROGRESS")) @RequestBody ProjectUpdateStatusRequest request,
             @AuthenticationPrincipal Jwt jwt) {
         try {
             Project updatedProject = projectWriteService.updateProjectStatus(id, request.getStatus());
@@ -160,8 +156,7 @@ public class ProjectController {
                     "project", updatedProject.getName(),
                     "previousStatus", updatedProject.getStatus().name(),
                     "newStatus", request.getStatus().name(),
-                    "time", System.currentTimeMillis() 
-            );
+                    "time", System.currentTimeMillis());
 
             activityLogger.log(
                     updatedProject.getWorkspaceId(),
@@ -170,8 +165,7 @@ public class ProjectController {
                     ActivityType.PROJECT_STATUS_CHANGE,
                     variables,
                     null,
-                    ContextUtils.getUserId()
-            );
+                    ContextUtils.getUserId());
 
             return new ResponseEntity<>(ProjectResponse.from(updatedProject), HttpStatus.OK);
         } catch (ResourceNotFoundException e) {
