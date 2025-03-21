@@ -24,7 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/project-roles")
+@RequestMapping("/projects")
 @Tag(name = "Project Role Management", description = "APIs for managing project roles")
 @Slf4j
 public class ProjectRoleController {

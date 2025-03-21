@@ -40,11 +40,7 @@ public class WorkspaceAuthFilter extends OncePerRequestFilter {
         boolean isExcludedPath = EXCLUDE_PATH_PATTERNS.stream()
                 .anyMatch(pattern -> path.startsWith(pattern));
 
-        if (isExcludedPath) {
-            return true;
-        }
-
-        return !path.startsWith("/api");
+        return isExcludedPath;
     }
 
     @Override

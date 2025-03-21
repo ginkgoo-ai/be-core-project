@@ -48,13 +48,7 @@ public class GlobalLoggingFilter extends OncePerRequestFilter {
 
         boolean isExcludedPath = EXCLUDE_PATHS.stream().anyMatch(path::startsWith);
 
-        if (isExcludedPath) {
-            return true;
-        }
-
-        boolean isApiPath = path.startsWith("/api");
-
-        return !isApiPath;
+        return isExcludedPath;
     }
 
     @Override
