@@ -1,6 +1,5 @@
 package com.ginkgooai.core.project.domain.project;
 
-import com.ginkgooai.core.common.jpa.BaseEntity;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.dto.request.ProjectCreateRequest;
 import jakarta.persistence.*;
@@ -19,7 +18,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "project")
-public class Project extends BaseEntity {
+public class Project {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -95,35 +94,6 @@ public class Project extends BaseEntity {
 
     public void removeRole(String roleId) {
         roles.removeIf(role -> role.getId().equals(roleId));
-    }
-
-    public void addNda(ProjectNda nda) {
-        if (nda == null) {
-            throw new IllegalArgumentException("NDA cannot be null");
-        }
-        nda.setProject(this);
-        ndas.add(nda);
-    }
-
-    public void removeNda(String ndaId) {
-        ndas.removeIf(nda -> nda.getId().equals(ndaId));
-    }
-
-    public void addMember(ProjectMember member) {
-        if (member == null) {
-            throw new IllegalArgumentException("Member cannot be null");
-        }
-        member.setProject(this);
-        members.add(member);
-    }
-
-    public void removeMember(String userId) {
-        members.removeIf(member -> member.getUserId().equals(userId));
-    }
-
-    public boolean isMember(String userId) {
-        return members.stream()
-                .anyMatch(member -> member.getUserId().equals(userId));
     }
 
 }

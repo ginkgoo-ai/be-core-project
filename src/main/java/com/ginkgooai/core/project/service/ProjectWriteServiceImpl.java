@@ -7,7 +7,6 @@ import com.ginkgooai.core.project.dto.request.*;
 import com.ginkgooai.core.project.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,8 +21,6 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
     private ProjectRepository projectRepository;
     @Autowired
     private ProjectRoleRepository projectRoleRepository;
-    @Autowired
-    private ProjectNdaRepository projectNdaRepository;
 
     @Override
     @Transactional
@@ -171,31 +168,4 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         projectRoleRepository.delete(role);
     }
 
-    @Override
-    @Transactional
-    public ProjectNda createNda(String projectId, ProjectNdaRequest request) {
-        Project project = projectRepository.findById(projectId).orElseThrow(() -> new ResourceNotFoundException("Project", "projectId", projectId));
-
-        ProjectNda nda = new ProjectNda();
-        nda.setRequiresNda(request.getRequiresNda() != null ? request.getRequiresNda() : false);
-        nda.setApplyToAll(request.getApplyToAll() != null ? request.getApplyToAll() : false);
-        nda.setVersion(request.getVersion());
-        nda.setFullName(request.getFullName());
-        nda.setTitle(request.getTitle());
-        nda.setCompany(request.getCompany());
-        nda.setSignatureUrl(request.getSignatureUrl());
-        nda.setProject(project);
-
-        ProjectNda savedNda = projectNdaRepository.save(nda);
-        project.addNda(savedNda); // Update the project aggregate
-        projectRepository.save(project); // Save to persist the relationship
-
-        return savedNda;
-    }
-
-    @Override
-    @Transactional
-    public ProjectMember addMember(String projectId, ProjectMemberRequest request) {
-        return new ProjectMember();
-    }
 }

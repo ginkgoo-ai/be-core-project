@@ -21,8 +21,4 @@ public interface ProjectWriteService {
     ProjectRole patchRoleDetails(String roleId, ProjectRolePatchRequest request);
 
     void deleteRole(String roleId);
-
-    ProjectNda createNda(String projectId, ProjectNdaRequest request);
-
-    ProjectMember addMember(String projectId, ProjectMemberRequest request);
 }
