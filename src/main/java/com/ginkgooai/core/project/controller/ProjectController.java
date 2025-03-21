@@ -22,7 +22,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -47,9 +46,6 @@ public class ProjectController {
     @Autowired
     private ActivityLogger activityLogger;
 
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
-
     @Operation(summary = "Create a new project", description = "Creates a new project with the provided details")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Project created successfully"),
@@ -64,7 +60,7 @@ public class ProjectController {
                 "timeAgo", "just now"
         );
 
-        activityLogger.log(
+        activityLogger.log( 
                 project.getWorkspaceId(),
                 project.getId(),
                 null,

@@ -21,6 +21,12 @@ public class ApplicationCommentResponse {
     @Schema(description = "User ID who created the comment")
     private String createdBy;
 
+    @Schema(description = "User's name")
+    private String userName;
+
+    @Schema(description = "User's avatar URL")
+    private String userPicture;
+
     @Schema(description = "When the comment was created")
     private LocalDateTime createdAt;
 

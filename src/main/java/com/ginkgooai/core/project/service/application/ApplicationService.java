@@ -1,6 +1,8 @@
 package com.ginkgooai.core.project.service.application;
 
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
+import com.ginkgooai.core.project.client.identity.IdentityClient;
+import com.ginkgooai.core.project.client.identity.dto.UserInfo;
 import com.ginkgooai.core.project.client.storage.StorageClient;
 import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
 import com.ginkgooai.core.project.domain.application.*;
@@ -27,7 +29,9 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -43,6 +47,7 @@ public class ApplicationService {
     private final ApplicationStateMachine stateMachine;
     private final TalentService talentService;
     private final StorageClient storageClient;
+    private final IdentityClient identityClient;
 
     @Transactional
     public ApplicationResponse createApplication(ApplicationCreateRequest request, String workspaceId, String userId) {
@@ -51,7 +56,7 @@ public class ApplicationService {
         if (!ObjectUtils.isEmpty(request.getTalentId())) {
             talent = talentRepository.findById(request.getTalentId())
                     .orElseThrow(() -> new ResourceNotFoundException("Talent", "id", request.getTalentId()));
-        } else if (Objects.nonNull(request.getTalent())) 
+        } else if (Objects.nonNull(request.getTalent()))
             talent = talentService.createTalentFromProfiles(request.getTalent(), workspaceId, userId);
         else {
             throw new IllegalArgumentException("Talent ID or Talent object must be provided");
@@ -107,24 +112,54 @@ public class ApplicationService {
 
     @Transactional(readOnly = true)
     public Page<ApplicationResponse> listApplications(String workspaceId,
-                                                      String userId,
-                                                      String projectId,
-                                                      String roleId,
-                                                      String keyword,
-                                                      ApplicationStatus status,
-                                                      Pageable pageable) {
+            String userId,
+            String projectId,
+            String roleId,
+            String keyword,
+            ApplicationStatus status,
+            Pageable pageable) {
 
-        return applicationRepository.findAll(
+        Page<ApplicationResponse> applicationResponsePage = applicationRepository.findAll(
                 buildSpecification(workspaceId, projectId, roleId, keyword, status),
-                pageable
-        ).map(application -> ApplicationResponse.from(application, userId));
+                pageable).map(application -> ApplicationResponse.from(application, userId));
+
+        // Extract all unique user IDs from the notes' createdBy field
+        List<String> userIds = applicationResponsePage.getContent().stream()
+                .flatMap(app -> app.getNotes().stream())
+                .map(ApplicationNoteResponse::getCreatedBy)
+                .distinct()
+                .toList();
+
+        // Fetch user information for all extracted user IDs
+        if (!userIds.isEmpty()) {
+            List<UserInfo> users = identityClient.getUsersByIds(userIds).getBody();
+            if (users != null && !users.isEmpty()) {
+                // Create a map for quick lookup of user info by ID
+                Map<String, UserInfo> userInfoMap = users.stream()
+                        .collect(Collectors.toMap(UserInfo::getId, user -> user));
+
+                // Populate userName and userPicture in each note
+                applicationResponsePage.getContent().forEach(app -> {
+                    app.getNotes().forEach(note -> {
+                        UserInfo userInfo = userInfoMap.get(note.getCreatedBy());
+                        if (userInfo != null) {
+                            // Set user name and picture in the note
+                            note.setUserName(userInfo.getName());
+                            note.setUserPicture(userInfo.getPicture());
+                        }
+                    });
+                });
+            }
+        }
+
+        return applicationResponsePage;
     }
 
     private Specification<Application> buildSpecification(String workspaceId,
-                                                          String projectId,
-                                                          String roleId,
-                                                          String keyword,
-                                                          ApplicationStatus status) {
+            String projectId,
+            String roleId,
+            String keyword,
+            ApplicationStatus status) {
 
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -165,8 +200,7 @@ public class ApplicationService {
                         talentEmailPredicate,
                         agentNamePredicate,
                         agentEmailPredicate,
-                        roleNamePredicate
-                ));
+                        roleNamePredicate));
             }
 
             // Make query distinct to avoid duplicates
@@ -206,8 +240,9 @@ public class ApplicationService {
         ApplicationNote savedNote = applicationNoteRepository.findById(note.getId()).get();
         application.getNotes().add(savedNote);
 
-        List<String> userIds = application.getNotes().stream().filter(t -> !ObjectUtils.isEmpty(t.getCreatedBy())).map(ApplicationNote::getCreatedBy).distinct().toList();
-        
+        List<String> userIds = application.getNotes().stream().filter(t -> !ObjectUtils.isEmpty(t.getCreatedBy()))
+                .map(ApplicationNote::getCreatedBy).distinct().toList();
+
         return application.getNotes().stream()
                 .map(ApplicationNoteResponse::from)
                 .toList();
@@ -217,9 +252,8 @@ public class ApplicationService {
         return applicationRepository.findOne(
                 (root, query, cb) -> cb.and(
                         cb.equal(root.get("id"), id),
-                        cb.equal(root.get("workspaceId"), workspaceId)
-                )
-        ).orElseThrow(() -> new ResourceNotFoundException("Application", "id", id));
+                        cb.equal(root.get("workspaceId"), workspaceId)))
+                .orElseThrow(() -> new ResourceNotFoundException("Application", "id", id));
     }
 
 }

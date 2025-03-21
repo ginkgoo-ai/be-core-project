@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.domain.project;
 
+import com.ginkgooai.core.common.jpa.BaseEntity;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.dto.request.ProjectCreateRequest;
 import jakarta.persistence.*;
@@ -18,7 +19,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "project")
-public class Project {
+public class Project extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

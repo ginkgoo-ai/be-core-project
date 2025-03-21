@@ -29,7 +29,7 @@ public class WorkspaceAuthFilter extends OncePerRequestFilter {
         
         String workspaceId = request.getHeader("x-workspace-id");
         if (workspaceId == null || workspaceId.isEmpty()) {
-            chain.doFilter(request, response);
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
         
