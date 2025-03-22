@@ -56,7 +56,7 @@ class TestSecurityController {
 @WebAppConfiguration
 @WebMvcTest(controllers = TestSecurityController.class, excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
         WorkspaceAuthFilter.class,
-        SecurityConfig.class // 排除原始的SecurityConfig
+        SecurityConfig.class
 }))
 @Import(TestSecurityConfig.class)
 @ActiveProfiles("test")
@@ -85,7 +85,6 @@ class MethodSecurityConfigTest {
     @Test
     @WithMockUser(roles = "USER")
     void testAccessWithRoleUser() {
-        // 测试ROLE_USER角色是否可以访问
         String shortlistId = "cfc08cb3-c87c-4190-9355-1ff73fe15c0e";
         ResponseEntity<?> response = securityController.getShortlistItemsByShortlistId(shortlistId);
 
@@ -95,18 +94,14 @@ class MethodSecurityConfigTest {
 
     @Test
     void testAccessWithGuestAndScope() {
-        // 测试ROLE_GUEST角色带有必要的scope是否可以访问
         String shortlistId = "cfc08cb3-c87c-4190-9355-1ff73fe15c0e";
 
-        // 模拟拥有ROLE_GUEST角色和特定scope的用户
         Authentication authentication = mock(Authentication.class);
 
-        // 创建授权集合
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("ROLE_GUEST"));
         authorities.add(new SimpleGrantedAuthority("shortlist:" + shortlistId + ":read"));
 
-        // 使用doReturn语法避免泛型问题
         doReturn(authorities).when(authentication).getAuthorities();
         doReturn(true).when(authentication).isAuthenticated();
 
@@ -119,7 +114,6 @@ class MethodSecurityConfigTest {
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
 
-        // 清理
         SecurityContextHolder.clearContext();
     }
 }

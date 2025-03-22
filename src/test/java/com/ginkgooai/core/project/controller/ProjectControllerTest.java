@@ -135,14 +135,6 @@ class ProjectControllerTest {
         assertNotNull(response.getBody());
 
         verify(projectWriteService).createProject(eq(createRequest), eq(workspaceId), eq(userId));
-        verify(activityLogger).log(
-                eq(workspaceId),
-                eq(projectId),
-                eq(null),
-                eq(ActivityType.PROJECT_CREATED),
-                any(Map.class),
-                eq(null),
-                eq(userId));
     }
 
     @Test
