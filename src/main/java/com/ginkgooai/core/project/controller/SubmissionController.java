@@ -1,6 +1,7 @@
 package com.ginkgooai.core.project.controller;
 
 import com.ginkgooai.core.common.utils.ContextUtils;
+import com.ginkgooai.core.project.domain.application.CommentType;
 import com.ginkgooai.core.project.dto.request.CommentCreateRequest;
 import com.ginkgooai.core.project.dto.request.SubmissionCreateRequest;
 import com.ginkgooai.core.project.dto.response.SubmissionCommentResponse;

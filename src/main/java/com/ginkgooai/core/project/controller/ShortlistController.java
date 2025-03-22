@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ginkgooai.core.common.utils.ContextUtils;
-import com.ginkgooai.core.project.config.security.RequireShareShortlistScope;
 import com.ginkgooai.core.project.dto.request.ShareShortlistRequest;
 import com.ginkgooai.core.project.dto.response.BatchShareShortlistResponse;
 import com.ginkgooai.core.project.dto.response.ShortlistItemResponse;
@@ -34,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/shortlists")
 @RequiredArgsConstructor
-@Tag(name = "Shortlists", description = "APIs for managing shortlists")
+@Tag(name = "Shortlists Management", description = "APIs for managing shortlists")
 public class ShortlistController {
 
         private final ShortlistService shortlistService;
@@ -66,26 +65,6 @@ public class ShortlistController {
                         @Parameter(description = "Optional search keyword to filter items", example = "John Smith") @RequestParam(required = false) String keyword,
                         @Parameter(description = "Pagination parameters") @ParameterObject Pageable pageable) {
                 return ResponseEntity.ok(shortlistService.listShortlistItems(projectId, keyword, pageable));
-        }
-
-        @Operation(summary = "Get shortlist items by shortlist ID", description = "Retrieves a paginated list of items from a specific shortlist. "
-                        +
-                        "Requires ROLE_USER role or ROLE_GUEST role with appropriate shortlist scopes.")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Successfully retrieved shortlist items", content = @Content(schema = @Schema(implementation = Page.class))),
-                        @ApiResponse(responseCode = "400", description = "Invalid pagination parameters"),
-                        @ApiResponse(responseCode = "403", description = "Not authorized to view this shortlist"),
-                        @ApiResponse(responseCode = "404", description = "Shortlist not found")
-        })
-        @GetMapping("/{shortlistId}/items")
-        @RequireShareShortlistScope
-        public ResponseEntity<Page<ShortlistItemResponse>> getShortlistItemsByShortlistId(
-                        @Parameter(description = "ID of the shortlist", required = true, example = "cfc08cb3-c87c-4190-9355-1ff73fe15c0e") @PathVariable String shortlistId,
-                        @Parameter(description = "Optional search keyword to filter items", example = "John Smith") @RequestParam(required = false) String keyword,
-                        @Parameter(description = "Pagination parameters") @ParameterObject Pageable pageable) {
-
-                return ResponseEntity
-                                .ok(shortlistService.listShortlistItemsByShortlistId(shortlistId, keyword, pageable));
         }
 
         @Operation(summary = "Remove item from shortlist", description = "Removes a specific submission from a shortlist")

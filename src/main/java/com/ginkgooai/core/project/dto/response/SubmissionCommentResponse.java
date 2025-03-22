@@ -39,7 +39,7 @@ public class SubmissionCommentResponse {
             example = "2025-03-03T02:09:57.713Z")
     private LocalDateTime updatedAt;
 
-    @Schema(description = "Converts a SubmissionComment entity to SubmissionCommentResponse DTO")
+    //For internal user comment
     public static SubmissionCommentResponse from(SubmissionComment comment, UserInfoResponse userInfo) {
         return SubmissionCommentResponse.builder()
                 .id(comment.getId())
@@ -47,6 +47,19 @@ public class SubmissionCommentResponse {
                 .createdBy(comment.getCreatedBy())
                 .userName(userInfo.getName())
                 .userPicture(userInfo.getPicture())
+                .createdAt(comment.getCreatedAt())
+                .updatedAt(comment.getUpdatedAt())
+                .build();
+    }
+
+    //For public user comment
+    public static SubmissionCommentResponse from(SubmissionComment comment) {
+        return SubmissionCommentResponse.builder()
+                .id(comment.getId())
+                .content(comment.getContent())
+                .createdBy(comment.getCreatedBy())
+                .userName(comment.getCreatedBy())
+                .userPicture("") //TODO: Add system default guest picture
                 .createdAt(comment.getCreatedAt())
                 .updatedAt(comment.getUpdatedAt())
                 .build();

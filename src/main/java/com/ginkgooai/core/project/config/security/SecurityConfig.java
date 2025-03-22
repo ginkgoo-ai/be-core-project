@@ -25,84 +25,87 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityConfig {
 
-        @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
-        private String issuerUri;
+    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+    private String issuerUri;
 
-        @Bean
-        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-                http
-                                .csrf(csrf -> csrf.disable())
-                                .authorizeHttpRequests(authorize -> authorize
-                                                .requestMatchers(
-                                                                "/api/project/v3/api-docs/**",
-                                                                "/api/project/swagger-ui/**",
-                                                                "/webjars/**")
-                                                .permitAll()
-                                                .requestMatchers(
-                                                                "/health")
-                                                .permitAll()
-                                                .anyRequest().authenticated())
-                                .oauth2ResourceServer(oauth2 -> oauth2
-                                                .jwt(jwt -> jwt
-                                                                .jwtAuthenticationConverter(
-                                                                                jwtAuthenticationConverter())));
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(
+                                "/api/project/v3/api-docs/**",
+                                "/api/project/swagger-ui/**",
+                                "/webjars/**")
+                        .permitAll()
+                        .requestMatchers(
+                                "/health")
+                        .permitAll()
+                        .requestMatchers(
+                                "/shared-shortlists/**")
+                        .authenticated()
+                        .anyRequest().hasRole("USER"))
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt
+                                .jwtAuthenticationConverter(
+                                        jwtAuthenticationConverter())));
 
-                return http.build();
-        }
+        return http.build();
+    }
 
-        public JwtAuthenticationConverter jwtAuthenticationConverter() {
-                JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
 
-                jwtConverter.setPrincipalClaimName("email");
-                jwtConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
-                        Collection<GrantedAuthority> authorities = new ArrayList<>();
-                        List<String> roles = getClaimAsList(jwt, "role");
-                        if (roles != null) {
-                                for (String role : roles) {
-                                        authorities.add(new SimpleGrantedAuthority(role.toUpperCase()));
-                                }
-                        }
-
-                        List<String> scopes = getClaimAsList(jwt, "scope");
-                        if (scopes != null) {
-                                for (String scope : scopes) {
-                                        authorities.add(new SimpleGrantedAuthority(scope));
-                                }
-                        }
-
-                        return authorities;
-                });
-
-                return jwtConverter;
-        }
-
-        @Bean
-        public MethodSecurityExpressionHandler methodSecurityExpressionHandler() {
-                DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
-                return expressionHandler;
-        }
-
-        @SuppressWarnings("unchecked")
-        private List<String> getClaimAsList(Jwt jwt, String claimName) {
-                Object claimValue = jwt.getClaim(claimName);
-
-                if (claimValue == null) {
-                        return null;
+        jwtConverter.setPrincipalClaimName("email");
+        jwtConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            Collection<GrantedAuthority> authorities = new ArrayList<>();
+            List<String> roles = getClaimAsList(jwt, "role");
+            if (roles != null) {
+                for (String role : roles) {
+                    authorities.add(new SimpleGrantedAuthority(role.toUpperCase()));
                 }
+            }
 
-                if (claimValue instanceof List) {
-                        return (List<String>) claimValue;
+            List<String> scopes = getClaimAsList(jwt, "scope");
+            if (scopes != null) {
+                for (String scope : scopes) {
+                    authorities.add(new SimpleGrantedAuthority(scope));
                 }
+            }
 
-                if (claimValue instanceof String) {
-                        return List.of(((String) claimValue).split(" "));
-                }
+            return authorities;
+        });
 
-                return null;
+        return jwtConverter;
+    }
+
+    @Bean
+    public MethodSecurityExpressionHandler methodSecurityExpressionHandler() {
+        DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
+        return expressionHandler;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> getClaimAsList(Jwt jwt, String claimName) {
+        Object claimValue = jwt.getClaim(claimName);
+
+        if (claimValue == null) {
+            return null;
         }
 
-        @Bean
-        public JwtDecoder jwtDecoder() {
-                return JwtDecoders.fromIssuerLocation(issuerUri);
+        if (claimValue instanceof List) {
+            return (List<String>) claimValue;
         }
+
+        if (claimValue instanceof String) {
+            return List.of(((String) claimValue).split(" "));
+        }
+
+        return null;
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        return JwtDecoders.fromIssuerLocation(issuerUri);
+    }
 }

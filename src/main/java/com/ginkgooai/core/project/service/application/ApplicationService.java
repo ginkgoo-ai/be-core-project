@@ -157,10 +157,10 @@ public class ApplicationService {
         application.getComments().forEach(comment -> userIds.add(comment.getCreatedBy()));
         application.getNotes().forEach(note -> userIds.add(note.getCreatedBy()));
         application.getSubmissions().forEach(submission -> submission.getComments()
-                    .forEach(comment -> userIds.add(comment.getCreatedBy())));
+                .forEach(comment -> userIds.add(comment.getCreatedBy())));
 
         final List<UserInfoResponse> finalUsers = getUserInfoByIds(userIds);
-        
+
         return ApplicationResponse.from(application, finalUsers, ContextUtils.getUserId());
     }
 
@@ -169,30 +169,36 @@ public class ApplicationService {
                                                       String userId,
                                                       String projectId,
                                                       String roleId,
+                                                      String talentId,
+                                                      String viewMode,
                                                       String keyword,
                                                       ApplicationStatus status,
                                                       Pageable pageable) {
 
         Page<Application> applicationPage = applicationRepository.findAll(
-                buildSpecification(workspaceId, projectId, roleId, keyword, status),
+                buildSpecification(workspaceId, projectId, roleId, viewMode, talentId, keyword, status),
                 pageable);
 
         List<String> userIds = new ArrayList<>();
         applicationPage.forEach(app -> {
-            CollectionUtils.emptyIfNull(app.getComments()).forEach(comment -> userIds.add(comment.getCreatedBy()));
+            CollectionUtils.emptyIfNull(app.getComments())
+                    .forEach(comment -> userIds.add(comment.getCreatedBy()));
             CollectionUtils.emptyIfNull(app.getNotes()).forEach(note -> userIds.add(note.getCreatedBy()));
-            CollectionUtils.emptyIfNull(app.getSubmissions()).forEach(submission -> CollectionUtils.emptyIfNull(submission.getComments())
-                    .forEach(comment -> userIds.add(comment.getCreatedBy())));
+            CollectionUtils.emptyIfNull(app.getSubmissions())
+                    .forEach(submission -> CollectionUtils.emptyIfNull(submission.getComments())
+                            .forEach(comment -> userIds.add(comment.getCreatedBy())));
         });
 
         final List<UserInfoResponse> finalUsers = getUserInfoByIds(userIds);
-        
+
         return applicationPage.map(application -> ApplicationResponse.from(application, finalUsers, userId));
     }
 
     private Specification<Application> buildSpecification(String workspaceId,
                                                           String projectId,
                                                           String roleId,
+                                                          String viewMode,
+                                                          String talentId,
                                                           String keyword,
                                                           ApplicationStatus status) {
 
@@ -212,9 +218,21 @@ public class ApplicationService {
                 predicates.add(cb.equal(root.get("role").get("id"), roleId));
             }
 
+            // Talent filter
+            if (StringUtils.hasText(talentId)) {
+                predicates.add(cb.equal(root.get("talent").get("id"), talentId));
+            }
+
             // Status filter
             if (status != null) {
                 predicates.add(cb.equal(root.get("status"), status));
+            }
+
+            // viewMode filter
+            if ("submissions".equals(viewMode)) {
+                Join<Application, Submission> submissionJoin = root.join("submissions", JoinType.LEFT);
+                predicates.add(cb.isNotNull(submissionJoin.get("id")));
+                query.distinct(true);
             }
 
             // Keyword search on talent name or email
@@ -262,8 +280,9 @@ public class ApplicationService {
         List<String> userIds = application.getNotes().stream()
                 .filter(t -> !ObjectUtils.isEmpty(t.getCreatedBy()))
                 .map(ApplicationNote::getCreatedBy).distinct().toList();
-        
-        Map<String, UserInfoResponse> userInfoResponses = getUserInfoByIds(userIds).stream().collect(Collectors.toMap(UserInfoResponse::getId, userInfoResponse -> userInfoResponse));
+
+        Map<String, UserInfoResponse> userInfoResponses = getUserInfoByIds(userIds).stream().collect(
+                Collectors.toMap(UserInfoResponse::getId, userInfoResponse -> userInfoResponse));
 
         application.getComments().add(comment);
         application.setStatus(ApplicationStatus.REVIEWED);
@@ -285,12 +304,12 @@ public class ApplicationService {
         ApplicationNote savedNote = applicationNoteRepository.findById(note.getId()).get();
         application.getNotes().add(savedNote);
 
-
         List<String> userIds = application.getNotes().stream()
                 .filter(t -> !ObjectUtils.isEmpty(t.getCreatedBy()))
                 .map(ApplicationNote::getCreatedBy).distinct().toList();
 
-        Map<String, UserInfoResponse> userInfoResponses = getUserInfoByIds(userIds).stream().collect(Collectors.toMap(UserInfoResponse::getId, userInfoResponse -> userInfoResponse));
+        Map<String, UserInfoResponse> userInfoResponses = getUserInfoByIds(userIds).stream().collect(
+                Collectors.toMap(UserInfoResponse::getId, userInfoResponse -> userInfoResponse));
 
         return application.getNotes().stream()
                 .map(t -> ApplicationNoteResponse.from(t, userInfoResponses.get(t.getCreatedBy())))
@@ -304,7 +323,7 @@ public class ApplicationService {
                                 cb.equal(root.get("workspaceId"), workspaceId)))
                 .orElseThrow(() -> new ResourceNotFoundException("Application", "id", id));
     }
-    
+
     private List<UserInfoResponse> getUserInfoByIds(List<String> userIds) {
         List<String> distinctUserIds = userIds.stream()
                 .filter(id -> id != null && !id.isEmpty())
@@ -323,7 +342,7 @@ public class ApplicationService {
                 log.error("Error fetching user information: {}", e.getMessage());
             }
         }
-        
+
         return users;
     }
 

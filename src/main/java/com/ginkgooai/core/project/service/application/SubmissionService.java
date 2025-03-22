@@ -7,10 +7,7 @@ import com.ginkgooai.core.project.client.identity.IdentityClient;
 import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.client.storage.StorageClient;
 import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
-import com.ginkgooai.core.project.domain.application.Application;
-import com.ginkgooai.core.project.domain.application.ShortlistItem;
-import com.ginkgooai.core.project.domain.application.Submission;
-import com.ginkgooai.core.project.domain.application.SubmissionComment;
+import com.ginkgooai.core.project.domain.application.*;
 import com.ginkgooai.core.project.dto.request.CommentCreateRequest;
 import com.ginkgooai.core.project.dto.request.SubmissionCreateRequest;
 import com.ginkgooai.core.project.dto.response.SubmissionCommentResponse;
@@ -144,9 +141,12 @@ public class SubmissionService {
         submission.getComments().add(comment);
         submissionRepository.save(submission);
 
+        if (comment.getType() == CommentType.PUBLIC) {
+            return SubmissionResponse.from(submission, ContextUtils.getUserId());
+        }
+        
         List<UserInfoResponse> users = identityClient.getUsersByIds(submission.getComments().stream().map(SubmissionComment::getCreatedBy).distinct().toList()).getBody();
-
-        return SubmissionResponse.from(submission, users, ContextUtils.get(USER_ID, String.class, null));
+        return SubmissionResponse.from(submission, users, ContextUtils.getUserId());
     }
 
     @Transactional

@@ -64,21 +64,21 @@ public class WorkspaceAuthFilter extends OncePerRequestFilter {
         if (!ObjectUtils.isEmpty(jwt.getClaimAsString("workspace_id"))) {
             ContextUtils.set(ContextsConstant.WORKSPACE_ID, jwt.getClaimAsString("workspace_id"));
             chain.doFilter(request, response);
-        }
-        
-        try {
-            boolean hasAccess = projectWorkspaceContextService.validateUserWorkspaceAccess(jwt.getSubject(), workspaceId);
+        } else {
+            try {
+                boolean hasAccess = projectWorkspaceContextService.validateUserWorkspaceAccess(jwt.getSubject(), workspaceId);
 
-            if (!hasAccess) {
-                log.warn("User {} workspace {} access denied", jwt.getSubject(), workspaceId);
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                return;
+                if (!hasAccess) {
+                    log.warn("User {} workspace {} access denied", jwt.getSubject(), workspaceId);
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
+            } catch (Exception e) {
+                log.error("Failed to validate workspace access: {}", e.getMessage());
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
-        } catch (Exception e) {
-            log.error("Failed to validate workspace access: {}", e.getMessage());
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            chain.doFilter(request, response);
         }
         
-        chain.doFilter(request, response);
     }
 }

@@ -225,7 +225,7 @@ public class ShortlistService {
         public Map<String, String> shareShortlist(ShareShortlistRequest request, String userId) {
                 Map<String, String> shareLinks = new HashMap<>();
                 String workspaceId = ContextUtils.get().getWorkspaceId();
-
+                
                 List<Submission> submissions = submissionRepository.findAllById(request.getSubmissionIds());
                 if (submissions.isEmpty()) {
                         throw new ResourceNotFoundException("Submissions", "ids",

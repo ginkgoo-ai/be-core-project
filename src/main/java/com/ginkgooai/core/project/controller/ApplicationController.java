@@ -1,7 +1,6 @@
 package com.ginkgooai.core.project.controller;
 
 import com.ginkgooai.core.common.utils.ContextUtils;
-import com.ginkgooai.core.project.domain.application.Application;
 import com.ginkgooai.core.project.domain.application.ApplicationStatus;
 import com.ginkgooai.core.project.dto.request.ApplicationCreateRequest;
 import com.ginkgooai.core.project.dto.request.NoteCreateRequest;
@@ -66,6 +65,8 @@ public class ApplicationController {
         public ResponseEntity<Page<ApplicationResponse>> listApplications(
                         @Parameter(description = "Project ID filter") @RequestParam(required = false) String projectId,
                         @Parameter(description = "Role ID filter") @RequestParam(required = false) String roleId,
+                        @Parameter(description = "Talent ID filter") @RequestParam(required = false) String talentId,
+                        @Parameter(description = "View Mode") @RequestParam(defaultValue = "readingList") String viewMode,
                         @Parameter(description = "Search keyword for talent name or email or role name") @RequestParam(required = false) String keyword,
                         @Parameter(description = "Filter by application status") @RequestParam(required = false) ApplicationStatus status,
                         @Parameter(description = "Page number (zero-based)", example = "0") @RequestParam(defaultValue = "0") int page,
@@ -75,7 +76,7 @@ public class ApplicationController {
                 Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
                 Pageable pageable = PageRequest.of(page, size, sort);
                 return ResponseEntity.ok(applicationService.listApplications(ContextUtils.getWorkspaceId(),
-                                ContextUtils.getUserId(), projectId, roleId, keyword, status, pageable));
+                                ContextUtils.getUserId(), projectId, roleId, talentId, viewMode, keyword, status, pageable));
         }
 
         @Operation(summary = "Add comment to application", description = "Adds a new comment to the application")
