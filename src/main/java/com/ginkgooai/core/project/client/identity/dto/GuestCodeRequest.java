@@ -6,6 +6,8 @@ import lombok.Data;
 @Data
 @Builder
 public class GuestCodeRequest {
+    private String workspaceId;
+    
     private String resource;
     
     private String resourceId;

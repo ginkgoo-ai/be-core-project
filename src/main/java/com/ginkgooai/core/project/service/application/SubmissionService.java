@@ -83,7 +83,7 @@ public class SubmissionService {
                 Map.of(
                         "user", userId,
                         "talentName", application.getTalent().getName(),
-                        "videoName", submission.getOriginalFilename() 
+                        "videoName", submission.getVideoName() 
                 ),
                 null,
                 userId

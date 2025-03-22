@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.ginkgooai.core.common.utils.ContextUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -44,8 +45,6 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 
 @Service
 @Slf4j
@@ -180,9 +179,9 @@ public class ApplicationService {
 
         List<String> userIds = new ArrayList<>();
         applicationPage.forEach(app -> {
-            emptyIfNull(app.getComments()).forEach(comment -> userIds.add(comment.getCreatedBy()));
-            emptyIfNull(app.getNotes()).forEach(note -> userIds.add(note.getCreatedBy()));
-            emptyIfNull(app.getSubmissions()).forEach(submission -> emptyIfNull(submission.getComments())
+            CollectionUtils.emptyIfNull(app.getComments()).forEach(comment -> userIds.add(comment.getCreatedBy()));
+            CollectionUtils.emptyIfNull(app.getNotes()).forEach(note -> userIds.add(note.getCreatedBy()));
+            CollectionUtils.emptyIfNull(app.getSubmissions()).forEach(submission -> CollectionUtils.emptyIfNull(submission.getComments())
                     .forEach(comment -> userIds.add(comment.getCreatedBy())));
         });
 

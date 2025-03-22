@@ -127,8 +127,8 @@ class ProjectControllerTest {
     @Test
     void createProject_Success() {
         when(projectWriteService.createProject(any(ProjectCreateRequest.class), anyString(), anyString()))
-                .thenReturn(project);
-
+                .thenReturn(ProjectResponse.from(project));
+        
         ResponseEntity<ProjectResponse> response = projectController.createProject(createRequest);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());

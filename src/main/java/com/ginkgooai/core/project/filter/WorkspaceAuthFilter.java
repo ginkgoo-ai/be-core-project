@@ -4,9 +4,12 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import com.ginkgooai.core.common.constant.ContextsConstant;
+import com.ginkgooai.core.common.utils.ContextUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.ginkgooai.core.project.service.ProjectWorkspaceContextService;
@@ -49,18 +52,25 @@ public class WorkspaceAuthFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain chain) throws ServletException, IOException {
 
+
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String workspaceId = request.getHeader("x-workspace-id");
         if (workspaceId == null || workspaceId.isEmpty()) {
+            log.warn("User {} must choose workspace before visit project", jwt.getSubject());
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
 
-        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!ObjectUtils.isEmpty(jwt.getClaimAsString("workspace_id"))) {
+            ContextUtils.set(ContextsConstant.WORKSPACE_ID, jwt.getClaimAsString("workspace_id"));
+            chain.doFilter(request, response);
+        }
+        
         try {
-            boolean hasAccess = projectWorkspaceContextService.validateUserWorkspaceAccess(jwt.getSubject(),
-                    workspaceId);
+            boolean hasAccess = projectWorkspaceContextService.validateUserWorkspaceAccess(jwt.getSubject(), workspaceId);
 
             if (!hasAccess) {
+                log.warn("User {} workspace {} access denied", jwt.getSubject(), workspaceId);
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 return;
             }

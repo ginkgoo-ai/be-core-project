@@ -51,6 +51,7 @@ public class ShortlistService {
         private final IdentityClient identityClient;
         private final ActivityLoggerService activityLogger;
         private final String guestLoginUri;
+        private final String appBaseUrl;
 
         public ShortlistService(
                         ShortlistRepository shortlistRepository,
@@ -58,13 +59,15 @@ public class ShortlistService {
                         SubmissionRepository submissionRepository,
                         IdentityClient identityClient,
                         ActivityLoggerService activityLogger,
-                        @Value("${spring.security.oauth2.guest_login_uri}") String guestLoginUri) {
+                        @Value("${spring.security.oauth2.guest_login_uri}") String guestLoginUri,
+                        @Value("${app.base-uri}") String appBaseUrl) {
                 this.shortlistRepository = shortlistRepository;
                 this.shortlistItemRepository = shortlistItemRepository;
                 this.submissionRepository = submissionRepository;
                 this.identityClient = identityClient;
                 this.activityLogger = activityLogger;
                 this.guestLoginUri = guestLoginUri;
+                this.appBaseUrl = appBaseUrl;
         }
 
         @Transactional
@@ -170,6 +173,18 @@ public class ShortlistService {
                                 pageable).map(t -> ShortlistItemResponse.from(t, userId));
         }
 
+
+        @Transactional(readOnly = true)
+        public Page<ShortlistItemResponse> listShortlistItemsByShortlistId(String shortlistId, String keyword,
+                        Pageable pageable) {
+                Shortlist shortlist = shortlistRepository.findById(shortlistId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Shortlist", "id", shortlistId));
+
+                return shortlistItemRepository.findAll(
+                                buildShortlistItemSpecification(shortlistId, keyword),
+                                pageable).map(t -> ShortlistItemResponse.from(t, shortlist.getOwnerId()));
+        }
+
         private Specification<ShortlistItem> buildShortlistItemSpecification(String shortlistId, String keyword) {
                 return (root, query, cb) -> {
                         List<Predicate> predicates = new ArrayList<>();
@@ -257,12 +272,13 @@ public class ShortlistService {
                                         : 7 * 24;
 
                         GuestCodeResponse response = identityClient.generateGuestCode(GuestCodeRequest.builder()
+                                        .workspaceId(workspaceId)
                                         .resource("shortlist")
                                         .resourceId(shortlist.getId())
                                         .guestName(recipient.getName())
                                         .guestEmail(recipient.getEmail())
                                         .write(true)
-                                        .redirectUrl(guestLoginUri)
+                                        .redirectUrl(appBaseUrl + "/shares/shortlist/" + shortlist.getId())
                                         .expiryHours(expiryHours)
                                         .build()).getBody();
 

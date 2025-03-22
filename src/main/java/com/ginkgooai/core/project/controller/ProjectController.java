@@ -53,22 +53,10 @@ public class ProjectController {
     })
     @PostMapping
     public ResponseEntity<ProjectResponse> createProject(@RequestBody ProjectCreateRequest request) {
-        Project project = projectWriteService.createProject(request, ContextUtils.getWorkspaceId(),
+        ProjectResponse project = projectWriteService.createProject(request, ContextUtils.getWorkspaceId(),
                 ContextUtils.getUserId());
-        Map<String, Object> variables = Map.of(
-                "user", ContextUtils.getUserId(),
-                "project", project.getName(),
-                "timeAgo", "just now");
 
-        activityLogger.log(
-                project.getWorkspaceId(),
-                project.getId(),
-                null,
-                ActivityType.PROJECT_CREATED,
-                variables,
-                null,
-                ContextUtils.getUserId());
-        return new ResponseEntity<>(ProjectResponse.from(project), HttpStatus.CREATED);
+        return new ResponseEntity<>(project, HttpStatus.CREATED);
     }
 
     @Operation(summary = "Get a project by ID", description = "Retrieves details of a specific project by its ID")

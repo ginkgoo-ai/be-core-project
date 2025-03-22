@@ -2,18 +2,20 @@ package com.ginkgooai.core.project.dto.request;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.util.ObjectUtils;
+
+import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
 import com.ginkgooai.core.project.domain.project.Project;
-import com.ginkgooai.core.project.domain.project.ProjectMember;
-import com.ginkgooai.core.project.domain.project.ProjectNda;
 import com.ginkgooai.core.project.domain.project.ProjectStatus;
-import com.ginkgooai.core.project.domain.role.ProjectRole;
+import com.ginkgooai.core.project.dto.response.ProjectRoleResponse;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import org.springframework.util.ObjectUtils;
 
 @Data
 @Schema(description = "Response payload for a project")
@@ -46,20 +48,11 @@ public class ProjectResponse {
     @Schema(description = "Timestamp when the project was last updated", example = "2025-02-20T10:30:00")
     private LocalDateTime updatedAt;
 
-    @Schema(description = "List of role IDs associated with the project")
-    private Set<String> roleIds;
+    @Schema(description = "List of roles associated with the project")
+    private List<ProjectRoleResponse> roles;
 
     @Schema(description = "Number of roles in the project", example = "5")
     private Integer rolesCount;
-
-    @Schema(description = "List of NDA IDs associated with the project")
-    private Set<String> ndaIds;
-
-    @Schema(description = "List of member IDs associated with the project")
-    private Set<String> memberIds;
-
-    @Schema(description = "List of activity IDs associated with the project")
-    private Set<String> activityIds;
 
     @Schema(description = "Workspace Id of this project", example = "work123")
     private String workspaceId;
@@ -69,7 +62,35 @@ public class ProjectResponse {
 
     public static ProjectResponse from(Project project) {
         if (ObjectUtils.isEmpty(project.getRoles())) {
-           project.setRoles(Collections.emptySet()); 
+            project.setRoles(Collections.emptySet());
+        }
+
+        ProjectResponse response = new ProjectResponse();
+        response.setId(project.getId());
+        response.setName(project.getName());
+        response.setDescription(project.getDescription());
+        response.setPlotLine(project.getPlotLine());
+        response.setStatus(project.getStatus());
+        response.setCreatedBy(project.getCreatedBy());
+        response.setLastActivityAt(project.getLastActivityAt());
+        response.setCreatedAt(project.getCreatedAt());
+        response.setUpdatedAt(project.getUpdatedAt());
+        response.setRoles(project.getRoles().stream().map(t -> ProjectRoleResponse.from(t)).toList());
+        response.setRolesCount(project.getRoles().size());
+        response.setWorkspaceId(project.getWorkspaceId());
+        response.setPosterUrl(project.getPosterUrl());
+        return response;
+    }
+
+    public static ProjectResponse from(Project project, List<CloudFileResponse> roleSideFiles) {
+        Map<String, CloudFileResponse> roleSideFilesMap = roleSideFiles.stream()
+                .collect(Collectors.toMap(
+                        file -> file.getId(),
+                        Function.identity(),
+                        (o, n) -> n));
+
+        if (ObjectUtils.isEmpty(project.getRoles())) {
+            project.setRoles(Collections.emptySet());
         }
         ProjectResponse response = new ProjectResponse();
         response.setId(project.getId());
@@ -81,7 +102,7 @@ public class ProjectResponse {
         response.setLastActivityAt(project.getLastActivityAt());
         response.setCreatedAt(project.getCreatedAt());
         response.setUpdatedAt(project.getUpdatedAt());
-        response.setRoleIds(project.getRoles().stream().map(ProjectRole::getId).collect(Collectors.toSet()));
+        response.setRoles(project.getRoles().stream().map(t -> ProjectRoleResponse.from(t, roleSideFilesMap)).toList());
         response.setRolesCount(project.getRoles().size());
         response.setWorkspaceId(project.getWorkspaceId());
         response.setPosterUrl(project.getPosterUrl());

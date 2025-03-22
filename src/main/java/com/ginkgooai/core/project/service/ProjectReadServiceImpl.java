@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.ginkgooai.core.common.utils.ContextUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,7 +40,7 @@ public class ProjectReadServiceImpl implements ProjectReadService {
 
     @Override
     public List<ProjectResponse> findAll() {
-        return projectRepository.findAll().stream()
+        return projectRepository.findByWorkspaceId(ContextUtils.getWorkspaceId()).stream()
                 .map(ProjectResponse::from)
                 .collect(Collectors.toList());
     }

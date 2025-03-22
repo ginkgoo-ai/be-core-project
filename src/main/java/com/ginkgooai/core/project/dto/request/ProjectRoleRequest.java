@@ -1,5 +1,7 @@
 package com.ginkgooai.core.project.dto.request;
 
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -24,8 +26,8 @@ public class ProjectRoleRequest {
     @Schema(description = "Gender for the role", example = "Any")
     private String gender;
 
-    @Schema(description = "Sides for the role", example = "['side1', 'side2']")
-    private String[] sides;
+    @Schema(description = "Sides file id for the role", example = "['side1', 'side2']")
+    private List<String> sides;
 
     @Schema(description = "Whether the role is active", example = "true")
     private Boolean isActive;

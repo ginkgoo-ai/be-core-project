@@ -3,6 +3,9 @@ core-workspace-uri: ${SERVICE_SCHEME}://${CORE_WORKSPACE_HOST}:${CORE_WORKSPACE_
 core-messaging-uri: ${SERVICE_SCHEME}://${CORE_IDENTITY_HOST}:${CORE_IDENTITY_PORT}
 core-storage-uri: ${SERVICE_SCHEME}://${CORE_STORAGE_HOST}:${CORE_STORAGE_PORT}
 
+app:
+  base-uri: ${SLATE_URI}
+
 server:
   port: ${CORE_PROJECT_PORT}
   shutdown: graceful
@@ -32,6 +35,8 @@ spring:
     show-sql: true
     properties:
       hibernate.default_schema: project
+      hibernate.temp.use_jdbc_metadata_defaults: false
+      hibernate.jdbc.lob.non_contextual_creation: true
   
   flyway:
     enabled: true
@@ -71,5 +76,5 @@ logging:
   level:
     root: ${LOG_LEVEL_ROOT:INFO}
     org.springframework.web.cors: ${LOG_LEVEL_SPRING_WEB_CORS:DEBUG}
-    org.springframework.security: ${LOG_LEVEL_SPRING_SECURITY:DEBUG}
+    org.springframework.security: ${LOG_LEVEL_SPRING_SECURITY:TRACE}
     com.ginkgooai: ${LOG_LEVEL_GINKGOOAI:DEBUG}

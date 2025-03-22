@@ -31,7 +31,7 @@ public class ProjectRole {
     private String[] sides;
     
     private Boolean isActive = true;
-    
+
     private RoleStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -1,9 +1,15 @@
 package com.ginkgooai.core.project.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import com.ginkgooai.core.common.bean.ActivityType;
+import com.ginkgooai.core.project.client.storage.StorageClient;
+import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
+import com.ginkgooai.core.project.dto.request.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,10 +19,6 @@ import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.project.ProjectStatus;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
-import com.ginkgooai.core.project.dto.request.ProjectCreateRequest;
-import com.ginkgooai.core.project.dto.request.ProjectRolePatchRequest;
-import com.ginkgooai.core.project.dto.request.ProjectRoleRequest;
-import com.ginkgooai.core.project.dto.request.ProjectUpdateRequest;
 import com.ginkgooai.core.project.repository.ProjectRepository;
 import com.ginkgooai.core.project.repository.ProjectRoleRepository;
 
@@ -32,10 +34,12 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
     private ProjectRoleRepository projectRoleRepository;
     @Autowired
     private ActivityLoggerService activityLogger;
+    @Autowired
+    private StorageClient storageClient;
 
     @Override
     @Transactional
-    public Project createProject(ProjectCreateRequest request, String workspaceId, String userId) {
+    public ProjectResponse createProject(ProjectCreateRequest request, String workspaceId, String userId) {
         log.debug("Creating new project with request: {}", request);
 
         validateProjectRequest(request);
@@ -49,6 +53,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         }
 
         // Initialize roles and bind to project
+        List<CloudFileResponse> roleSideFiles = new ArrayList<>();
         if (request.getRoles() != null && !request.getRoles().isEmpty()) {
             request.getRoles().forEach(roleRequest -> {
                 ProjectRole role = ProjectRole.builder()
@@ -56,7 +61,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
                         .characterDescription(roleRequest.getCharacterDescription())
                         .selfTapeInstructions(roleRequest.getSelfTapeInstructions())
                         .isActive(roleRequest.getIsActive() != null ? roleRequest.getIsActive() : true)
-                        .sides(roleRequest.getSides())
+                        .sides(roleRequest.getSides().toArray(new String[0]))
                         .project(savedProject)
                         .build();
                 projectRoleRepository.save(role);
@@ -75,6 +80,9 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
                         userId
                 );
             });
+
+            roleSideFiles = storageClient.getFileDetails(request.getRoles().stream().flatMap(roles -> roles.getSides().stream()).toList()).getBody();
+            log.debug("Roles sides files: {}", roleSideFiles);
         }
 
         activityLogger.log(
@@ -90,7 +98,8 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
                 userId
         );
 
-        return savedProject;
+
+        return ProjectResponse.from(savedProject, roleSideFiles);
     }
 
     private void validateProjectRequest(ProjectCreateRequest request) {
@@ -212,7 +221,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
             role.setSelfTapeInstructions(request.getSelfTapeInstructions());
         }
         if (request.getSides() != null) {
-            role.setSides(request.getSides());
+            role.setSides(request.getSides().toArray(new String[0]));
         }
         return projectRoleRepository.save(role);
     }

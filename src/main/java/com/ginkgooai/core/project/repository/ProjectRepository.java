@@ -13,5 +13,7 @@ public interface ProjectRepository extends JpaRepository<Project, String>, JpaSp
     
     List<Project> findByCreatedBy(String ownerId);
     
+    List<Project> findByWorkspaceId(String workspaceId);
+    
     List<Project> findByStatus(ProjectStatus status);
 }

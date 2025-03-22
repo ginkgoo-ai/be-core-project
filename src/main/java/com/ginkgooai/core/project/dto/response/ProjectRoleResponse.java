@@ -1,10 +1,25 @@
 package com.ginkgooai.core.project.dto.response;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
+
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "Response payload for a project role")
 public class ProjectRoleResponse {
     @Schema(description = "ID of the role", example = "role123")
@@ -14,7 +29,7 @@ public class ProjectRoleResponse {
     private String name;
 
     @Schema(description = "Sides for the role", example = "['side1', 'side2']")
-    private String[] sides;
+    private List<CloudFileResponse> sides;
 
     @Schema(description = "Character description", example = "A brave young hero")
     private String characterDescription;
@@ -37,16 +52,36 @@ public class ProjectRoleResponse {
     @Schema(description = "Project ID associated with the role", example = "proj123")
     private String projectId;
 
-    // Mapping methods (simplified, can use ModelMapper or MapStruct in practice)
     public static ProjectRoleResponse from(ProjectRole role) {
-        ProjectRoleResponse response = new ProjectRoleResponse();
-        response.setId(role.getId());
-        response.setName(role.getName());
-        response.setSides(role.getSides());
-        response.setCharacterDescription(role.getCharacterDescription());
-        response.setSelfTapeInstructions(role.getSelfTapeInstructions());
-        response.setIsActive(role.getIsActive());
-        response.setProjectId(role.getProject().getId());
+        if (role == null) {
+            return null;
+        }
+
+        return ProjectRoleResponse.builder()
+                .id(role.getId())
+                .name(role.getName())
+                .characterDescription(role.getCharacterDescription())
+                .selfTapeInstructions(role.getSelfTapeInstructions())
+                .isActive(role.getIsActive())
+                .projectId(role.getProject() != null ? role.getProject().getId() : null)
+                .build();
+    }
+
+    public static ProjectRoleResponse from(ProjectRole role, Map<String, CloudFileResponse> roleSideFilesMap) {
+        ProjectRoleResponse response = from(role);
+        if (response == null) {
+            return null;
+        }
+
+        List<CloudFileResponse> sideFiles = role.getSides() != null && roleSideFilesMap != null
+                ? Arrays.stream(role.getSides())
+                        .filter(sideId -> sideId != null && roleSideFilesMap.containsKey(sideId))
+                        .map(roleSideFilesMap::get)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList())
+                : new ArrayList<>();
+
+        response.setSides(sideFiles);
         return response;
     }
 }
