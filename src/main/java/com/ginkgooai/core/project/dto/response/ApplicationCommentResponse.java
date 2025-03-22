@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.dto.response;
 
+import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.domain.application.ApplicationComment;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -33,11 +34,13 @@ public class ApplicationCommentResponse {
     @Schema(description = "When the comment was last updated")
     private LocalDateTime updatedAt;
 
-    public static ApplicationCommentResponse from(ApplicationComment comment) {
+    public static ApplicationCommentResponse from(ApplicationComment comment, UserInfoResponse user) {
         return ApplicationCommentResponse.builder()
                 .id(comment.getId())
                 .content(comment.getContent())
                 .createdBy(comment.getCreatedBy())
+                .userPicture(user.getPicture())
+                .userName(user.getName())
                 .createdAt(comment.getCreatedAt())
                 .updatedAt(comment.getUpdatedAt())
                 .build();

@@ -1,6 +1,6 @@
 package com.ginkgooai.core.project.domain.talent;
 
-import io.hypersistence.utils.hibernate.type.array.StringArrayType;
+import com.ginkgooai.core.project.dto.request.TalentRequest;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -67,4 +67,21 @@ public class Talent {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    public static Talent from(TalentRequest request, String userid, String workspaceId) {
+        return Talent.builder()
+                .name(request.getName())
+                .nameSuffix(request.getNameSuffix())
+                .email(request.getEmail())
+                .imdbProfileUrl(request.getImdbProfileUrl())
+                .spotlightProfileUrl(request.getSpotlightProfileUrl())
+                .agencyName(request.getAgencyName())
+                .agentName(request.getAgentName())
+                .agentEmail(request.getAgentEmail())
+                .profilePhotoUrl(request.getProfilePhotoUrl())
+                .status(TalentStatus.ACTIVE)
+                .createdBy(userid)
+                .workspaceId(workspaceId)
+                .build();
+    }
 }

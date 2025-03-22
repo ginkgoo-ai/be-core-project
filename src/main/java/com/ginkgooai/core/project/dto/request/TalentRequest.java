@@ -5,11 +5,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "Request object for creating/update a new talent profile")
 public class TalentRequest {
 
@@ -62,6 +66,6 @@ public class TalentRequest {
     @Email(message = "Must be a valid email address")
     private String agentEmail;
    
-    @Schema(description = "Additional personal details about the talent")
-    private TalentProfileData profile;
+//    @Schema(description = "Additional personal details about the talent")
+//    private TalentProfileData profile;
 }

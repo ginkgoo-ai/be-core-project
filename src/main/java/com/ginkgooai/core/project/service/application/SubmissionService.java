@@ -4,7 +4,7 @@ import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.client.identity.IdentityClient;
-import com.ginkgooai.core.project.client.identity.dto.UserInfo;
+import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.client.storage.StorageClient;
 import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
 import com.ginkgooai.core.project.domain.application.Application;
@@ -96,7 +96,7 @@ public class SubmissionService {
     public SubmissionResponse getSubmission(String submissionId) {
         Submission submission = findSubmissionById(submissionId);
 
-        List<UserInfo> users = identityClient.getUsersByIds(submission.getComments().stream().map(SubmissionComment::getCreatedBy).distinct().toList()).getBody();
+        List<UserInfoResponse> users = identityClient.getUsersByIds(submission.getComments().stream().map(SubmissionComment::getCreatedBy).distinct().toList()).getBody();
         return SubmissionResponse.from(submission, users, ContextUtils.get(USER_ID, String.class, null));
     }
 
@@ -144,7 +144,7 @@ public class SubmissionService {
         submission.getComments().add(comment);
         submissionRepository.save(submission);
 
-        List<UserInfo> users = identityClient.getUsersByIds(submission.getComments().stream().map(SubmissionComment::getCreatedBy).distinct().toList()).getBody();
+        List<UserInfoResponse> users = identityClient.getUsersByIds(submission.getComments().stream().map(SubmissionComment::getCreatedBy).distinct().toList()).getBody();
 
         return SubmissionResponse.from(submission, users, ContextUtils.get(USER_ID, String.class, null));
     }
@@ -164,8 +164,8 @@ public class SubmissionService {
     public List<SubmissionCommentResponse> listComments(String submissionId) {
         Submission submission = findSubmissionById(submissionId);
 
-        Map<String, UserInfo> usersMap = identityClient.getUsersByIds(submission.getComments().stream().map(SubmissionComment::getCreatedBy).distinct().toList())
-                .getBody().stream().collect(Collectors.toMap(UserInfo::getId, user -> user));
+        Map<String, UserInfoResponse> usersMap = identityClient.getUsersByIds(submission.getComments().stream().map(SubmissionComment::getCreatedBy).distinct().toList())
+                .getBody().stream().collect(Collectors.toMap(UserInfoResponse::getId, user -> user));
 
         return submission.getComments().stream()
                 .sorted(Comparator.comparing(SubmissionComment::getCreatedAt))

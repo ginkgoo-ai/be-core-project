@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.dto.response;
 
+import com.ginkgooai.core.project.domain.application.Application;
 import com.ginkgooai.core.project.domain.application.ShortlistItem;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -17,9 +18,8 @@ public class ShortlistItemResponse {
             example = "sli_12345")
     private String id;
 
-    @Schema(description = "Application identifier associated with this submission",
-            example = "application-456")
-    private String applicationId;
+    @Schema(description = "Application associated with this shortlist item")
+    private ApplicationResponse application;
     
     @Schema(description = "Submission lists")
     private List<SubmissionResponse> submissions;
@@ -38,7 +38,7 @@ public class ShortlistItemResponse {
     public static ShortlistItemResponse from(ShortlistItem shortlistItem, String userId) {
         return ShortlistItemResponse.builder()
                 .id(shortlistItem.getId())
-                .applicationId(shortlistItem.getApplication().getId())
+                .application(ApplicationResponse.from(shortlistItem.getApplication()))
                 .submissions(shortlistItem.getSubmissions().stream().map(t -> SubmissionResponse.from(t, userId)).toList())
                 .order(shortlistItem.getSortOrder())
                 .createdBy(shortlistItem.getCreatedBy())

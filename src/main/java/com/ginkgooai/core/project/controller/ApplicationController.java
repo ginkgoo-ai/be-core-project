@@ -57,8 +57,8 @@ public class ApplicationController {
         @GetMapping("/{id}")
         public ResponseEntity<ApplicationResponse> getApplication(
                         @Parameter(description = "Application ID", example = "app_12345") @PathVariable String id) {
-                Application application = applicationService.getApplicationById(ContextUtils.getWorkspaceId(), id);
-                return ResponseEntity.ok(ApplicationResponse.from(application, ContextUtils.getUserId()));
+                ApplicationResponse application = applicationService.getApplicationById(ContextUtils.getWorkspaceId(), id);
+                return ResponseEntity.ok(application);
         }
 
         @Operation(summary = "List applications", description = "Retrieves a paginated list of applications with filtering and sorting options")

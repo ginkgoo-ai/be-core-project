@@ -1,11 +1,13 @@
 package com.ginkgooai.core.project.client.identity.dto;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.*;
 
 @Data
-public class UserInfo {
+@Builder
+public class UserInfoResponse {
     private String id;
     
     private String sub;

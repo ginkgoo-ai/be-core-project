@@ -1,6 +1,7 @@
 package com.ginkgooai.core.project.dto.request;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -12,6 +13,7 @@ import com.ginkgooai.core.project.domain.role.ProjectRole;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import org.springframework.util.ObjectUtils;
 
 @Data
 @Schema(description = "Response payload for a project")
@@ -66,6 +68,9 @@ public class ProjectResponse {
     private String posterUrl;
 
     public static ProjectResponse from(Project project) {
+        if (ObjectUtils.isEmpty(project.getRoles())) {
+           project.setRoles(Collections.emptySet()); 
+        }
         ProjectResponse response = new ProjectResponse();
         response.setId(project.getId());
         response.setName(project.getName());
@@ -78,8 +83,6 @@ public class ProjectResponse {
         response.setUpdatedAt(project.getUpdatedAt());
         response.setRoleIds(project.getRoles().stream().map(ProjectRole::getId).collect(Collectors.toSet()));
         response.setRolesCount(project.getRoles().size());
-        response.setNdaIds(project.getNdas().stream().map(ProjectNda::getId).collect(Collectors.toSet()));
-        response.setMemberIds(project.getMembers().stream().map(ProjectMember::getId).collect(Collectors.toSet()));
         response.setWorkspaceId(project.getWorkspaceId());
         response.setPosterUrl(project.getPosterUrl());
         return response;

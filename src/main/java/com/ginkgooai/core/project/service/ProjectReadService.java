@@ -1,15 +1,16 @@
 package com.ginkgooai.core.project.service;
 
-import com.ginkgooai.core.project.domain.role.ProjectRole;
-import com.ginkgooai.core.project.domain.project.ProjectStatus;
-import com.ginkgooai.core.project.dto.request.ProjectResponse;
-import com.ginkgooai.core.project.dto.response.ProjectBasicResponse;
-import com.ginkgooai.core.project.dto.response.ProjectRoleStatisticsResponse;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-import java.util.Optional;
+import com.ginkgooai.core.project.domain.project.ProjectStatus;
+import com.ginkgooai.core.project.domain.role.ProjectRole;
+import com.ginkgooai.core.project.dto.request.ProjectResponse;
+import com.ginkgooai.core.project.dto.response.ProjectBasicResponse;
+import com.ginkgooai.core.project.dto.response.ProjectRoleStatisticsResponse;
 
 public interface ProjectReadService {
 
@@ -32,5 +33,13 @@ public interface ProjectReadService {
     List<ProjectRole> findRolesByProjectId(String projectId);
 
     Page<ProjectRole> findRolesByProjectIdPaginated(String projectId, Pageable pageable);
+
+    /**
+     * 获取项目中所有角色的统计数据
+     * 
+     * @param projectId 项目ID
+     * @return 角色统计数据列表
+     */
+    List<ProjectRoleStatisticsResponse> getProjectRolesStatistics(String projectId);
 
 }

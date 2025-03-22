@@ -1,14 +1,21 @@
 package com.ginkgooai.core.project.dto.response;
 
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import com.ginkgooai.core.project.domain.application.ApplicationNote;
+import org.springframework.util.ObjectUtils;
+
+import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.domain.application.Application;
 import com.ginkgooai.core.project.domain.application.ApplicationStatus;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
-import org.springframework.util.ObjectUtils;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @Builder
@@ -51,26 +58,47 @@ public class ApplicationResponse {
     @Schema(description = "Last update timestamp")
     private LocalDateTime updatedAt;
 
-    public static ApplicationResponse from(Application application, String userId) {
-        return ApplicationResponse.builder()
+    public static ApplicationResponse from(Application application, List<UserInfoResponse> users, String userId) {
+        Map<String, UserInfoResponse> userInfoMap = users.stream()
+                .collect(Collectors.toMap(UserInfoResponse::getId, user -> user));
+        ApplicationResponse response = ApplicationResponse.builder()
                 .id(application.getId())
                 .workspaceId(application.getWorkspaceId())
                 .projectId(application.getProject().getId())
                 .role(ProjectRoleResponse.from(application.getRole()))
                 .talent(TalentResponse.from(application.getTalent()))
                 .submissions(ObjectUtils.isEmpty(application.getSubmissions()) ? null : application.getSubmissions().stream()
-                        .map(submission -> SubmissionResponse.from(submission, userId))
+                        .map(submission -> SubmissionResponse.from(submission, users, userId))
                         .toList())
                 .status(application.getStatus())
                 .notes(application.getNotes().stream()
-                        .map(ApplicationNoteResponse::from)
+                        .map(note -> ApplicationNoteResponse.from(note, userInfoMap.get(note.getCreatedBy())))
                         .toList())
                 .comments(application.getComments().stream()
-                        .map(ApplicationCommentResponse::from)
+                        .map(comment -> ApplicationCommentResponse.from(comment, userInfoMap.get(comment.getCreatedBy())))
                         .toList())
                 .createdBy(application.getCreatedBy())
                 .createdAt(application.getCreatedAt())
                 .updatedAt(application.getUpdatedAt())
                 .build();
+
+        return response;
     }
+
+    public static ApplicationResponse from(Application application) {
+        ApplicationResponse response = ApplicationResponse.builder()
+                .id(application.getId())
+                .workspaceId(application.getWorkspaceId())
+                .projectId(application.getProject().getId())
+                .role(ProjectRoleResponse.from(application.getRole()))
+                .talent(TalentResponse.from(application.getTalent()))
+                .status(application.getStatus())
+                .createdBy(application.getCreatedBy())
+                .createdAt(application.getCreatedAt())
+                .updatedAt(application.getUpdatedAt())
+                .build();
+
+        return response;
+    }
+    
 }

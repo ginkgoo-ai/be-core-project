@@ -97,18 +97,14 @@ public class ProjectController {
             @Parameter(description = "Filter by project name (fuzzy search)", example = "Enchanted") @RequestParam(required = false) String name,
             @Parameter(description = "Filter by project status (e.g., DRAFTING, ACTIVE, COMPLETED, PENDING_REVIEW)", example = "IN_PROGRESS") @RequestParam(required = false) ProjectStatus status) {
 
-        try {
-            // Create Pageable with sorting
-            Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
-            Pageable pageable = PageRequest.of(page, size, sort);
+        // Create Pageable with sorting
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
+        Pageable pageable = PageRequest.of(page, size, sort);
 
-            Page<ProjectResponse> projects = projectReadService.findProjects(ContextUtils.getWorkspaceId(), name,
-                    status, pageable);
+        Page<ProjectResponse> projects = projectReadService.findProjects(ContextUtils.getWorkspaceId(), name,
+                status, pageable);
 
-            return new ResponseEntity<>(projects, HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+        return new ResponseEntity<>(projects, HttpStatus.OK);
     }
 
     @Operation(summary = "Get basic info of all projects", description = "Retrieves basic information (id and name) of all projects")
@@ -129,13 +125,9 @@ public class ProjectController {
     })
     @PutMapping("/{id}")
     public ResponseEntity<ProjectResponse> updateProject(@PathVariable String id,
-            @RequestBody ProjectUpdateRequest request) {
-        try {
-            Project updatedProject = projectWriteService.updateProject(id, request, ContextUtils.getWorkspaceId());
-            return new ResponseEntity<>(ProjectResponse.from(updatedProject), HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+                                                         @RequestBody ProjectUpdateRequest request) {
+        Project updatedProject = projectWriteService.updateProject(id, request, ContextUtils.getWorkspaceId());
+        return new ResponseEntity<>(ProjectResponse.from(updatedProject), HttpStatus.OK);
     }
 
     @Operation(summary = "Update project status", description = "Updates the status of an existing project")
@@ -149,30 +141,24 @@ public class ProjectController {
             @PathVariable String id,
             @Parameter(description = "New project status", required = true, schema = @Schema(implementation = ProjectStatus.class, example = "IN_PROGRESS")) @RequestBody ProjectUpdateStatusRequest request,
             @AuthenticationPrincipal Jwt jwt) {
-        try {
-            Project updatedProject = projectWriteService.updateProjectStatus(id, request.getStatus());
-            // Log activity to message queue
-            Map<String, Object> variables = Map.of(
-                    "project", updatedProject.getName(),
-                    "previousStatus", updatedProject.getStatus().name(),
-                    "newStatus", request.getStatus().name(),
-                    "time", System.currentTimeMillis());
+        Project updatedProject = projectWriteService.updateProjectStatus(id, request.getStatus());
+        // Log activity to message queue
+        Map<String, Object> variables = Map.of(
+                "project", updatedProject.getName(),
+                "previousStatus", updatedProject.getStatus().name(),
+                "newStatus", request.getStatus().name(),
+                "time", System.currentTimeMillis());
 
-            activityLogger.log(
-                    updatedProject.getWorkspaceId(),
-                    updatedProject.getId(),
-                    null,
-                    ActivityType.PROJECT_STATUS_CHANGE,
-                    variables,
-                    null,
-                    ContextUtils.getUserId());
+        activityLogger.log(
+                updatedProject.getWorkspaceId(),
+                updatedProject.getId(),
+                null,
+                ActivityType.PROJECT_STATUS_CHANGE,
+                variables,
+                null,
+                ContextUtils.getUserId());
 
-            return new ResponseEntity<>(ProjectResponse.from(updatedProject), HttpStatus.OK);
-        } catch (ResourceNotFoundException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+        return new ResponseEntity<>(ProjectResponse.from(updatedProject), HttpStatus.OK);
     }
 
     @Operation(summary = "Delete a project", description = "Deletes a project by its ID")
@@ -182,11 +168,7 @@ public class ProjectController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProject(@PathVariable String id) {
-        try {
-            projectWriteService.deleteProject(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        projectWriteService.deleteProject(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

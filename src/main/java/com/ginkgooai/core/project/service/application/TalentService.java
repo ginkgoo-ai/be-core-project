@@ -42,39 +42,35 @@ public class TalentService {
     public Talent createTalentFromProfiles(TalentRequest request, String workspaceId, String userId) {
         // Scrape profiles if URLs are provided
         TalentProfileMeta imdbProfile = null;
-        if (Objects.isNull(request.getProfile()) && StringUtils.hasText(request.getImdbProfileUrl())) {
+        if (StringUtils.hasText(request.getImdbProfileUrl())) {
             imdbProfile = profileScraperService.scrapeFromImdb(request.getImdbProfileUrl());
         }
 
         TalentProfileMeta spotlightProfile = null;
-        if (Objects.isNull(request.getProfile()) && StringUtils.hasText(request.getSpotlightProfileUrl())) {
+        if (StringUtils.hasText(request.getSpotlightProfileUrl())) {
             spotlightProfile = profileScraperService.scrapeFromSpotlight(request.getSpotlightProfileUrl());
         }
 
         // Merge profiles with manual input
-        Talent talent = mergeTalentData(request, imdbProfile.getData(), spotlightProfile.getData());
-        talent.setEmail(request.getEmail());
-        talent.setProfileMetaId(Optional.ofNullable(imdbProfile.getId()).orElse(null));
+//        Talent talent = mergeTalentData(request, imdbProfile.getData(), spotlightProfile.getData());
+        Talent talent = Talent.from(request, userId, workspaceId);
         talent.setCreatedBy(userId);
         talent.setWorkspaceId(workspaceId);
-        talent.setAgencyName(request.getAgencyName());
-        talent.setAgentName(request.getAgentName());
-        talent.setAgentEmail(request.getAgentEmail());
         Talent saved = talentRepository.save(talent);
 
-        // Log activity
-        activityLogger.log(
-            saved.getWorkspaceId(),
-            null,
-            saved.getId(),
-            ActivityType.TALENT_IMPORTED,
-            Map.of(
-                "name", saved.getName(),
-                "sources", getProfileSources(imdbProfile.getData(), spotlightProfile.getData())
-            ),
-            null,
-            userId
-        );
+//        // Log activity
+//        activityLogger.log(
+//            saved.getWorkspaceId(),
+//            null,
+//            saved.getId(),
+//            ActivityType.TALENT_IMPORTED,
+//            Map.of(
+//                "name", saved.getName(),
+//                "sources", getProfileSources(imdbProfile.getData(), spotlightProfile.getData())
+//            ),
+//            null,
+//            userId
+//        );
 
         return saved;
     }

@@ -2,6 +2,7 @@ package com.ginkgooai.core.project.dto.response;
 
 import java.time.LocalDateTime;
 
+import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.domain.application.ApplicationNote;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -34,11 +35,13 @@ public class ApplicationNoteResponse {
     @Schema(description = "When the note was last updated")
     private LocalDateTime updatedAt;
 
-    public static ApplicationNoteResponse from(ApplicationNote note) {
+    public static ApplicationNoteResponse from(ApplicationNote note, UserInfoResponse user) {
         return ApplicationNoteResponse.builder()
                 .id(note.getId())
                 .content(note.getContent())
                 .createdBy(note.getCreatedBy())
+                .userPicture(user.getPicture())
+                .userName(user.getName())
                 .createdAt(note.getCreatedAt())
                 .updatedAt(note.getUpdatedAt())
                 .build();

@@ -1,6 +1,6 @@
 package com.ginkgooai.core.project.dto.response;
 
-import com.ginkgooai.core.project.client.identity.dto.UserInfo;
+import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.domain.application.CommentType;
 import com.ginkgooai.core.project.domain.application.Submission;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -8,7 +8,6 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -82,9 +81,9 @@ public class SubmissionResponse {
     @Schema(description = "List of public comments associated with this submission")
     private List<SubmissionCommentResponse> publicComments;
 
-    public static SubmissionResponse from(Submission submission, List<UserInfo> users, String userId) {
-        Map<String, UserInfo> userInfoMap = users.stream()
-                .collect(Collectors.toMap(UserInfo::getId, user -> user));
+    public static SubmissionResponse from(Submission submission, List<UserInfoResponse> users, String userId) {
+        Map<String, UserInfoResponse> userInfoMap = users.stream()
+                .collect(Collectors.toMap(UserInfoResponse::getId, user -> user));
 
         return SubmissionResponse.builder()
                 .id(submission.getId())

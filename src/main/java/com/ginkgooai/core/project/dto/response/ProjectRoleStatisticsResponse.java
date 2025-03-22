@@ -11,19 +11,33 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProjectRoleStatisticsResponse {
-    
+    @Schema(description = "ID of the role", example = "role123")
+    private String id;
+
+    @Schema(description = "Name of the role", example = "Lead Character")
+    private String name;
+
+    @Schema(description = "Sides for the role", example = "['side1', 'side2']")
+    private String[] sides;
+
+    @Schema(description = "Character description", example = "A brave young hero")
+    private String characterDescription;
+
+    @Schema(description = "Self-tape instructions", example = "Prepare a 2-minute monologue")
+    private String selfTapeInstructions;
+
     @Schema(description = "Total number of talents for this role")
-    private Integer total = 0;
-    
+    private long total;
+
     @Schema(description = "Number of talents added")
-    private Integer added = 0;
-    
+    private long added;
+
     @Schema(description = "Number of talents who submitted")
-    private Integer submitted = 0;
-    
+    private long submitted;
+
     @Schema(description = "Number of talents shortlisted")
-    private Integer shortlisted = 0;
-    
+    private long shortlisted;
+
     @Schema(description = "Number of talents declined")
-    private Integer declined = 0;
+    private long declined;
 }

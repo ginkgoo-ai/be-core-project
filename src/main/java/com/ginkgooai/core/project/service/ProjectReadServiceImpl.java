@@ -1,22 +1,25 @@
 package com.ginkgooai.core.project.service;
 
-import com.ginkgooai.core.project.domain.project.*;
-import com.ginkgooai.core.project.domain.role.ProjectRole;
-import com.ginkgooai.core.project.dto.request.ProjectResponse;
-import com.ginkgooai.core.project.dto.response.ProjectBasicResponse;
-import com.ginkgooai.core.project.dto.response.ProjectRoleStatisticsResponse;
-import com.ginkgooai.core.project.repository.ProjectRepository;
-import com.ginkgooai.core.project.repository.ProjectRoleRepository;
-import com.ginkgooai.core.project.specification.ProjectSpecification;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import com.ginkgooai.core.project.domain.project.Project;
+import com.ginkgooai.core.project.domain.project.ProjectStatus;
+import com.ginkgooai.core.project.domain.role.ProjectRole;
+import com.ginkgooai.core.project.dto.request.ProjectResponse;
+import com.ginkgooai.core.project.dto.response.ProjectBasicResponse;
+import com.ginkgooai.core.project.dto.response.ProjectRoleStatisticsResponse;
+import com.ginkgooai.core.project.repository.ApplicationRepository;
+import com.ginkgooai.core.project.repository.ProjectRepository;
+import com.ginkgooai.core.project.repository.ProjectRoleRepository;
+import com.ginkgooai.core.project.specification.ProjectSpecification;
 
 @Service
 public class ProjectReadServiceImpl implements ProjectReadService {
@@ -25,6 +28,8 @@ public class ProjectReadServiceImpl implements ProjectReadService {
     private ProjectRepository projectRepository;
     @Autowired
     private ProjectRoleRepository projectRoleRepository;
+    @Autowired
+    private ApplicationRepository applicationRepository;
 
     @Override
     public Optional<ProjectResponse> findById(String workspaceId, String id) {
@@ -40,7 +45,8 @@ public class ProjectReadServiceImpl implements ProjectReadService {
     }
 
     @Override
-    public Page<ProjectResponse> findProjects(String workspaceId, String name, ProjectStatus status, Pageable pageable) {
+    public Page<ProjectResponse> findProjects(String workspaceId, String name, ProjectStatus status,
+            Pageable pageable) {
         Specification<Project> spec = Specification.where(ProjectSpecification.hasWorkspaceId(workspaceId));
 
         // Apply name filter if provided and not empty
@@ -85,7 +91,12 @@ public class ProjectReadServiceImpl implements ProjectReadService {
 
     @Override
     public ProjectRoleStatisticsResponse getRoleStatistics(String roleId) {
-        return new ProjectRoleStatisticsResponse();
+        return applicationRepository.getRoleStatistics(roleId);
+    }
+
+    @Override
+    public List<ProjectRoleStatisticsResponse> getProjectRolesStatistics(String projectId) {
+        return applicationRepository.getProjectRolesStatistics(projectId);
     }
 
     @Override
@@ -94,7 +105,7 @@ public class ProjectReadServiceImpl implements ProjectReadService {
     }
 
     @Override
-public Page<ProjectRole> findRolesByProjectIdPaginated(String projectId, Pageable pageable) {
+    public Page<ProjectRole> findRolesByProjectIdPaginated(String projectId, Pageable pageable) {
         return projectRoleRepository.findByProjectId(projectId, pageable);
     }
 

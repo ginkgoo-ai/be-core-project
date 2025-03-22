@@ -26,15 +26,16 @@ public class ShareShortlistRequest {
 
     @Schema(description = "Number of days before the shared link expires", example = "7")
     private Integer expiresInDays;
-   
+
     @Getter
     @Setter
+    @Builder
     public static class Recipient {
         @Email
         @NotBlank
         @Schema(description = "Email address of the recipient", example = "recipient@slate.com")
         private String email;
-       
+
         @NotBlank
         @Schema(description = "Name of the recipient", example = "Recipient")
         private String name;
