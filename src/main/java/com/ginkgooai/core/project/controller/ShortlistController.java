@@ -75,7 +75,6 @@ public class ShortlistController {
         })
         @DeleteMapping("/items/{submissionId}")
         public ResponseEntity<Void> removeShortlistItem(
-                        @Parameter(description = "ID of the shortlist", required = true, example = "shortlist_123") @PathVariable String shortlistId,
                         @Parameter(description = "ID of the submission to remove", required = true, example = "submission_456") @PathVariable String submissionId) {
                 shortlistService.removeSubmission(submissionId);
                 return ResponseEntity.noContent().build();

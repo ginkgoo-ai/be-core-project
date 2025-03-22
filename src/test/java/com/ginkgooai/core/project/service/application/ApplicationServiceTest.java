@@ -306,7 +306,7 @@ public class ApplicationServiceTest {
 
         // Execute test
         Page<ApplicationResponse> responsePage = applicationService.listApplications(
-                workspaceId, userId, null, null, null, null, Pageable.unpaged());
+                workspaceId, userId, null, null, null, null, null, null, Pageable.unpaged());
 
         // Verify
         assertNotNull(responsePage);
@@ -337,7 +337,7 @@ public class ApplicationServiceTest {
 
         // Execute test
         Page<ApplicationResponse> responsePage = applicationService.listApplications(
-                workspaceId, userId, null, null, null, null, Pageable.unpaged());
+                workspaceId, userId, null, null, null, null, null, null, Pageable.unpaged());
 
         // Verify
         assertNotNull(responsePage);
@@ -367,7 +367,7 @@ public class ApplicationServiceTest {
 
         // Execute test - should not throw exception despite identity client failure
         Page<ApplicationResponse> responsePage = applicationService.listApplications(
-                workspaceId, userId, null, null, null, null, Pageable.unpaged());
+                workspaceId, userId, null, null, null, null, null, null, Pageable.unpaged());
 
         // Verify we still got results despite the identity client failure
         assertNotNull(responsePage);
