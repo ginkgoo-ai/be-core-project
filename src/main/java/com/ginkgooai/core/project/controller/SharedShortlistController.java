@@ -55,7 +55,7 @@ public class SharedShortlistController {
                 .ok(shortlistService.listShortlistItemsByShortlistId(shortlistId, keyword, pageable));
     }
 
-    @Operation(summary = "Add comment to submission", description = "Adds a new comment to an existing submission")
+    @Operation(summary = "Guest(Producer) Add comment to submission", description = "Adds a new comment to an existing submission")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Comment added successfully", content = @Content(schema = @Schema(implementation = SubmissionResponse.class))),
             @ApiResponse(responseCode = "404", description = "Submission not found")
