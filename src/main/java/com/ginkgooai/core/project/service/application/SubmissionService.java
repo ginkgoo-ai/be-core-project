@@ -162,10 +162,6 @@ public class SubmissionService {
         submission.getComments().add(comment);
         submissionRepository.save(submission);
 
-        if (comment.getType() == CommentType.PUBLIC) {
-            return SubmissionResponse.from(submission, ContextUtils.getUserId());
-        }
-
         List<UserInfoResponse> users = identityClient
                 .getUsersByIds(
                         submission.getComments().stream().map(SubmissionComment::getCreatedBy).distinct().toList())
