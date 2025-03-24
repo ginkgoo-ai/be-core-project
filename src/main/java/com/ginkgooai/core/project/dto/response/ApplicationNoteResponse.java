@@ -1,6 +1,7 @@
 package com.ginkgooai.core.project.dto.response;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.domain.application.ApplicationNote;
@@ -40,8 +41,8 @@ public class ApplicationNoteResponse {
                 .id(note.getId())
                 .content(note.getContent())
                 .createdBy(note.getCreatedBy())
-                .userPicture(user.getPicture())
-                .userName(user.getName())
+                .userName(Optional.ofNullable(user).map(UserInfoResponse::getName).orElse("unknown"))
+                .userPicture(Optional.ofNullable(user).map(UserInfoResponse::getPicture).orElse(null))
                 .createdAt(note.getCreatedAt())
                 .updatedAt(note.getUpdatedAt())
                 .build();
