@@ -1,16 +1,19 @@
 package com.ginkgooai.core.project.service;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.ginkgooai.core.common.utils.ContextUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.ginkgooai.core.common.utils.ContextUtils;
+import com.ginkgooai.core.project.client.storage.StorageClient;
+import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
 import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.project.ProjectStatus;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
@@ -22,7 +25,10 @@ import com.ginkgooai.core.project.repository.ProjectRepository;
 import com.ginkgooai.core.project.repository.ProjectRoleRepository;
 import com.ginkgooai.core.project.specification.ProjectSpecification;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class ProjectReadServiceImpl implements ProjectReadService {
 
     @Autowired
@@ -31,6 +37,8 @@ public class ProjectReadServiceImpl implements ProjectReadService {
     private ProjectRoleRepository projectRoleRepository;
     @Autowired
     private ApplicationRepository applicationRepository;
+    @Autowired
+    private StorageClient storageClient;
 
     @Override
     public Optional<ProjectResponse> findById(String workspaceId, String id) {
@@ -96,8 +104,41 @@ public class ProjectReadServiceImpl implements ProjectReadService {
     }
 
     @Override
-    public List<ProjectRoleStatisticsResponse> getProjectRolesStatistics(String projectId) {
-        return applicationRepository.getProjectRolesStatistics(projectId);
+    public Page<ProjectRoleStatisticsResponse> getProjectRolesStatistics(String projectId, Pageable pageable) {
+        Page<ProjectRoleStatisticsResponse> statisticsPage = applicationRepository.getProjectRolesStatistics(projectId,
+                pageable);
+
+        List<String> allSideFileIds = statisticsPage.getContent().stream()
+                .filter(stat -> stat.getSideFileIds() != null)
+                .flatMap(role -> Arrays.stream(role.getSideFileIds()))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        Map<String, CloudFileResponse> sideFilesMap = Collections.emptyMap();
+        if (!allSideFileIds.isEmpty()) {
+            try {
+                ResponseEntity<List<CloudFileResponse>> response = storageClient.getFileDetails(allSideFileIds);
+                if (response.getBody() != null) {
+                    sideFilesMap = response.getBody().stream()
+                            .collect(Collectors.toMap(CloudFileResponse::getId, Function.identity()));
+                }
+            } catch (Exception e) {
+                log.error("Error fetching side files: {}", e.getMessage());
+            }
+        }
+
+        Map<String, CloudFileResponse> finalSideFilesMap = sideFilesMap;
+        statisticsPage.getContent().forEach(stat -> {
+            if (stat.getSideFileIds() != null) {
+                List<CloudFileResponse> sideFiles = Arrays.stream(stat.getSideFileIds())
+                        .map(side -> finalSideFilesMap.get(side))
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+                stat.setSides(sideFiles);
+            }
+        });
+
+        return statisticsPage;
     }
 
     @Override

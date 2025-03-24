@@ -1,12 +1,27 @@
 package com.ginkgooai.core.project.controller;
 
+import java.util.List;
+
+import com.ginkgooai.core.common.utils.IpUtils;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.ginkgooai.core.common.utils.ContextUtils;
-import com.ginkgooai.core.project.domain.application.CommentType;
 import com.ginkgooai.core.project.dto.request.CommentCreateRequest;
 import com.ginkgooai.core.project.dto.request.SubmissionCreateRequest;
 import com.ginkgooai.core.project.dto.response.SubmissionCommentResponse;
 import com.ginkgooai.core.project.dto.response.SubmissionResponse;
 import com.ginkgooai.core.project.service.application.SubmissionService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,14 +29,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/submissions")
@@ -107,4 +117,19 @@ public class SubmissionController {
                         @Parameter(description = "ID of the submission", required = true, example = "submission_123") @PathVariable String submissionId) {
                 return ResponseEntity.ok(submissionService.listComments(submissionId));
         }
+
+        @Operation(summary = "Record video view", description = "Records that a video has been viewed, incrementing its view counter")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Successfully recorded video view"),
+                        @ApiResponse(responseCode = "404", description = "Submission not found")
+        })
+        @PostMapping("/{submissionId}/view")
+        public ResponseEntity<?> recordVideoView(
+                        @PathVariable String submissionId,
+                        HttpServletRequest request) {
+
+                submissionService.incrementViewCount(submissionId, ContextUtils.getUserId(), IpUtils.getClientIpAddress(request));
+                return ResponseEntity.ok().build();
+        }
+
 }

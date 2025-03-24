@@ -183,7 +183,8 @@ public class ApplicationService {
         applicationPage.forEach(app -> {
             CollectionUtils.emptyIfNull(app.getComments())
                     .forEach(comment -> userIds.add(comment.getCreatedBy()));
-            CollectionUtils.emptyIfNull(app.getNotes()).forEach(note -> userIds.add(note.getCreatedBy()));
+            CollectionUtils.emptyIfNull(app.getNotes())
+                    .forEach(note -> userIds.add(note.getCreatedBy()));
             CollectionUtils.emptyIfNull(app.getSubmissions())
                     .forEach(submission -> CollectionUtils.emptyIfNull(submission.getComments())
                             .forEach(comment -> userIds.add(comment.getCreatedBy())));

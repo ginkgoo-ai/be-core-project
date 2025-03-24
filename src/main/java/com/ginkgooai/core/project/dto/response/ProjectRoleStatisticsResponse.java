@@ -1,5 +1,9 @@
 package com.ginkgooai.core.project.dto.response;
 
+import java.util.List;
+
+import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,7 +22,10 @@ public class ProjectRoleStatisticsResponse {
     private String name;
 
     @Schema(description = "Sides for the role", example = "['side1', 'side2']")
-    private String[] sides;
+    private String[] sideFileIds;
+    
+    @Schema(description = "Sides for the role", example = "['side1', 'side2']")
+    private List<CloudFileResponse> sides;
 
     @Schema(description = "Character description", example = "A brave young hero")
     private String characterDescription;
@@ -40,4 +47,17 @@ public class ProjectRoleStatisticsResponse {
 
     @Schema(description = "Number of talents declined")
     private long declined;
+
+    public ProjectRoleStatisticsResponse(String id, String name, String[] sideFileIds, String characterDescription, String selfTapeInstructions, long total, long added, long submitted, long shortlisted, long declined) {
+        this.id = id;
+        this.name = name;
+        this.sideFileIds = sideFileIds;
+        this.characterDescription = characterDescription;
+        this.selfTapeInstructions = selfTapeInstructions;
+        this.total = total;
+        this.added = added;
+        this.submitted = submitted;
+        this.shortlisted = shortlisted;
+        this.declined = declined;
+    }
 }

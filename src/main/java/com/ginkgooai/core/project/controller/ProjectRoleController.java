@@ -109,14 +109,12 @@ public class ProjectRoleController {
 
                 Page<ProjectRole> rolesPage = projectReadService.findRolesByProjectIdPaginated(projectId, pageable);
 
-                // 使用Stream API收集所有角色的side文件ID
                 List<String> allSideFileIds = rolesPage.getContent().stream()
                                 .filter(role -> role.getSides() != null)
                                 .flatMap(role -> Arrays.stream(role.getSides()))
                                 .filter(sideId -> sideId != null)
                                 .collect(Collectors.toList());
 
-                // 批量获取所有side文件信息
                 Map<String, CloudFileResponse> sideFilesMap = Collections.emptyMap();
                 if (!allSideFileIds.isEmpty()) {
                         try {
@@ -206,10 +204,13 @@ public class ProjectRoleController {
                         @ApiResponse(responseCode = "404", description = "Project not found")
         })
         @GetMapping("/{projectId}/roles/statistics")
-        public ResponseEntity<List<ProjectRoleStatisticsResponse>> getProjectRolesStatistics(
-                        @Parameter(description = "ID of the project", required = true) @PathVariable String projectId) {
-                List<ProjectRoleStatisticsResponse> statistics = projectReadService
-                                .getProjectRolesStatistics(projectId);
+        public ResponseEntity<Page<ProjectRoleStatisticsResponse>> getProjectRolesStatistics(
+                        @Parameter(description = "ID of the project", required = true) @PathVariable String projectId,
+                        @Parameter(description = "Page number (zero-based)", example = "0") @RequestParam(defaultValue = "0") int page,
+                        @Parameter(description = "Page size", example = "10") @RequestParam(defaultValue = "10") int size) {
+                Pageable pageable = PageRequest.of(page, size);
+                Page<ProjectRoleStatisticsResponse> statistics = projectReadService.getProjectRolesStatistics(projectId,
+                                pageable);
                 return new ResponseEntity<>(statistics, HttpStatus.OK);
         }
 

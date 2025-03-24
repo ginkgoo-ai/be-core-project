@@ -34,12 +34,6 @@ public interface ProjectReadService {
 
     Page<ProjectRole> findRolesByProjectIdPaginated(String projectId, Pageable pageable);
 
-    /**
-     * 获取项目中所有角色的统计数据
-     * 
-     * @param projectId 项目ID
-     * @return 角色统计数据列表
-     */
-    List<ProjectRoleStatisticsResponse> getProjectRolesStatistics(String projectId);
+    Page<ProjectRoleStatisticsResponse> getProjectRolesStatistics(String projectId, Pageable pageable);
 
 }
