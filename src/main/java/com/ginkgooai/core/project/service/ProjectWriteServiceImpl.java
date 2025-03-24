@@ -2,23 +2,28 @@ package com.ginkgooai.core.project.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import com.ginkgooai.core.common.bean.ActivityType;
-import com.ginkgooai.core.project.client.storage.StorageClient;
-import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
-import com.ginkgooai.core.project.dto.request.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
+import com.ginkgooai.core.project.client.storage.StorageClient;
+import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
+import com.ginkgooai.core.project.domain.application.Application;
 import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.project.ProjectStatus;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
+import com.ginkgooai.core.project.dto.request.ProjectCreateRequest;
+import com.ginkgooai.core.project.dto.request.ProjectResponse;
+import com.ginkgooai.core.project.dto.request.ProjectRolePatchRequest;
+import com.ginkgooai.core.project.dto.request.ProjectRoleRequest;
+import com.ginkgooai.core.project.dto.request.ProjectUpdateRequest;
+import com.ginkgooai.core.project.repository.ApplicationRepository;
 import com.ginkgooai.core.project.repository.ProjectRepository;
 import com.ginkgooai.core.project.repository.ProjectRoleRepository;
 
@@ -36,6 +41,8 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
     private ActivityLoggerService activityLogger;
     @Autowired
     private StorageClient storageClient;
+    @Autowired
+    private ApplicationRepository applicationRepository;
 
     @Override
     @Transactional
@@ -74,14 +81,14 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
                         Map.of(
                                 "user", userId,
                                 "projectName", savedProject.getName(),
-                                "roleName", role.getName()
-                        ),
+                                "roleName", role.getName()),
                         null,
-                        userId
-                );
+                        userId);
             });
 
-            roleSideFiles = storageClient.getFileDetails(request.getRoles().stream().flatMap(roles -> roles.getSides().stream()).toList()).getBody();
+            roleSideFiles = storageClient
+                    .getFileDetails(request.getRoles().stream().flatMap(roles -> roles.getSides().stream()).toList())
+                    .getBody();
             log.debug("Roles sides files: {}", roleSideFiles);
         }
 
@@ -92,12 +99,9 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
                 ActivityType.PROJECT_CREATED,
                 Map.of(
                         "user", userId,
-                        "projectName", savedProject.getName()
-                ),
+                        "projectName", savedProject.getName()),
                 null,
-                userId
-        );
-
+                userId);
 
         return ProjectResponse.from(savedProject, roleSideFiles);
     }
@@ -151,14 +155,12 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
                 ActivityType.PROJECT_STATUS_CHANGE,
                 Map.of(
                         "project", updatedProject.getName(),
-                        "previousStatus", project.getStatus().getValue() ,
+                        "previousStatus", project.getStatus().getValue(),
                         "newStatus", status,
-                        "newStatus", updatedProject.getStatus().getValue()
-                ),
+                        "newStatus", updatedProject.getStatus().getValue()),
                 null,
-                updatedProject.getCreatedBy()
-        );
-        
+                updatedProject.getCreatedBy());
+
         return updatedProject;
     }
 
@@ -231,6 +233,11 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
     public void deleteRole(String roleId) {
         ProjectRole role = projectRoleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Role", "roleId", roleId));
+
+        List<Application> dependentApplications = applicationRepository.findByRoleId(roleId);
+        if (!dependentApplications.isEmpty()) {
+            throw new IllegalArgumentException("Role '" + roleId + "' already has applications");
+        }
 
         Project project = role.getProject();
         project.removeRole(roleId);
