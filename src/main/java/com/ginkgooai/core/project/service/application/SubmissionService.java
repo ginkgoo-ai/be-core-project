@@ -1,13 +1,9 @@
 package com.ginkgooai.core.project.service.application;
 
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -106,11 +102,19 @@ public class SubmissionService {
     public SubmissionResponse getSubmission(String submissionId) {
         Submission submission = findSubmissionById(submissionId);
 
-        List<UserInfoResponse> users = identityClient
-                .getUsersByIds(
-                        submission.getComments().stream().map(SubmissionComment::getCreatedBy).distinct().toList())
-                .getBody();
-        return SubmissionResponse.from(submission, users, ContextUtils.get(USER_ID, String.class, null));
+        List<String> commentUserIds = CollectionUtils.emptyIfNull(submission.getComments()).stream()
+                .map(SubmissionComment::getCreatedBy)
+                .distinct()
+                .toList();
+
+        List<UserInfoResponse> commentUsers = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(commentUserIds)) {
+            commentUsers = identityClient
+                    .getUsersByIds(
+                            submission.getComments().stream().map(SubmissionComment::getCreatedBy).distinct().toList())
+                    .getBody();
+        }
+        return SubmissionResponse.from(submission, commentUsers, ContextUtils.get(USER_ID, String.class, null));
     }
 
     @Transactional
