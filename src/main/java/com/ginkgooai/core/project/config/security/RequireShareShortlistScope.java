@@ -9,6 +9,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 @Target({ ElementType.METHOD, ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
-@PreAuthorize("hasRole('ROLE_USER') or (hasRole('ROLE_GUEST') and (hasAuthority('shortlist:' + #shortlistId + ':read') or hasAuthority('shortlist:' + #shortlistId + ':write')))")
+@PreAuthorize("hasRole('ROLE_GUEST') and (hasAuthority('shortlist:' + #shortlistId + ':read') or hasAuthority('shortlist:' + #shortlistId + ':write'))")
 public @interface RequireShareShortlistScope {
 }

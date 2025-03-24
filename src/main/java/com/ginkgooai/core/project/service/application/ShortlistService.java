@@ -173,7 +173,6 @@ public class ShortlistService {
                                 pageable).map(t -> ShortlistItemResponse.from(t, userId));
         }
 
-
         @Transactional(readOnly = true)
         public Page<ShortlistItemResponse> listShortlistItemsByShortlistId(String shortlistId, String keyword,
                         Pageable pageable) {
@@ -225,7 +224,7 @@ public class ShortlistService {
         public Map<String, String> shareShortlist(ShareShortlistRequest request, String userId) {
                 Map<String, String> shareLinks = new HashMap<>();
                 String workspaceId = ContextUtils.get().getWorkspaceId();
-                
+
                 List<Submission> submissions = submissionRepository.findAllById(request.getSubmissionIds());
                 if (submissions.isEmpty()) {
                         throw new ResourceNotFoundException("Submissions", "ids",
@@ -291,5 +290,15 @@ public class ShortlistService {
                 }
 
                 return shareLinks;
+        }
+
+        @Transactional(readOnly = true)
+        public ShortlistItemResponse getShortlistItemById(String shortlistItemId) {
+                ShortlistItem shortlistItem = shortlistItemRepository.findById(shortlistItemId)
+                                .orElseThrow(() -> new ResourceNotFoundException("ShortlistItem", "id",
+                                                shortlistItemId));
+
+                Shortlist shortlist = shortlistItem.getShortlist();
+                return ShortlistItemResponse.from(shortlistItem, shortlist.getOwnerId());
         }
 }
