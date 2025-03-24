@@ -64,7 +64,7 @@ public class SharedShortlistController {
     @RequireShareShortlistScope
     public ResponseEntity<SubmissionResponse> addComment(
             @Parameter(description = "ID of the shortlist", required = true, example = "cfc08cb3-c87c-4190-9355-1ff73fe15c0e") @PathVariable String shortlistId,
-            @Parameter(description = "ID of the submission", required = true, example = "submission_123") @PathVariable String submissionId,
+            @Parameter(description = "ID of the submission", required = true, example = "afc08cb3-c88c-4191-9455-1ff73fe15c0f") @PathVariable String submissionId,
             @Valid @RequestBody GuestCommentCreateRequest request) {
         return ResponseEntity.ok(submissionService.addComment(
                 submissionId,
