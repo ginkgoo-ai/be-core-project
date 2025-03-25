@@ -82,6 +82,20 @@ public class SubmissionResponse {
     @Schema(description = "List of public comments associated with this submission")
     private List<SubmissionCommentResponse> publicComments;
 
+    /**
+     * Converts a Submission into a SubmissionResponse DTO, enriching it with associated user details.
+     *
+     * <p>This method maps core fields from the Submission—including project, application, and video details,
+     * timestamps, and creator information—into a corresponding DTO. It builds a lookup map from the provided
+     * user list to annotate internal comment data with user-specific information. Public comments are included
+     * only if the current user is the creator of the submission, and the method also determines whether the
+     * submission is shortlisted by the current user.</p>
+     *
+     * @param submission the submission to convert
+     * @param users the list of user information used to enhance comment details
+     * @param userId the identifier of the current user for filtering public comments and determining shortlist status
+     * @return a fully populated SubmissionResponse DTO reflecting the submission's details
+     */
     public static SubmissionResponse from(Submission submission, List<UserInfo> users, String userId) {
         Map<String, UserInfo> userInfoMap = users.stream()
                 .collect(Collectors.toMap(UserInfo::getId, user -> user));
@@ -113,6 +127,16 @@ public class SubmissionResponse {
                 .build();
     }
 
+    /**
+     * Creates a SubmissionResponse from a Submission using an empty list for user details.
+     *
+     * <p>This overload delegates to {@link SubmissionResponse#from(Submission, List, String)}
+     * when no user information is provided.
+     *
+     * @param submission the Submission object to convert
+     * @param userId the identifier of the current user, used for filtering comment visibility
+     * @return a SubmissionResponse representing the converted submission data
+     */
     public static SubmissionResponse from(Submission submission, String userId) {
         return SubmissionResponse.from(submission, Collections.EMPTY_LIST, userId); 
     }

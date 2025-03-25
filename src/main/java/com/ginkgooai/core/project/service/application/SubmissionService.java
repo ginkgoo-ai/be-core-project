@@ -45,6 +45,19 @@ public class SubmissionService {
     
     private final IdentityClient identityClient;
 
+    /**
+     * Creates a new submission in the specified workspace using the provided submission details.
+     *
+     * <p>The method retrieves the application associated with the submission and fetches the video file's
+     * metadata. If the application or video file is not found, a ResourceNotFoundException is thrown.
+     * It then constructs and saves a new submission, returning a corresponding SubmissionResponse.
+     *
+     * @param workspaceId the workspace identifier where the submission is created
+     * @param request the submission creation details, including application and video identifiers
+     * @param userId the identifier of the user creating the submission
+     * @return a SubmissionResponse representing the newly created submission
+     * @throws ResourceNotFoundException if the application or video file cannot be found
+     */
     @Transactional
     public SubmissionResponse createSubmission(String workspaceId, 
                                                SubmissionCreateRequest request, 
@@ -74,12 +87,37 @@ public class SubmissionService {
         return SubmissionResponse.from(savedSubmission, Collections.EMPTY_LIST, userId);
     }
 
+    /**
+     * Retrieves a submission by its unique identifier.
+     *
+     * <p>This method locates the submission using the provided ID and converts it into a
+     * SubmissionResponse. The response includes the submission details along with the current
+     * user identifier fetched from the application context. A ResourceNotFoundException is thrown
+     * if the submission does not exist.</p>
+     *
+     * @param submissionId the unique identifier of the submission to retrieve
+     * @return a SubmissionResponse representing the submission details
+     */
     @Transactional(readOnly = true)
     public SubmissionResponse getSubmission(String submissionId) {
         Submission submission = findSubmissionById(submissionId);
         return SubmissionResponse.from(submission, Collections.EMPTY_LIST, ContextUtils.get(USER_ID, String.class, null));
     }
 
+    /**
+     * Deletes the specified submission and cleans up associated shortlist item references.
+     *
+     * <p>This method retrieves the submission by its ID and verifies that the requesting user
+     * is the creator. If the user is not authorized, an AccessDeniedException is thrown.
+     * It then removes the submission from any related shortlist items—deleting a shortlist item if it
+     * no longer contains any submissions, or updating it otherwise—before deleting the submission.
+     * </p>
+     *
+     * @param submissionId the identifier of the submission to delete
+     * @param userId the identifier of the user performing the deletion
+     *
+     * @throws AccessDeniedException if the user is not authorized to delete the submission
+     */
     @Transactional
     public void deleteSubmission(String submissionId, String userId) {
         Submission submission = findSubmissionById(submissionId);
@@ -104,6 +142,22 @@ public class SubmissionService {
         log.info("Deleted submission: {}", submissionId);
     }
 
+    /**
+     * Adds a new comment to the specified submission and returns an updated submission response.
+     * <p>
+     * The method creates a comment from the provided request. If a parent comment ID is specified,
+     * it retrieves the corresponding parent comment and throws a ResourceNotFoundException if not found.
+     * The updated submission is then saved, and user details for all distinct comment authors are aggregated
+     * into the response.
+     * </p>
+     *
+     * @param submissionId the ID of the submission to which the comment is added
+     * @param workspaceId the workspace identifier associated with the comment
+     * @param request the request containing the comment's details, including content, type, and an optional parent comment ID
+     * @param userId the ID of the user creating the comment
+     * @return a SubmissionResponse representing the updated submission and associated user information
+     * @throws ResourceNotFoundException if the specified parent comment is not found
+     */
     public SubmissionResponse addComment(String submissionId, String workspaceId,
                                          CommentCreateRequest request, String userId) {
         Submission submission = findSubmissionById(submissionId);
@@ -130,6 +184,18 @@ public class SubmissionService {
         return SubmissionResponse.from(submission, users, ContextUtils.get(USER_ID, String.class, null));
     }
 
+    /**
+     * Deletes a comment from a submission if the specified user is the comment's creator.
+     *
+     * <p>This method retrieves the submission by its ID and removes the comment identified by
+     * {@code commentId} only when it was created by the user specified by {@code userId}. The updated
+     * submission is then persisted.</p>
+     *
+     * @param submissionId the identifier of the submission containing the comment
+     * @param commentId the identifier of the comment to delete
+     * @param userId the identifier of the user attempting to delete the comment
+     * @throws ResourceNotFoundException if no submission exists with the given submissionId
+     */
     @Transactional
     public void deleteComment(String submissionId, String commentId, String userId) {
         Submission submission = findSubmissionById(submissionId);
@@ -141,6 +207,17 @@ public class SubmissionService {
         submissionRepository.save(submission);
     }
 
+    /**
+     * Retrieves all comments for the specified submission as a sorted list of comment responses.
+     *
+     * <p>This method fetches the submission corresponding to the provided ID, retrieves user information for
+     * each comment via the identity client, and assembles the comments into response objects. The resulting
+     * list is sorted by the creation date of each comment in ascending order.</p>
+     *
+     * @param submissionId the unique identifier of the submission
+     * @return a list of {@code SubmissionCommentResponse} objects sorted by comment creation date
+     * @throws ResourceNotFoundException if no submission exists for the provided ID
+     */
     @Transactional(readOnly = true)
     public List<SubmissionCommentResponse> listComments(String submissionId) {
         Submission submission = findSubmissionById(submissionId);
@@ -155,7 +232,7 @@ public class SubmissionService {
     }
 
     private Submission findSubmissionById(String id) {
-        String workspaceId = ContextUtils.get().getWorkspaceId();
+        String workspaceId = ContextUtils.getWorkspaceId();
 
         return submissionRepository.findOne(
                 (root, query, cb) -> cb.and(
