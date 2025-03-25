@@ -140,6 +140,8 @@ public class ShortlistService {
 
                 ShortlistItem shortlistItem = shortlistItems.get(0);
                 shortlistItem.getSubmissions().remove(submission);
+                submission.getShortlistItems().remove(shortlistItem);
+
                 if (shortlistItem.getSubmissions().isEmpty()) {
                         shortlistItemRepository.delete(shortlistItem);
                         log.debug("Deleted empty shortlist item: {}", shortlistItem.getId());
@@ -147,6 +149,8 @@ public class ShortlistService {
                         shortlistItemRepository.save(shortlistItem);
                         log.debug("Removed submission {} from shortlist item {}", submissionId, shortlistItem.getId());
                 }
+
+                submissionRepository.save(submission);
         }
 
         private Shortlist findShortlistById(String shortlistId) {
