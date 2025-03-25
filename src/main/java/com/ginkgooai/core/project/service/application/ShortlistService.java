@@ -55,6 +55,21 @@ public class ShortlistService {
         this.guestLoginUri = guestLoginUri;
     }
 
+    /**
+     * Adds a submission to the user's shortlist.
+     *
+     * <p>
+     * Retrieves the submission by its identifier and its associated application. Ensures a shortlist exists
+     * for the user and project—creating one if necessary—and calculates the highest sort order among existing items.
+     * It then retrieves or creates a shortlist item for the application, sets the application's status to
+     * {@link ApplicationStatus#SHORTLISTED}, and adds the submission to the shortlist item if it is not already present.
+     * </p>
+     *
+     * @param userId the identifier of the user adding the submission to the shortlist
+     * @param submissionId the identifier of the submission to be added
+     * @param notes additional notes for the shortlist item (currently unused)
+     * @throws ResourceNotFoundException if the submission with the specified ID is not found
+     */
     @Transactional
     public void addShortlistItem(String userId, String submissionId, String notes) {
         Submission submission = submissionRepository.findById(submissionId)

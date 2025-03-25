@@ -45,11 +45,19 @@ public class SubmissionController {
     })
     @PostMapping
     public ResponseEntity<SubmissionResponse> createSubmission(
-            @Valid @RequestBody SubmissionCreateRequest request,
-            @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(submissionService.createSubmission(ContextUtils.get().getWorkspaceId(), request, jwt.getSubject()));
+            @Valid @RequestBody SubmissionCreateRequest request) {
+        return ResponseEntity.ok(submissionService.createSubmission(ContextUtils.getWorkspaceId(), request, ContextUtils.getUserId()));
     }
 
+    /**
+     * Retrieves detailed information about a submission along with its associated comments.
+     *
+     * <p>This method returns a ResponseEntity containing a SubmissionResponse if the submission exists,
+     * or a 404 Not Found response if it does not.
+     *
+     * @param submissionId the unique identifier of the submission to retrieve
+     * @return a ResponseEntity encapsulating the SubmissionResponse on success
+     */
     @Operation(summary = "Get submission details",
             description = "Retrieves detailed information about a specific submission including its comments")
     @ApiResponses(value = {
@@ -67,6 +75,18 @@ public class SubmissionController {
         return ResponseEntity.ok(submissionService.getSubmission(submissionId));
     }
     
+    /**
+     * Deletes a submission and its associated comments.
+     * <p>
+     * This operation removes the submission identified by the provided submission ID along with all related comments.
+     * It requires authentication and uses the subject from the provided JSON Web Token (JWT) for authorization.
+     * On successful deletion, a ResponseEntity with a 204 No Content status is returned.
+     * </p>
+     *
+     * @param submissionId the unique identifier of the submission to be deleted
+     * @param jwt the JSON Web Token containing the authenticated user's credentials
+     * @return a ResponseEntity with a 204 No Content status upon successful deletion
+     */
     @Operation(summary = "Delete submission",
             description = "Deletes a submission and its associated comments")
     @ApiResponses(value = {
@@ -87,6 +107,17 @@ public class SubmissionController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Adds a new comment to an existing submission.
+     *
+     * <p>This method creates a comment for the submission identified by the provided submission ID,
+     * using the details in the comment creation request. It returns the updated submission information
+     * including the newly added comment.</p>
+     *
+     * @param submissionId the identifier of the submission to which the comment is added
+     * @param request the comment creation request containing the comment details
+     * @return a ResponseEntity containing the updated submission details after the comment is added
+     */
     @Operation(summary = "Add comment to submission",
             description = "Adds a new comment to an existing submission")
     @ApiResponses(value = {
@@ -101,9 +132,8 @@ public class SubmissionController {
             @Parameter(description = "ID of the submission", required = true,
                     example = "submission_123")
             @PathVariable String submissionId,
-            @Valid @RequestBody CommentCreateRequest request,
-            @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(submissionService.addComment(submissionId, ContextUtils.get().getWorkspaceId(), request, jwt.getSubject()));
+            @Valid @RequestBody CommentCreateRequest request) {
+        return ResponseEntity.ok(submissionService.addComment(submissionId, ContextUtils.getWorkspaceId(), request, ContextUtils.getUserId()));
     }
 
     @Operation(summary = "Delete submission comment",

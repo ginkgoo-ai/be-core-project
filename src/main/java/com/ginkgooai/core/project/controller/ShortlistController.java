@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.controller;
 
+import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.dto.request.ShareShortlistRequest;
 import com.ginkgooai.core.project.dto.response.ShortlistItemResponse;
 import com.ginkgooai.core.project.dto.response.ShortlistResponse;
@@ -28,6 +29,18 @@ public class ShortlistController {
 
     private final ShortlistService shortlistService;
 
+    /**
+     * Adds a submission to the current user's shortlist.
+     *
+     * <p>This endpoint registers the given submission along with optional notes for the authenticated user.
+     * It returns an HTTP 200 OK response upon successful addition. If the input parameters are invalid,
+     * the submission is not found, or the item already exists in the shortlist, the appropriate error response
+     * is generated.</p>
+     *
+     * @param submissionId the identifier of the submission to be added
+     * @param notes optional notes associated with the shortlisted submission
+     * @return an HTTP 200 OK response if the item is added successfully
+     */
     @Operation(summary = "Add item to shortlist",
             description = "Adds a submission to the user's shortlist with optional notes")
     @ApiResponses(value = {
@@ -47,9 +60,8 @@ public class ShortlistController {
             @RequestParam String submissionId,
             @Parameter(description = "Optional notes about the shortlisted item",
                     example = "Great performance, consider for callback")
-            @RequestParam(required = false) String notes,
-            @AuthenticationPrincipal Jwt jwt) {
-        shortlistService.addShortlistItem(jwt.getSubject(), submissionId, notes);
+            @RequestParam(required = false) String notes) {
+        shortlistService.addShortlistItem(ContextUtils.getUserId(), submissionId, notes);
         return ResponseEntity.ok().build();
     }
 
@@ -112,8 +124,7 @@ public class ShortlistController {
     })
     @PostMapping("/share")
     public ResponseEntity<String> shareShortlist(
-            @RequestBody ShareShortlistRequest request,
-            @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(shortlistService.shareShortlist(request, jwt.getSubject()));
+            @RequestBody ShareShortlistRequest request) {
+        return ResponseEntity.ok(shortlistService.shareShortlist(request, ContextUtils.getUserId()));
     }
 }

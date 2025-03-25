@@ -39,6 +39,17 @@ public class SubmissionCommentResponse {
             example = "2025-03-03T02:09:57.713Z")
     private LocalDateTime updatedAt;
 
+    /**
+     * Converts a SubmissionComment entity and its associated UserInfo into a SubmissionCommentResponse DTO.
+     *
+     * This method maps the properties of the provided SubmissionComment, including its content, creation timestamps,
+     * and creator identifier, and supplements them with user-specific details from the UserInfo object, such as
+     * the user's name and picture.
+     *
+     * @param comment the submission comment entity containing comment details
+     * @param userInfo the user information containing the user's name and avatar URL
+     * @return a SubmissionCommentResponse DTO populated with both comment and user details
+     */
     @Schema(description = "Converts a SubmissionComment entity to SubmissionCommentResponse DTO")
     public static SubmissionCommentResponse from(SubmissionComment comment, UserInfo userInfo) {
         return SubmissionCommentResponse.builder()

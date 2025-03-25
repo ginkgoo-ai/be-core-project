@@ -176,6 +176,20 @@ public class ApplicationService {
         };
     }
 
+    /**
+     * Adds a comment to the application and updates its status to REVIEWED.
+     *
+     * <p>This method retrieves the application using the provided workspace and application IDs,
+     * creates a new comment with the specified content and user ID, and appends it to the application's
+     * comment list. It then updates the application's status to REVIEWED, saves the changes, and returns
+     * a list of response objects representing all current comments on the application.
+     *
+     * @param workspaceId the identifier for the workspace containing the application
+     * @param id the identifier of the application to update
+     * @param userId the identifier of the user adding the comment
+     * @param content the text content of the comment to add
+     * @return a list of application comment responses reflecting the updated comment list
+     */
     @Transactional
     public List<ApplicationCommentResponse> addComment(String workspaceId, String id, String userId, String content) {
         Application application = findApplicationById(workspaceId, id);
@@ -193,6 +207,20 @@ public class ApplicationService {
                 .toList();
     }
 
+    /**
+     * Adds a note to the specified application and returns the updated list of note responses.
+     *
+     * <p>This method retrieves the application by workspace and application ID, creates a new note with the given
+     * content and user identifier, and updates the application's notes list. It then returns all notes related to the
+     * application as a list of note responses.
+     *
+     * @param workspaceId the identifier of the workspace that contains the application
+     * @param id the identifier of the application to which the note is added
+     * @param userId the identifier of the user adding the note
+     * @param content the content of the note
+     * @return a list of responses representing the application's notes
+     * @throws ResourceNotFoundException if the application cannot be found for the specified workspace and ID
+     */
     @Transactional
     public List<ApplicationNoteResponse> addNote(String workspaceId, String id, String userId, String content) {
         Application application = findApplicationById(workspaceId, id);
