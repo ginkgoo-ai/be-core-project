@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.domain.role;
 
+import com.ginkgooai.core.project.domain.BaseAuditableEntity;
 import com.ginkgooai.core.project.domain.project.Project;
 import jakarta.persistence.*;
 import lombok.*;
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "project_role")
-public class ProjectRole {
+public class ProjectRole extends BaseAuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -29,7 +30,7 @@ public class ProjectRole {
 
     @Column(name = "sides", columnDefinition = "text[]")
     private String[] sides;
-    
+
     private Boolean isActive = true;
 
     private RoleStatus status;
@@ -37,10 +38,4 @@ public class ProjectRole {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
-
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
 }

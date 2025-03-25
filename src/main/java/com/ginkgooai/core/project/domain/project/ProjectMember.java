@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.domain.project;
 
+import com.ginkgooai.core.project.domain.BaseAuditableEntity;
 import com.ginkgooai.core.project.domain.MemberStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @Table(name = "project_member")
-public class ProjectMember {
+public class ProjectMember extends BaseAuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -26,11 +27,4 @@ public class ProjectMember {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Project project;
-
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
-
 }

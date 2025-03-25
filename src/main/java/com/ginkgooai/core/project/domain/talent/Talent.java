@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.domain.talent;
 
+import com.ginkgooai.core.project.domain.BaseAuditableEntity;
 import com.ginkgooai.core.project.dto.request.TalentRequest;
 import jakarta.persistence.*;
 import lombok.*;
@@ -18,7 +19,7 @@ import java.util.Map;
 @AllArgsConstructor
 @Entity
 @Table(name = "talent")
-public class Talent {
+public class Talent extends BaseAuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -60,14 +61,6 @@ public class Talent {
     @Enumerated(EnumType.STRING)
     private TalentStatus status;
 
-    private String createdBy;
-    
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
-
     public static Talent from(TalentRequest request, String userid, String workspaceId) {
         return Talent.builder()
                 .name(request.getName())
@@ -80,7 +73,6 @@ public class Talent {
                 .agentEmail(request.getAgentEmail())
                 .profilePhotoUrl(request.getProfilePhotoUrl())
                 .status(TalentStatus.ACTIVE)
-                .createdBy(userid)
                 .workspaceId(workspaceId)
                 .build();
     }

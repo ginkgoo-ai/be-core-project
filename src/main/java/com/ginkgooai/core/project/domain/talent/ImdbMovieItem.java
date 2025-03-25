@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.domain.talent;
 
+import com.ginkgooai.core.project.domain.BaseAuditableEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "imdb_movie_item")
-public class ImdbMovieItem {
+public class ImdbMovieItem extends BaseAuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;

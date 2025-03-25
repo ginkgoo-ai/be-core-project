@@ -39,13 +39,13 @@ public class ProjectResponse {
     @Schema(description = "Owner ID of the project", example = "user123")
     private String createdBy;
 
-    @Schema(description = "Last activity timestamp", example = "2025-02-20T10:00:00")
+    @Schema(description = "Last activity timestamp", example = "25/03/2025 10:00:00")
     private LocalDateTime lastActivityAt;
 
-    @Schema(description = "Timestamp when the project was created", example = "2025-02-20T09:00:00")
+    @Schema(description = "Timestamp when the project was created", example = "25/03/2025 09:00:00")
     private LocalDateTime createdAt;
 
-    @Schema(description = "Timestamp when the project was last updated", example = "2025-02-20T10:30:00")
+    @Schema(description = "Timestamp when the project was last updated", example = "25/03/2025 10:30:00")
     private LocalDateTime updatedAt;
 
     @Schema(description = "List of roles associated with the project")

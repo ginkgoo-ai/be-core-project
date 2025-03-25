@@ -1,16 +1,18 @@
 package com.ginkgooai.core.project.service;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Map;
+
+import org.springframework.stereotype.Component;
+
 import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.common.constant.MessageQueue;
 import com.ginkgooai.core.common.message.ActivityLogMessage;
 import com.ginkgooai.core.common.queue.QueueInterface;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
-import java.time.LocalDateTime;
-import java.util.Map;
-
 
 @Slf4j
 @Component
@@ -20,12 +22,12 @@ public class ActivityLoggerService {
     private final QueueInterface queueInterface;
 
     public void log(String workspaceId,
-                    String projectId,
-                    String applicationId,
-                    ActivityType activityType,
-                    Map<String, Object> variables,
-                    Map<String, Object> attachments,
-                    String createdBy) {
+            String projectId,
+            String applicationId,
+            ActivityType activityType,
+            Map<String, Object> variables,
+            Map<String, Object> attachments,
+            String createdBy) {
         try {
 
             ActivityLogMessage message = ActivityLogMessage.builder()
@@ -36,7 +38,7 @@ public class ActivityLoggerService {
                     .variables(variables)
                     .attachments(attachments)
                     .createdBy(createdBy)
-                    .createdAt(LocalDateTime.now())
+                    .createdAt(LocalDateTime.now(ZoneId.systemDefault()))
                     .build();
 
             queueInterface.send(MessageQueue.ACTIVITY_LOG_QUEUE, message);

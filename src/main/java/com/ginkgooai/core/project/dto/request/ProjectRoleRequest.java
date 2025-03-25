@@ -26,7 +26,7 @@ public class ProjectRoleRequest {
     @Schema(description = "Gender for the role", example = "Any")
     private String gender;
 
-    @Schema(description = "Sides file id for the role", example = "['side1', 'side2']")
+    @Schema(description = "Sides file id for the role", example = "\"side1\", \"side2\"]")
     private List<String> sides;
 
     @Schema(description = "Whether the role is active", example = "true")

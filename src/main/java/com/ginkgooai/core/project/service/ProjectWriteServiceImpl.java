@@ -1,6 +1,7 @@
 package com.ginkgooai.core.project.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -53,11 +54,6 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
 
         Project project = new Project(request, workspaceId, userId);
         Project savedProject = projectRepository.save(project);
-
-        // Set optional status if provided (override default DRAFTING if necessary)
-        if (request.getStatus() != null) {
-            project.setStatus(request.getStatus());
-        }
 
         // Initialize roles and bind to project
         List<CloudFileResponse> roleSideFiles = new ArrayList<>();
@@ -145,7 +141,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         }
 
         project.setStatus(status);
-        project.setLastActivityAt(LocalDateTime.now());
+        project.setLastActivityAt(LocalDateTime.now(ZoneId.of("UTC")));
 
         Project updatedProject = projectRepository.save(project);
         activityLogger.log(
@@ -186,8 +182,6 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         role.setProject(project);
 
         ProjectRole savedRole = projectRoleRepository.save(role);
-        project.addRole(savedRole); // Update the project aggregate
-        projectRepository.save(project); // Save to persist the relationship
 
         return savedRole;
     }

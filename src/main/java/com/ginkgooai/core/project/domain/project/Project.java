@@ -1,11 +1,10 @@
 package com.ginkgooai.core.project.domain.project;
 
+import com.ginkgooai.core.project.domain.BaseAuditableEntity;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.dto.request.ProjectCreateRequest;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -18,7 +17,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "project")
-public class Project {
+public class Project extends BaseAuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -51,14 +50,6 @@ public class Project {
 
     private String posterUrl;
 
-    private String createdBy;
-
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
-
     public Project(ProjectCreateRequest request, String workspaceId, String userId) {
         this.name = request.getName();
         this.description = request.getDescription();
@@ -66,11 +57,10 @@ public class Project {
         this.status = ProjectStatus.DRAFTING;
         this.posterUrl = request.getPosterUrl();
         this.workspaceId = workspaceId;
-        this.createdBy = userId;
-        this.createdAt = LocalDateTime.now();
     }
 
-    public void updateDetails(String name, String description, String plotLine, ProjectStatus status, String posterUrl) {
+    public void updateDetails(String name, String description, String plotLine, ProjectStatus status,
+            String posterUrl) {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Project name cannot be null or empty");
         }

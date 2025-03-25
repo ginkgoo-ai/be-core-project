@@ -1,10 +1,12 @@
 package com.ginkgooai.core.project.domain.project;
 
+import com.ginkgooai.core.project.domain.BaseAuditableEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -12,7 +14,7 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @Table(name = "project_nda")
-public class ProjectNda {
+public class ProjectNda extends BaseAuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -36,9 +38,4 @@ public class ProjectNda {
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
 }

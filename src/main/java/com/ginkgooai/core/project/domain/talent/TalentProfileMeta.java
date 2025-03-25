@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.domain.talent;
 
+import com.ginkgooai.core.project.domain.BaseAuditableEntity;
 import com.ginkgooai.core.project.dto.TalentProfileData;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
@@ -12,8 +13,6 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Set;
 
 @Entity
 @Builder
@@ -21,7 +20,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "talent_profile_meta")
-public class TalentProfileMeta {
+public class TalentProfileMeta extends BaseAuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -34,12 +33,4 @@ public class TalentProfileMeta {
     @Type(JsonType.class)
     @Column(columnDefinition = "jsonb")
     private TalentProfileData data;
-
-    private String createdBy;
-    
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
 }

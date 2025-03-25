@@ -100,8 +100,6 @@ class ProjectControllerTest {
                 .plotLine("测试剧情")
                 .status(ProjectStatus.DRAFTING)
                 .workspaceId(workspaceId)
-                .createdBy(userId)
-                .createdAt(LocalDateTime.now())
                 .build();
 
         projectResponse = new ProjectResponse();
