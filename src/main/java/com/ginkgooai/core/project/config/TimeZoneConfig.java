@@ -21,6 +21,8 @@ import jakarta.annotation.PostConstruct;
 public class TimeZoneConfig {
 
     private static final String DATE_TIME_FORMAT = "dd/MM/yyyy HH:mm:ss";
+    private static final String ISO_8601_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
+
 
     @PostConstruct
     public void init() {
@@ -33,7 +35,7 @@ public class TimeZoneConfig {
         ObjectMapper objectMapper = new ObjectMapper();
         JavaTimeModule javaTimeModule = new JavaTimeModule();
 
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(ISO_8601_DATE_TIME_FORMAT);
         javaTimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(dateTimeFormatter));
         javaTimeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(dateTimeFormatter));
 
@@ -46,9 +48,9 @@ public class TimeZoneConfig {
     @Bean
     public Jackson2ObjectMapperBuilderCustomizer jsonCustomizer() {
         return builder -> {
-            builder.simpleDateFormat(DATE_TIME_FORMAT);
-            builder.serializers(new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT)));
-            builder.deserializers(new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT)));
+            builder.simpleDateFormat(ISO_8601_DATE_TIME_FORMAT);
+            builder.serializers(new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(ISO_8601_DATE_TIME_FORMAT)));
+            builder.deserializers(new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(ISO_8601_DATE_TIME_FORMAT)));
         };
     }
 }
