@@ -47,7 +47,7 @@ public class SubmissionCommentResponse {
                 .id(comment.getId())
                 .content(comment.getContent())
                 .createdBy(comment.getCreatedBy())
-                .userName(Optional.ofNullable(userInfo).map(UserInfoResponse::getName).orElse(null))
+                .userName(Optional.ofNullable(userInfo).map(UserInfoResponse::getName).orElse(comment.getCreatedBy()))
                 .userPicture(Optional.ofNullable(userInfo).map(UserInfoResponse::getPicture).orElse(null))
                 .createdAt(comment.getCreatedAt())
                 .updatedAt(comment.getUpdatedAt())
