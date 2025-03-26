@@ -80,7 +80,8 @@ public class ProjectReadServiceImpl implements ProjectReadService {
 
     @Override
     public List<ProjectBasicResponse> findAllBasicInfo() {
-        return projectRepository.findAll().stream()
+        String workspaceId = ContextUtils.getWorkspaceId();
+        return projectRepository.findByWorkspaceId(workspaceId).stream()
                 .map(ProjectBasicResponse::fromProject)
                 .collect(Collectors.toList());
     }

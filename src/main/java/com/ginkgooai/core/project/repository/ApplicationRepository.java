@@ -70,7 +70,7 @@ public interface ApplicationRepository
                         FROM Application a
                         RIGHT JOIN a.role r
                         WHERE r.project.id = :projectId
-                        AND (:name IS NULL OR r.name LIKE CONCAT('%', :name, '%'))
+                        AND (COALESCE(:name, '') = '' OR r.name LIKE CONCAT('%', :name, '%'))
                         GROUP BY r.id, r.name, r.sides, r.characterDescription, r.selfTapeInstructions
                         """)
         Page<ProjectRoleStatisticsResponse> getProjectRolesStatistics(@Param("projectId") String projectId,

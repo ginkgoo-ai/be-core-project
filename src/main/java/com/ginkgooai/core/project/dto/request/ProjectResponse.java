@@ -60,6 +60,9 @@ public class ProjectResponse {
     @Schema(description = "Project poster Url", example = "www.example.com/poster.jpg")
     private String posterUrl;
 
+    @Schema(description = "Producer of the project", example = "Mark Ronson")
+    private String producer;
+
     public static ProjectResponse from(Project project) {
         if (ObjectUtils.isEmpty(project.getRoles())) {
             project.setRoles(Collections.emptySet());
@@ -79,6 +82,7 @@ public class ProjectResponse {
         response.setRolesCount(project.getRoles().size());
         response.setWorkspaceId(project.getWorkspaceId());
         response.setPosterUrl(project.getPosterUrl());
+        response.setProducer(project.getProducer());
         return response;
     }
 
@@ -106,6 +110,7 @@ public class ProjectResponse {
         response.setRolesCount(project.getRoles().size());
         response.setWorkspaceId(project.getWorkspaceId());
         response.setPosterUrl(project.getPosterUrl());
+        response.setProducer(project.getProducer());
         return response;
     }
 
