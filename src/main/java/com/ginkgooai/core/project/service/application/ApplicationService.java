@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.service.application;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -169,15 +170,40 @@ public class ApplicationService {
                                                       String projectId,
                                                       String roleId,
                                                       String talentId,
+                                                      LocalDateTime startDateTime,
+                                                      LocalDateTime endDateTime,
                                                       String viewMode,
                                                       String keyword,
                                                       ApplicationStatus status,
                                                       Pageable pageable) {
 
         Page<Application> applicationPage = applicationRepository.findAll(
-                buildSpecification(workspaceId, projectId, roleId, viewMode, talentId, keyword, status),
+                buildSpecification(workspaceId, projectId, roleId, viewMode, talentId, startDateTime, endDateTime, keyword, status),
                 pageable);
 
+        // If we're in submissions view mode and have date filters, filter the submissions in memory
+        if ("submissions".equals(viewMode) && (startDateTime != null || endDateTime != null)) {
+            applicationPage.forEach(app -> {
+                if (Objects.nonNull(app.getSubmissions())) {
+                    // Filter submissions by date range
+                    List<Submission> filteredSubmissions = app.getSubmissions().stream()
+                            .filter(submission -> {
+                                LocalDateTime createdAt = submission.getCreatedAt();
+                                if (createdAt == null) return false;
+
+                                boolean afterStart = startDateTime == null || !createdAt.isBefore(startDateTime);
+                                boolean beforeEnd = endDateTime == null || !createdAt.isAfter(endDateTime);
+
+                                return afterStart && beforeEnd;
+                            })
+                            .collect(Collectors.toList());
+
+                    // Replace the submissions list with the filtered one
+                    app.setSubmissions(filteredSubmissions);
+                }
+            });
+        }
+        
         List<String> userIds = new ArrayList<>();
         applicationPage.forEach(app -> {
             if (Objects.nonNull(app.getComments())) {
@@ -205,6 +231,8 @@ public class ApplicationService {
                                                           String roleId,
                                                           String viewMode,
                                                           String talentId,
+                                                          LocalDateTime startDateTime,
+                                                          LocalDateTime endDateTime,
                                                           String keyword,
                                                           ApplicationStatus status) {
 
@@ -229,6 +257,8 @@ public class ApplicationService {
                 predicates.add(cb.equal(root.get("talent").get("id"), talentId));
             }
 
+      
+
             // Status filter
             if (status != null) {
                 predicates.add(cb.equal(root.get("status"), status));
@@ -239,6 +269,23 @@ public class ApplicationService {
                 Join<Application, Submission> submissionJoin = root.join("submissions", JoinType.LEFT);
                 predicates.add(cb.isNotNull(submissionJoin.get("id")));
                 query.distinct(true);
+
+                // Date filter
+                if (startDateTime != null && endDateTime != null) {
+                    predicates.add(cb.between(submissionJoin.get("createdAt"), startDateTime, endDateTime));
+                } else if (startDateTime != null) {
+                    predicates.add(cb.greaterThanOrEqualTo(submissionJoin.get("createdAt"), startDateTime));
+                } else if (endDateTime != null) {
+                    predicates.add(cb.lessThanOrEqualTo(submissionJoin.get("createdAt"), endDateTime));
+                }
+            } else {
+                if (startDateTime != null && endDateTime != null) {
+                    predicates.add(cb.between(root.get("createdAt"), startDateTime, endDateTime));
+                } else if (startDateTime != null) {
+                    predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), startDateTime));
+                } else if (endDateTime != null) {
+                    predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), endDateTime));
+                }
             }
 
             // Keyword search on talent name or email

@@ -22,9 +22,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -66,6 +69,10 @@ public class ApplicationController {
                         @Parameter(description = "Project ID filter") @RequestParam(required = false) String projectId,
                         @Parameter(description = "Role ID filter") @RequestParam(required = false) String roleId,
                         @Parameter(description = "Talent ID filter") @RequestParam(required = false) String talentId,
+                        @Parameter(description = "Start date for submission creation (format: yyyy-MM-dd'T'HH:mm:ss)")
+                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)  LocalDateTime startDateTime,
+                        @Parameter(description = "End date for submission creation (format: yyyy-MM-dd'T'HH:mm:ss)")
+                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)  LocalDateTime endDateTime,
                         @Parameter(description = "View Mode") @RequestParam(defaultValue = "readingList") String viewMode,
                         @Parameter(description = "Search keyword for talent name or email or role name") @RequestParam(required = false) String keyword,
                         @Parameter(description = "Filter by application status") @RequestParam(required = false) ApplicationStatus status,
@@ -73,10 +80,11 @@ public class ApplicationController {
                         @Parameter(description = "Page size", example = "10") @RequestParam(defaultValue = "10") int size,
                         @Parameter(description = "Sort direction (ASC/DESC)", example = "DESC") @RequestParam(defaultValue = "DESC") String sortDirection,
                         @Parameter(description = "Sort field (e.g., updatedAt)", example = "updatedAt") @RequestParam(defaultValue = "updatedAt") String sortField) {
+
                 Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
                 Pageable pageable = PageRequest.of(page, size, sort);
                 return ResponseEntity.ok(applicationService.listApplications(ContextUtils.getWorkspaceId(),
-                                ContextUtils.getUserId(), projectId, roleId, talentId, viewMode, keyword, status, pageable));
+                                ContextUtils.getUserId(), projectId, roleId, talentId, startDateTime, endDateTime, viewMode, keyword, status, pageable));
         }
 
         @Operation(summary = "Add comment to application", description = "Adds a new comment to the application")
