@@ -109,9 +109,10 @@ public class ProjectReadServiceImpl implements ProjectReadService {
     }
 
     @Override
-    public Page<ProjectRoleStatisticsResponse> getProjectRolesStatistics(String projectId, Pageable pageable) {
+    public Page<ProjectRoleStatisticsResponse> getProjectRolesStatistics(String projectId, String name,
+            Pageable pageable) {
         Page<ProjectRoleStatisticsResponse> statisticsPage = applicationRepository.getProjectRolesStatistics(projectId,
-                pageable);
+                name, pageable);
 
         List<String> allSideFileIds = statisticsPage.getContent().stream()
                 .filter(stat -> stat.getSideFileIds() != null)

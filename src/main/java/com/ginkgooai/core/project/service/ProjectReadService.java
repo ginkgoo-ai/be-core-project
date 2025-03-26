@@ -34,6 +34,6 @@ public interface ProjectReadService {
 
     Page<ProjectRole> findRolesByProjectIdPaginated(String projectId, Pageable pageable);
 
-    Page<ProjectRoleStatisticsResponse> getProjectRolesStatistics(String projectId, Pageable pageable);
+    Page<ProjectRoleStatisticsResponse> getProjectRolesStatistics(String projectId, String name, Pageable pageable);
 
 }

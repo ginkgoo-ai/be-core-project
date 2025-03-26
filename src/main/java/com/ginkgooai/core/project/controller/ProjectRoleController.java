@@ -206,11 +206,15 @@ public class ProjectRoleController {
         @GetMapping("/{projectId}/roles/statistics")
         public ResponseEntity<Page<ProjectRoleStatisticsResponse>> getProjectRolesStatistics(
                         @Parameter(description = "ID of the project", required = true) @PathVariable String projectId,
+                        @Parameter(description = "Name for fuzzy search", example = "actor") @RequestParam(required = false) String name,
                         @Parameter(description = "Page number (zero-based)", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Page size", example = "10") @RequestParam(defaultValue = "10") int size) {
-                Pageable pageable = PageRequest.of(page, size);
+                        @Parameter(description = "Page size", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field", example = "total") @RequestParam(required = false, defaultValue = "name") String sortBy,
+                        @Parameter(description = "Sort direction", example = "ASC") @RequestParam(required = false, defaultValue = "ASC") String sortDirection) {
+                Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
+                Pageable pageable = PageRequest.of(page, size, sort);
                 Page<ProjectRoleStatisticsResponse> statistics = projectReadService.getProjectRolesStatistics(projectId,
-                                pageable);
+                                name, pageable);
                 return new ResponseEntity<>(statistics, HttpStatus.OK);
         }
 
