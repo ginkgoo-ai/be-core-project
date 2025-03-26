@@ -3,10 +3,12 @@ package com.ginkgooai.core.project.dto.response;
 import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.domain.application.SubmissionComment;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Nullable;
 import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Data
 @Builder
@@ -40,13 +42,13 @@ public class SubmissionCommentResponse {
     private LocalDateTime updatedAt;
 
     //For internal user comment
-    public static SubmissionCommentResponse from(SubmissionComment comment, UserInfoResponse userInfo) {
+    public static SubmissionCommentResponse from(SubmissionComment comment, @Nullable UserInfoResponse userInfo) {
         return SubmissionCommentResponse.builder()
                 .id(comment.getId())
                 .content(comment.getContent())
                 .createdBy(comment.getCreatedBy())
-                .userName(userInfo.getName())
-                .userPicture(userInfo.getPicture())
+                .userName(Optional.ofNullable(userInfo).map(UserInfoResponse::getName).orElse(null))
+                .userPicture(Optional.ofNullable(userInfo).map(UserInfoResponse::getPicture).orElse(null))
                 .createdAt(comment.getCreatedAt())
                 .updatedAt(comment.getUpdatedAt())
                 .build();
