@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.ginkgooai.core.project.dto.response.RoleBasicResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -155,6 +156,14 @@ public class ProjectReadServiceImpl implements ProjectReadService {
     @Override
     public Page<ProjectRole> findRolesByProjectIdPaginated(String projectId, Pageable pageable) {
         return projectRoleRepository.findByProjectId(projectId, pageable);
+    }
+
+
+    @Override
+    public List<RoleBasicResponse> findAllRolesBasicInfo() {
+        return projectRoleRepository.findAll().stream()
+                .map(RoleBasicResponse::from)
+                .collect(Collectors.toList());
     }
 
 }

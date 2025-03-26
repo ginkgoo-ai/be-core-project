@@ -4,6 +4,7 @@ import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.domain.talent.Talent;
 import com.ginkgooai.core.project.dto.request.TalentRequest;
 import com.ginkgooai.core.project.dto.request.TalentSearchRequest;
+import com.ginkgooai.core.project.dto.response.TalentBasicResponse;
 import com.ginkgooai.core.project.dto.response.TalentResponse;
 import com.ginkgooai.core.project.service.application.TalentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,8 +19,11 @@ import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/talents")
@@ -80,5 +84,15 @@ public class TalentController {
                         @Parameter(description = "Pagination parameters") @ParameterObject Pageable pageable) {
 
                 return ResponseEntity.ok(talentService.searchTalents(ContextUtils.getWorkspaceId(), request, pageable));
+        }
+
+        @Operation(summary = "Get basic information for all talents", description = "Retrieve basic metadata for all talents, for use in dropdowns etc.")
+        @ApiResponses(value = {
+                @ApiResponse(responseCode = "200", description = "Successfully retrieved basic talents information")
+        })
+        @GetMapping("/basic")
+        public ResponseEntity<List<TalentBasicResponse>> getAllTalentsBasicInfo() {
+                List<TalentBasicResponse> basicInfo = talentService.findAllTalentsBasicInfo();
+                return new ResponseEntity<>(basicInfo, HttpStatus.OK);
         }
 }

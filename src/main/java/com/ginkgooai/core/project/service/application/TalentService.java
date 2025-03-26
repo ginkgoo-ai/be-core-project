@@ -10,6 +10,7 @@ import com.ginkgooai.core.project.dto.KnownForItem;
 import com.ginkgooai.core.project.dto.TalentProfileData;
 import com.ginkgooai.core.project.dto.request.TalentRequest;
 import com.ginkgooai.core.project.dto.request.TalentSearchRequest;
+import com.ginkgooai.core.project.dto.response.TalentBasicResponse;
 import com.ginkgooai.core.project.dto.response.TalentResponse;
 import com.ginkgooai.core.project.repository.ImdbMovieItemRepository;
 import com.ginkgooai.core.project.repository.TalentRepository;
@@ -196,5 +197,11 @@ public class TalentService {
         }
 
         return movieItemRepository.findAllById(Arrays.asList(talent.getKnownForMovieIds()));
+    }
+
+    public List<TalentBasicResponse> findAllTalentsBasicInfo() {
+        return talentRepository.findAll().stream()
+                .map(TalentBasicResponse::from)
+                .collect(Collectors.toList());
     }
 }

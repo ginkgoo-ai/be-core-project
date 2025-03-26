@@ -4,7 +4,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.ginkgooai.core.common.utils.ContextUtils;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -181,13 +180,19 @@ public class ApplicationService {
 
         List<String> userIds = new ArrayList<>();
         applicationPage.forEach(app -> {
-            CollectionUtils.emptyIfNull(app.getComments())
-                    .forEach(comment -> userIds.add(comment.getCreatedBy()));
-            CollectionUtils.emptyIfNull(app.getNotes())
-                    .forEach(note -> userIds.add(note.getCreatedBy()));
-            CollectionUtils.emptyIfNull(app.getSubmissions())
-                    .forEach(submission -> CollectionUtils.emptyIfNull(submission.getComments())
-                            .forEach(comment -> userIds.add(comment.getCreatedBy())));
+            if (Objects.nonNull(app.getComments())) {
+                app.getComments().forEach(comment -> userIds.add(comment.getCreatedBy()));
+            }
+            if (Objects.nonNull(app.getNotes())) {
+                app.getNotes().forEach(note -> userIds.add(note.getCreatedBy()));
+            }
+            if (Objects.nonNull(app.getSubmissions())) {
+                app.getSubmissions().forEach(submission -> {
+                            if (Objects.nonNull(submission.getComments())) {
+                                submission.getComments().forEach(comment -> userIds.add(comment.getCreatedBy()));
+                            }
+                        });
+            }
         });
 
         final List<UserInfoResponse> finalUsers = getUserInfoByIds(userIds);
