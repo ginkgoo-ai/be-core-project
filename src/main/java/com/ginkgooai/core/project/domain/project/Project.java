@@ -6,7 +6,6 @@ import com.ginkgooai.core.project.dto.request.ProjectCreateRequest;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,9 +33,6 @@ public class Project extends BaseAuditableEntity {
 
     private String producer;
 
-    @Column(name = "last_activity_at")
-    private LocalDateTime lastActivityAt;
-
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProjectRole> roles = new HashSet<>();
 
@@ -60,7 +56,7 @@ public class Project extends BaseAuditableEntity {
     }
 
     public void updateDetails(String name, String description, String plotLine, ProjectStatus status,
-            String posterUrl) {
+                              String posterUrl, String producer) {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Project name cannot be null or empty");
         }
@@ -71,7 +67,7 @@ public class Project extends BaseAuditableEntity {
             this.status = status;
         }
         this.posterUrl = posterUrl;
-        this.lastActivityAt = LocalDateTime.now();
+        this.producer = producer;
     }
 
     public void addRole(ProjectRole role) {

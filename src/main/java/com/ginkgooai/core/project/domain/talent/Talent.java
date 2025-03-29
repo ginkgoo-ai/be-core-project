@@ -1,16 +1,16 @@
 package com.ginkgooai.core.project.domain.talent;
 
+import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.domain.BaseAuditableEntity;
 import com.ginkgooai.core.project.dto.request.TalentRequest;
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.UpdateTimestamp;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Type;
 
-
-import java.time.LocalDateTime;
 import java.util.Map;
 
 @Builder
@@ -61,7 +61,7 @@ public class Talent extends BaseAuditableEntity {
     @Enumerated(EnumType.STRING)
     private TalentStatus status;
 
-    public static Talent from(TalentRequest request, String userid, String workspaceId) {
+    public static Talent from(TalentRequest request) {
         return Talent.builder()
                 .name(request.getName())
                 .nameSuffix(request.getNameSuffix())
@@ -73,7 +73,7 @@ public class Talent extends BaseAuditableEntity {
                 .agentEmail(request.getAgentEmail())
                 .profilePhotoUrl(request.getProfilePhotoUrl())
                 .status(TalentStatus.ACTIVE)
-                .workspaceId(workspaceId)
+            .workspaceId(ContextUtils.getWorkspaceId())
                 .build();
     }
 }

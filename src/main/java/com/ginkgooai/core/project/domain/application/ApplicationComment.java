@@ -1,11 +1,11 @@
 package com.ginkgooai.core.project.domain.application;
 
+import com.ginkgooai.core.project.domain.BaseAuditableEntity;
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Builder
@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "application_comment")
-public class ApplicationComment {
+public class ApplicationComment extends BaseAuditableEntity {
     
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -25,14 +25,6 @@ public class ApplicationComment {
     
     @Column(columnDefinition = "TEXT")
     private String content;
-    
-    private String createdBy;
-    
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-    
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_comment_id")

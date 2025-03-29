@@ -1,11 +1,9 @@
 package com.ginkgooai.core.project.domain.application;
 
+import com.ginkgooai.core.project.domain.BaseAuditableEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -15,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "shortlist")
-public class Shortlist {
+public class Shortlist extends BaseAuditableEntity {
     
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -36,14 +34,6 @@ public class Shortlist {
     
     @OneToMany(mappedBy = "shortlist", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ShortlistItem> items;
-    
-    private String createdBy;
-    
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-    
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
     
     @Version
     private Long version;

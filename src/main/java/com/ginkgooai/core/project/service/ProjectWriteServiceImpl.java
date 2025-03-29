@@ -1,16 +1,5 @@
 package com.ginkgooai.core.project.service;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.project.client.storage.StorageClient;
@@ -19,16 +8,19 @@ import com.ginkgooai.core.project.domain.application.Application;
 import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.project.ProjectStatus;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
-import com.ginkgooai.core.project.dto.request.ProjectCreateRequest;
-import com.ginkgooai.core.project.dto.request.ProjectResponse;
-import com.ginkgooai.core.project.dto.request.ProjectRolePatchRequest;
-import com.ginkgooai.core.project.dto.request.ProjectRoleRequest;
-import com.ginkgooai.core.project.dto.request.ProjectUpdateRequest;
+import com.ginkgooai.core.project.dto.request.*;
 import com.ginkgooai.core.project.repository.ApplicationRepository;
 import com.ginkgooai.core.project.repository.ProjectRepository;
 import com.ginkgooai.core.project.repository.ProjectRoleRepository;
-
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -76,7 +68,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
                         ActivityType.ROLE_CREATED,
                         Map.of(
                                 "user", userId,
-                                "projectName", savedProject.getName(),
+                            "project", savedProject.getName(),
                                 "roleName", role.getName()),
                         null,
                         userId);
@@ -119,7 +111,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
                         projectId + ":" + workspaceId));
 
         project.updateDetails(request.getName(), request.getDescription(), request.getPlotLine(), request.getStatus(),
-                request.getPosterUrl());
+            request.getPosterUrl(), request.getProducer());
 
         Project updatedProject = projectRepository.save(project);
 
@@ -141,8 +133,6 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         }
 
         project.setStatus(status);
-        project.setLastActivityAt(LocalDateTime.now(ZoneId.of("UTC")));
-
         Project updatedProject = projectRepository.save(project);
         activityLogger.log(
                 project.getWorkspaceId(),

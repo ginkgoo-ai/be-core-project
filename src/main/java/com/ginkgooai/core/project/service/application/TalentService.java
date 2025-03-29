@@ -1,6 +1,5 @@
 package com.ginkgooai.core.project.service.application;
 
-import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.project.domain.talent.ImdbMovieItem;
 import com.ginkgooai.core.project.domain.talent.Talent;
@@ -40,7 +39,7 @@ public class TalentService {
     private final ActivityLoggerService activityLogger;
 
     @Transactional
-    public Talent createTalentFromProfiles(TalentRequest request, String workspaceId, String userId) {
+    public Talent createTalentFromProfiles(TalentRequest request) {
         // Scrape profiles if URLs are provided
         TalentProfileMeta imdbProfile = null;
         if (StringUtils.hasText(request.getImdbProfileUrl())) {
@@ -54,9 +53,7 @@ public class TalentService {
 
         // Merge profiles with manual input
 //        Talent talent = mergeTalentData(request, imdbProfile.getData(), spotlightProfile.getData());
-        Talent talent = Talent.from(request, userId, workspaceId);
-        talent.setCreatedBy(userId);
-        talent.setWorkspaceId(workspaceId);
+        Talent talent = Talent.from(request);
         Talent saved = talentRepository.save(talent);
 
 //        // Log activity

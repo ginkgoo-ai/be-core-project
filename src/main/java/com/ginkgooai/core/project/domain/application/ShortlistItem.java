@@ -1,11 +1,9 @@
 package com.ginkgooai.core.project.domain.application;
 
+import com.ginkgooai.core.project.domain.BaseAuditableEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "shortlist_item")
-public class ShortlistItem {
+public class ShortlistItem extends BaseAuditableEntity {
     
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -35,12 +33,4 @@ public class ShortlistItem {
     private List<Submission> submissions = new ArrayList<>();
 
     private Integer sortOrder;
-
-    private String createdBy;
-
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
 }

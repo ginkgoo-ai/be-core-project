@@ -42,8 +42,7 @@ public class TalentController {
         @PostMapping
         public ResponseEntity<TalentResponse> createTalent(
                         @Parameter(description = "Talent creation details", required = true) @Valid @RequestBody TalentRequest request) {
-                Talent talent = talentService.createTalentFromProfiles(request, ContextUtils.getWorkspaceId(),
-                                ContextUtils.getUserId());
+                Talent talent = talentService.createTalentFromProfiles(request);
                 return ResponseEntity.ok(TalentResponse.from(talent));
         }
 

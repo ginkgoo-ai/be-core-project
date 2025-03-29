@@ -1,21 +1,19 @@
 package com.ginkgooai.core.project.dto.request;
 
+import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
+import com.ginkgooai.core.project.domain.project.Project;
+import com.ginkgooai.core.project.domain.project.ProjectStatus;
+import com.ginkgooai.core.project.dto.response.ProjectRoleResponse;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import org.springframework.util.ObjectUtils;
+
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import org.springframework.util.ObjectUtils;
-
-import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
-import com.ginkgooai.core.project.domain.project.Project;
-import com.ginkgooai.core.project.domain.project.ProjectStatus;
-import com.ginkgooai.core.project.dto.response.ProjectRoleResponse;
-
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
 
 @Data
 @Schema(description = "Response payload for a project")
@@ -75,7 +73,6 @@ public class ProjectResponse {
         response.setPlotLine(project.getPlotLine());
         response.setStatus(project.getStatus());
         response.setCreatedBy(project.getCreatedBy());
-        response.setLastActivityAt(project.getLastActivityAt());
         response.setCreatedAt(project.getCreatedAt());
         response.setUpdatedAt(project.getUpdatedAt());
         response.setRoles(project.getRoles().stream().map(t -> ProjectRoleResponse.from(t)).toList());
@@ -103,7 +100,6 @@ public class ProjectResponse {
         response.setPlotLine(project.getPlotLine());
         response.setStatus(project.getStatus());
         response.setCreatedBy(project.getCreatedBy());
-        response.setLastActivityAt(project.getLastActivityAt());
         response.setCreatedAt(project.getCreatedAt());
         response.setUpdatedAt(project.getUpdatedAt());
         response.setRoles(project.getRoles().stream().map(t -> ProjectRoleResponse.from(t, roleSideFilesMap)).toList());

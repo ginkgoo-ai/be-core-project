@@ -1,40 +1,30 @@
 package com.ginkgooai.core.project.service.application;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.ginkgooai.core.common.bean.ActivityType;
-import static com.ginkgooai.core.common.constant.ContextsConstant.USER_ID;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.client.identity.IdentityClient;
 import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.client.storage.StorageClient;
 import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
-import com.ginkgooai.core.project.domain.application.Application;
-import com.ginkgooai.core.project.domain.application.CommentType;
-import com.ginkgooai.core.project.domain.application.ShortlistItem;
-import com.ginkgooai.core.project.domain.application.Submission;
-import com.ginkgooai.core.project.domain.application.SubmissionComment;
-import com.ginkgooai.core.project.domain.application.SubmissionViewRecord;
+import com.ginkgooai.core.project.domain.application.*;
 import com.ginkgooai.core.project.dto.request.CommentCreateRequest;
 import com.ginkgooai.core.project.dto.request.SubmissionCreateRequest;
 import com.ginkgooai.core.project.dto.response.SubmissionCommentResponse;
 import com.ginkgooai.core.project.dto.response.SubmissionResponse;
-import com.ginkgooai.core.project.repository.ApplicationRepository;
-import com.ginkgooai.core.project.repository.ShortlistItemRepository;
-import com.ginkgooai.core.project.repository.SubmissionCommentRepository;
-import com.ginkgooai.core.project.repository.SubmissionRepository;
-import com.ginkgooai.core.project.repository.SubmissionViewRecordRepository;
+import com.ginkgooai.core.project.repository.*;
 import com.ginkgooai.core.project.service.ActivityLoggerService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.ginkgooai.core.common.constant.ContextsConstant.USER_ID;
 
 @Service
 @Slf4j
@@ -79,7 +69,6 @@ public class SubmissionService {
                 .videoThumbnailUrl(video.getVideoThumbnailUrl())
                 .videoResolution(video.getVideoResolution())
                 .mimeType(video.getFileType())
-                .createdBy(userId)
                 .build();
         Submission savedSubmission = submissionRepository.save(submission);
 
@@ -148,7 +137,6 @@ public class SubmissionService {
                 .content(request.getContent())
                 .type(request.getType())
                 .workspaceId(workspaceId)
-                .createdBy(userId)
                 .build();
 
         if (request.getParentCommentId() != null) {
@@ -161,6 +149,19 @@ public class SubmissionService {
 
         submission.getComments().add(comment);
         submissionRepository.save(submission);
+
+        // Check if userId is an email (contains '@' character) before logging activity
+        if (userId != null && userId.contains("@") && request.getType() == CommentType.PUBLIC) {
+            activityLogger.log(
+                submission.getWorkspaceId(),
+                submission.getApplication().getProject().getId(),
+                submission.getApplication().getId(),
+                ActivityType.PRODUCER_FEEDBACK_ADDED,
+                Map.of(
+                    "talentName", submission.getApplication().getTalent().getName()),
+                null,
+                userId);
+        }
 
         List<UserInfoResponse> users = identityClient
                 .getUsersByIds(

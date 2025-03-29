@@ -1,29 +1,13 @@
 package com.ginkgooai.core.project.service.application;
 
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import com.ginkgooai.core.common.utils.ContextUtils;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
-
 import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
+import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.client.identity.IdentityClient;
 import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.client.storage.StorageClient;
 import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
-import com.ginkgooai.core.project.domain.application.Application;
-import com.ginkgooai.core.project.domain.application.ApplicationComment;
-import com.ginkgooai.core.project.domain.application.ApplicationNote;
-import com.ginkgooai.core.project.domain.application.ApplicationStatus;
-import com.ginkgooai.core.project.domain.application.Submission;
+import com.ginkgooai.core.project.domain.application.*;
 import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.domain.role.RoleStatus;
@@ -32,19 +16,24 @@ import com.ginkgooai.core.project.dto.request.ApplicationCreateRequest;
 import com.ginkgooai.core.project.dto.response.ApplicationCommentResponse;
 import com.ginkgooai.core.project.dto.response.ApplicationNoteResponse;
 import com.ginkgooai.core.project.dto.response.ApplicationResponse;
-import com.ginkgooai.core.project.repository.ApplicationNoteRepository;
-import com.ginkgooai.core.project.repository.ApplicationRepository;
-import com.ginkgooai.core.project.repository.ProjectRepository;
-import com.ginkgooai.core.project.repository.ProjectRoleRepository;
-import com.ginkgooai.core.project.repository.SubmissionRepository;
-import com.ginkgooai.core.project.repository.TalentRepository;
+import com.ginkgooai.core.project.repository.*;
 import com.ginkgooai.core.project.service.ActivityLoggerService;
-
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
+
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -80,7 +69,7 @@ public class ApplicationService {
                     .orElseThrow(() -> new ResourceNotFoundException("Talent", "id",
                             request.getTalentId()));
         } else if (Objects.nonNull(request.getTalent())) {
-            talent = talentService.createTalentFromProfiles(request.getTalent(), workspaceId, userId);
+            talent = talentService.createTalentFromProfiles(request.getTalent());
 
             activityLogger.log(
                     workspaceId,
@@ -106,7 +95,6 @@ public class ApplicationService {
                 .role(role)
                 .talent(talent)
                 .status(ApplicationStatus.ADDED)
-                .createdBy(userId)
                 .build();
 
         Application savedApplication = applicationRepository.save(application);
@@ -138,7 +126,6 @@ public class ApplicationService {
                     .videoThumbnailUrl(video.getVideoThumbnailUrl())
                     .videoResolution(video.getVideoResolution())
                     .mimeType(video.getFileType())
-                    .createdBy(userId)
                     .build()).toList();
             List<Submission> savedSubmissions = submissionRepository.saveAll(submissions);
 
@@ -327,7 +314,6 @@ public class ApplicationService {
         ApplicationComment comment = ApplicationComment.builder()
                 .application(application)
                 .content(content)
-                .createdBy(userId)
                 .build();
 
         List<String> userIds = application.getNotes().stream()
@@ -351,7 +337,6 @@ public class ApplicationService {
         ApplicationNote note = applicationNoteRepository.save(ApplicationNote.builder()
                 .application(application)
                 .content(content)
-                .createdBy(userId)
                 .build());
 
         ApplicationNote savedNote = applicationNoteRepository.findById(note.getId()).get();
