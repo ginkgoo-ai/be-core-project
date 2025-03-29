@@ -1,41 +1,7 @@
 package com.ginkgooai.core.project.service.application;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import com.ginkgooai.core.project.domain.talent.TalentStatus;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import static org.mockito.Mockito.atMostOnce;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestClientException;
-
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.project.client.identity.IdentityClient;
-import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.client.storage.StorageClient;
 import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
 import com.ginkgooai.core.project.domain.application.Application;
@@ -44,16 +10,30 @@ import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.domain.role.RoleStatus;
 import com.ginkgooai.core.project.domain.talent.Talent;
+import com.ginkgooai.core.project.domain.talent.TalentStatus;
 import com.ginkgooai.core.project.dto.request.ApplicationCreateRequest;
 import com.ginkgooai.core.project.dto.request.TalentRequest;
 import com.ginkgooai.core.project.dto.response.ApplicationResponse;
-import com.ginkgooai.core.project.repository.ApplicationNoteRepository;
-import com.ginkgooai.core.project.repository.ApplicationRepository;
-import com.ginkgooai.core.project.repository.ProjectRepository;
-import com.ginkgooai.core.project.repository.ProjectRoleRepository;
-import com.ginkgooai.core.project.repository.SubmissionRepository;
-import com.ginkgooai.core.project.repository.TalentRepository;
+import com.ginkgooai.core.project.repository.*;
 import com.ginkgooai.core.project.service.ActivityLoggerService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestClientException;
+
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ApplicationServiceTest {
@@ -126,7 +106,6 @@ public class ApplicationServiceTest {
                 .role(role)
                 .talent(talent)
                 .status(ApplicationStatus.ADDED)
-                .createdBy(userId)
                 .build();
 
         createRequest = new ApplicationCreateRequest();
@@ -177,7 +156,7 @@ public class ApplicationServiceTest {
         // Mock repository responses
         when(projectRepository.findById(anyString())).thenReturn(Optional.of(project));
         when(projectRoleRepository.findById(anyString())).thenReturn(Optional.of(role));
-        when(talentService.createTalentFromProfiles(any(), eq(workspaceId), eq(userId))).thenReturn(talent);
+        when(talentService.createTalentFromProfiles(any())).thenReturn(talent);
         when(applicationRepository.save(any(Application.class))).thenReturn(application);
 
         // Execute test
@@ -188,7 +167,7 @@ public class ApplicationServiceTest {
         assertEquals(application.getId(), response.getId());
 
         // Verify talent was created through service
-        verify(talentService).createTalentFromProfiles(eq(talentRequest), eq(workspaceId), eq(userId));
+        verify(talentService).createTalentFromProfiles(eq(talentRequest));
     }
 
     @Test
@@ -276,7 +255,7 @@ public class ApplicationServiceTest {
         when(projectRoleRepository.findById(anyString())).thenReturn(Optional.of(role));
 
         // Simulate delay in talent service (web scraping)
-        when(talentService.createTalentFromProfiles(any(), eq(workspaceId), eq(userId))).thenAnswer(invocation -> {
+        when(talentService.createTalentFromProfiles(any())).thenAnswer(invocation -> {
             // Sleep to simulate a slow external service call
             Thread.sleep(1000);
             return talent;
@@ -293,7 +272,7 @@ public class ApplicationServiceTest {
         assertTrue((endTime - startTime) >= 1000, "Method should take at least 1 second due to web scraping delay");
 
         // Verify talent service was called
-        verify(talentService).createTalentFromProfiles(any(), eq(workspaceId), eq(userId));
+        verify(talentService).createTalentFromProfiles(any());
     }
 
     @Test

@@ -1,27 +1,5 @@
 package com.ginkgooai.core.project.service.application;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.common.exception.InternalServiceException;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.project.domain.talent.Talent;
@@ -32,6 +10,19 @@ import com.ginkgooai.core.project.dto.request.TalentRequest;
 import com.ginkgooai.core.project.repository.ImdbMovieItemRepository;
 import com.ginkgooai.core.project.repository.TalentRepository;
 import com.ginkgooai.core.project.service.ActivityLoggerService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.HashMap;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class TalentServiceTest {
@@ -125,7 +116,7 @@ public class TalentServiceTest {
         when(talentRepository.save(any(Talent.class))).thenReturn(talent);
 
         // Execute test
-        Talent result = talentService.createTalentFromProfiles(request, workspaceId, userId);
+        Talent result = talentService.createTalentFromProfiles(request);
 
         // Verify result
         assertNotNull(result);
@@ -145,7 +136,7 @@ public class TalentServiceTest {
 
         // Execute test and expect exception
         Exception exception = assertThrows(InternalServiceException.class, () -> {
-            talentService.createTalentFromProfiles(talentRequest, workspaceId, userId);
+            talentService.createTalentFromProfiles(talentRequest);
         });
 
         // Verify exception details
@@ -176,7 +167,7 @@ public class TalentServiceTest {
 
         // Execute test with timing
         long startTime = System.currentTimeMillis();
-        talentService.createTalentFromProfiles(talentRequest, workspaceId, userId);
+        talentService.createTalentFromProfiles(talentRequest);
         long endTime = System.currentTimeMillis();
 
         // Verify execution time (should be at least 1 second due to simulated delays)
