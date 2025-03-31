@@ -3,6 +3,7 @@ package com.ginkgooai.core.project.controller;
 import java.util.List;
 
 import com.ginkgooai.core.common.utils.IpUtils;
+import com.ginkgooai.core.project.dto.request.InvitationEmailRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -132,4 +133,17 @@ public class SubmissionController {
                 return ResponseEntity.ok().build();
         }
 
+        @Operation(summary = "Send invitation email", description = "Sends invitation emails to multiple applicants for their submissions")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Invitation emails sent successfully"),
+                        @ApiResponse(responseCode = "404", description = "One or more applications not found"),
+                        @ApiResponse(responseCode = "400", description = "Invalid request data")
+        })
+        @PostMapping("/invitation")
+        public ResponseEntity<?> sendInvitationEmail(
+                        @Parameter(description = "Invitation email request containing template type and application IDs", required = true) 
+                        @RequestBody InvitationEmailRequest request) {
+                submissionService.sendInvitationEmail(request);
+                return ResponseEntity.ok().build();
+        }
 }

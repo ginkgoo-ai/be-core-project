@@ -2,6 +2,7 @@ package com.ginkgooai.core.project.service.application;
 
 import com.ginkgooai.core.common.bean.ActivityType;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
+import com.ginkgooai.core.common.message.InnerMailSendMessage;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.client.identity.IdentityClient;
 import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
@@ -9,6 +10,7 @@ import com.ginkgooai.core.project.client.storage.StorageClient;
 import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
 import com.ginkgooai.core.project.domain.application.*;
 import com.ginkgooai.core.project.dto.request.CommentCreateRequest;
+import com.ginkgooai.core.project.dto.request.InvitationEmailRequest;
 import com.ginkgooai.core.project.dto.request.SubmissionCreateRequest;
 import com.ginkgooai.core.project.dto.response.SubmissionCommentResponse;
 import com.ginkgooai.core.project.dto.response.SubmissionResponse;
@@ -45,6 +47,8 @@ public class SubmissionService {
     private final IdentityClient identityClient;
 
     private final ActivityLoggerService activityLogger;
+
+    private final SendEmailInnerService sendEmailInnerService;
 
     @Transactional
     public SubmissionResponse createSubmission(String workspaceId,
@@ -251,5 +255,52 @@ public class SubmissionService {
                         cb.equal(root.get("id"), id),
                         cb.equal(root.get("workspaceId"), workspaceId)))
                 .orElseThrow(() -> new ResourceNotFoundException("Submission", "id", id));
+    }
+
+    /**
+     * Sends invitation emails to multiple applicants for their submissions.
+     * This method processes a batch of applications and sends personalized invitation emails
+     * to each applicant using the specified email template.
+     *
+     * The email template will be populated with the following placeholders:
+     * - ROLE_NAME: The name of the role the applicant is applying for
+     * - PROJECT_NAME: The name of the project
+     * - FIRST_NAME: The applicant's first name
+     * - SENDER_NAME: The name of the user sending the invitation
+     *
+     * @param request The invitation email request containing:
+     *                - emailTemplateType: The type of email template to use
+     *                - applicationIds: List of application IDs to send invitations for
+     * @throws ResourceNotFoundException if any of the specified applications are not found
+     */
+    public void sendInvitationEmail(InvitationEmailRequest request) {
+        List<Application> applications = applicationRepository.findAllById(request.getApplicationIds());
+
+        if (CollectionUtils.isEmpty(applications)) {
+            throw new ResourceNotFoundException("Application", "ids", request.getApplicationIds());
+        }
+
+        UserInfoResponse userInfoResponse = identityClient.getUserById(ContextUtils.getUserId())
+                .getBody();
+
+        if (userInfoResponse == null) {
+            throw new ResourceNotFoundException("User", "id", ContextUtils.getUserId());
+        }
+
+        List<InnerMailSendMessage.Receipt> list = applications.stream().map(application -> {
+            Map<String, String> placeholders = Map.of(
+                    "ROLE_NAME", application.getRole().getName(),
+                    "PROJECT_NAME", application.getProject().getName(),
+                    "FIRST_NAME", application.getTalent().getName(),
+                    "SENDER_NAME", userInfoResponse.getFirstName() + " " + userInfoResponse.getLastName()
+            );
+            return InnerMailSendMessage.Receipt.builder()
+                    .placeholders(placeholders)
+                    .to(application.getTalent().getEmail()).build();
+        }).toList();
+
+        sendEmailInnerService.email(InnerMailSendMessage.builder()
+                .emailTemplateType(request.getEmailTemplateType())
+                .receipts(list).build());
     }
 }
