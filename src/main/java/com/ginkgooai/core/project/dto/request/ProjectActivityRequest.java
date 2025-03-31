@@ -1,6 +1,6 @@
 package com.ginkgooai.core.project.dto.request;
 
-import com.ginkgooai.core.common.bean.ActivityType;
+import com.ginkgooai.core.common.enums.ActivityType;
 import com.ginkgooai.core.project.domain.ActivityStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

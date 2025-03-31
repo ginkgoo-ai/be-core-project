@@ -1,8 +1,8 @@
 package com.ginkgooai.core.project.client.identity;
 
 import com.ginkgooai.core.common.config.FeignConfig;
-import com.ginkgooai.core.project.client.identity.dto.GuestCodeRequest;
-import com.ginkgooai.core.project.client.identity.dto.GuestCodeResponse;
+import com.ginkgooai.core.project.client.identity.dto.ShareCodeRequest;
+import com.ginkgooai.core.project.client.identity.dto.ShareCodeResponse;
 import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +24,8 @@ public interface IdentityClient {
     @GetMapping("/users/validate/{id}")
     boolean validateUser(@PathVariable String id);
 
-    @GetMapping("/guest-codes")
-    ResponseEntity<GuestCodeResponse> generateGuestCode(@RequestBody GuestCodeRequest request);
+    @GetMapping("/share-codes")
+    ResponseEntity<ShareCodeResponse> generateShareCode(@RequestBody ShareCodeRequest request);
 
 }
 

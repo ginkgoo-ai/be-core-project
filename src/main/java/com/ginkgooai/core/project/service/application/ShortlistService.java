@@ -1,11 +1,13 @@
 package com.ginkgooai.core.project.service.application;
 
 import com.ginkgooai.core.common.constant.ContextsConstant;
+import com.ginkgooai.core.common.enums.Role;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.utils.ContextUtils;
+import com.ginkgooai.core.common.utils.UrlUtils;
 import com.ginkgooai.core.project.client.identity.IdentityClient;
-import com.ginkgooai.core.project.client.identity.dto.GuestCodeRequest;
-import com.ginkgooai.core.project.client.identity.dto.GuestCodeResponse;
+import com.ginkgooai.core.project.client.identity.dto.ShareCodeRequest;
+import com.ginkgooai.core.project.client.identity.dto.ShareCodeResponse;
 import com.ginkgooai.core.project.domain.application.*;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.domain.talent.Talent;
@@ -207,7 +209,6 @@ public class ShortlistService {
     return (root, query, cb) -> {
       List<Predicate> predicates = new ArrayList<>();
 
-      // 基本条件 - 属于特定短名单的条目
       predicates.add(cb.equal(root.get("shortlist").get("id"), shortlistId));
 
       if (keyword != null && !keyword.trim().isEmpty()) {
@@ -246,23 +247,23 @@ public class ShortlistService {
       Integer expiryHours =
           request.getExpiresInDays() != null ? request.getExpiresInDays() * 24 : 7 * 24;
 
-      String redirectUrl = appBaseUrl + "/shares/shortlist/" + shortlistId;
-      GuestCodeResponse response =
+      ShareCodeResponse response =
           identityClient
-              .generateGuestCode(
-                  GuestCodeRequest.builder()
+              .generateShareCode(
+                  ShareCodeRequest.builder()
                       .workspaceId(workspaceId)
                       .resource("shortlist")
                       .resourceId(shortlistId)
                       .guestName(recipient.getName())
                       .guestEmail(recipient.getEmail())
+                      .roles(List.of(Role.ROLE_PRODUCER))
                       .write(true)
-                      .redirectUrl(redirectUrl)
                       .expiryHours(expiryHours)
                       .build())
               .getBody();
 
-      String shareLink = redirectUrl + "?guest_code=" + response.getGuestCode();
+      String baseUrl = request.getRedirectUrl().replace("{id}", shortlistId);
+      String shareLink = UrlUtils.appendQueryParam(baseUrl, "share_code", response.getShareCode());
       shareLinks.put(recipient.getEmail(), shareLink);
 
       log.info(

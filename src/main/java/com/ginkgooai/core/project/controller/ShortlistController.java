@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -138,7 +139,7 @@ public class ShortlistController {
 			description = "Share request details including recipient emails and optional message",
 			required = true,
 			schema = @Schema(implementation = ShareShortlistRequest.class))
-		@RequestBody
+		@RequestBody @Valid
 		ShareShortlistRequest request) {
 		Map<String, String> shareLinks = shortlistService.shareShortlist(request, shortlistId);
 		return ResponseEntity.ok(BatchShareShortlistResponse.from(shareLinks));

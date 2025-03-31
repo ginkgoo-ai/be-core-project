@@ -1,6 +1,6 @@
 package com.ginkgooai.core.project.service.application;
 
-import com.ginkgooai.core.common.bean.ActivityType;
+import com.ginkgooai.core.common.enums.ActivityType;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.client.identity.IdentityClient;

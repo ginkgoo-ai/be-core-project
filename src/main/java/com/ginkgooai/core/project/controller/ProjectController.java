@@ -1,12 +1,14 @@
 package com.ginkgooai.core.project.controller;
 
-import com.ginkgooai.core.common.bean.ActivityType;
-import com.ginkgooai.core.common.exception.ResourceNotFoundException;
+import com.ginkgooai.core.common.enums.ActivityType;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.project.ProjectStatus;
-import com.ginkgooai.core.project.dto.request.*;
-import com.ginkgooai.core.project.dto.response.*;
+import com.ginkgooai.core.project.dto.request.ProjectCreateRequest;
+import com.ginkgooai.core.project.dto.request.ProjectResponse;
+import com.ginkgooai.core.project.dto.request.ProjectUpdateRequest;
+import com.ginkgooai.core.project.dto.request.ProjectUpdateStatusRequest;
+import com.ginkgooai.core.project.dto.response.ProjectBasicResponse;
 import com.ginkgooai.core.project.service.ActivityLoggerService;
 import com.ginkgooai.core.project.service.ProjectReadService;
 import com.ginkgooai.core.project.service.ProjectWriteService;

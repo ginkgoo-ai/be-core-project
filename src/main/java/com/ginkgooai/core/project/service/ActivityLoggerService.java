@@ -1,18 +1,16 @@
 package com.ginkgooai.core.project.service;
 
+import com.ginkgooai.core.common.constant.MessageQueue;
+import com.ginkgooai.core.common.enums.ActivityType;
+import com.ginkgooai.core.common.message.ActivityLogMessage;
+import com.ginkgooai.core.common.queue.QueueInterface;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Map;
-
-import org.springframework.stereotype.Component;
-
-import com.ginkgooai.core.common.bean.ActivityType;
-import com.ginkgooai.core.common.constant.MessageQueue;
-import com.ginkgooai.core.common.message.ActivityLogMessage;
-import com.ginkgooai.core.common.queue.QueueInterface;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
