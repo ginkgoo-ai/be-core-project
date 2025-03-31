@@ -292,7 +292,8 @@ public class SubmissionService {
                     "ROLE_NAME", application.getRole().getName(),
                     "PROJECT_NAME", application.getProject().getName(),
                     "FIRST_NAME", application.getTalent().getName(),
-                    "SENDER_NAME", userInfoResponse.getFirstName() + " " + userInfoResponse.getLastName()
+                    "SENDER_NAME", userInfoResponse.getFirstName() + " " + userInfoResponse.getLastName(),
+                        "SHARE_LINK","https://google.com"
             );
             return InnerMailSendMessage.Receipt.builder()
                     .placeholders(placeholders)
