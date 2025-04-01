@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.dto.response;
 
+import com.ginkgooai.core.project.domain.talent.Contact;
 import com.ginkgooai.core.project.domain.talent.Talent;
 import com.ginkgooai.core.project.dto.KnownForItem;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -7,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -20,8 +22,11 @@ public class TalentResponse {
     @Schema(description = "Workspace identifier that the talent belongs to")
     private String workspaceId;
 
-    @Schema(description = "Full name of the talent")
-    private String name;
+    @Schema(description = "User's first name")
+    private String firstName;
+
+    @Schema(description = "User's last name")
+    private String lastName;
 
     @Schema(description = "Contact email address")
     private String email;
@@ -35,15 +40,6 @@ public class TalentResponse {
     @Schema(description = "URL of the talent's profile photo")
     private String profilePhotoUrl;
 
-    @Schema(description = "Name of the talent's agency")
-    private String agencyName;
-
-    @Schema(description = "Name of the talent's agent")
-    private String agentName;
-
-    @Schema(description = "Contact email of the talent's agent")
-    private String agentEmail;
-  
     @Schema(description = "List of notable works the talent is known for")
     private Set<KnownForItem> knownFor;
 
@@ -59,26 +55,31 @@ public class TalentResponse {
     @Schema(description = "Timestamp of the last update to the talent record")
     private LocalDateTime updatedAt;
 
-    @Schema(description = "Additional dynamic attributes for the talent")
-    private Map<String, Object> attributes;
+    @Schema(description = "List of contact persons associated with the talent (agents, managers, etc.)")
+    private List<Contact> contacts;
+
+    @Schema(description = "List of applications submitted by the talent")
+    private List<ApplicationBriefResponse> applications;
+
+    @Schema(description = "List of video submissions by the talent")
+    private List<SubmissionBriefResponse> submissions;
+
 
     public static TalentResponse from(Talent talent) {
         return TalentResponse.builder()
-                .id(talent.getId())
-                .workspaceId(talent.getWorkspaceId())
-                .name(talent.getName())
-                .email(talent.getEmail())
-                .imdbProfileUrl(talent.getImdbProfileUrl())
-                .spotlightProfileUrl(talent.getSpotlightProfileUrl())
-                .profilePhotoUrl(talent.getProfilePhotoUrl())
-                .agencyName(talent.getAgencyName())
-                .agentName(talent.getAgentName())
-                .agentEmail(talent.getAgentEmail())
-                .personalDetails(talent.getPersonalDetails())
-                .status(talent.getStatus().name())
-                .createdAt(talent.getCreatedAt())
-                .updatedAt(talent.getUpdatedAt())
-                .attributes(talent.getAttributes())
-                .build();
+            .id(talent.getId())
+            .workspaceId(talent.getWorkspaceId())
+            .firstName(talent.getFirstName())
+            .lastName(talent.getLastName())
+            .email(talent.getEmail())
+            .imdbProfileUrl(talent.getImdbProfileUrl())
+            .spotlightProfileUrl(talent.getSpotlightProfileUrl())
+            .profilePhotoUrl(talent.getProfilePhotoUrl())
+            .contacts(talent.getContacts())
+            .personalDetails(talent.getPersonalDetails())
+            .status(talent.getStatus().name())
+            .createdAt(talent.getCreatedAt())
+            .updatedAt(talent.getUpdatedAt())
+            .build();
     }
 }

@@ -1,18 +1,17 @@
 package com.ginkgooai.core.project.dto.response;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.domain.application.CommentType;
 import com.ginkgooai.core.project.domain.application.Submission;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.collections4.CollectionUtils;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -45,10 +44,6 @@ public class SubmissionResponse {
 
     @Schema(description = "Resolution of the video", example = "1920x1080")
     private String videoResolution;
-
-    @Schema(description = "Current status of the video processing", example = "PROCESSED", allowableValues = {
-            "PROCESSING", "PROCESSED", "FAILED"})
-    private String videoStatus;
 
     @Schema(description = "Number of times the video has been viewed", example = "42")
     private Long viewCount;
@@ -103,7 +98,7 @@ public class SubmissionResponse {
                         .toList() : null)
                 .shortlisted(submission.getShortlistItems() != null &&
                         submission.getShortlistItems().stream()
-                                .anyMatch(item -> item.getShortlist().getOwnerId()
+                            .anyMatch(item -> item.getShortlist().getCreatedBy()
                                         .equals(userId)))
                 .build();
     }

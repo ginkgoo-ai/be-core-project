@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 
+import java.util.List;
 import java.util.Map;
 
 @Builder
@@ -26,30 +27,26 @@ public class Talent extends BaseAuditableEntity {
     private String id;
 
     private String workspaceId;
-    
-    private String name;
-    
+
+    private String firstName;
+
+    private String lastName;
+
     private String nameSuffix;
-    
+
     private String email;
-    
+
     private String imdbProfileUrl;
-    
+
     private String spotlightProfileUrl;
-    
-    private String agencyName;
-    
-    private String agentName;
-    
-    private String agentEmail;
 
     private String profileMetaId;
-    
+
     private String profilePhotoUrl;
 
     @Column(name = "known_for_movie_ids", columnDefinition = "text[]")
     private String[] knownForMovieIds;
-    
+
     @Type(JsonType.class)
     @Column(columnDefinition = "jsonb")
     private Map<String, Object> attributes;
@@ -58,22 +55,25 @@ public class Talent extends BaseAuditableEntity {
     @Column(columnDefinition = "jsonb")
     private Map<String, String> personalDetails;
 
+    @Type(JsonType.class)
+    @Column(columnDefinition = "jsonb")
+    private List<Contact> contacts;
+
     @Enumerated(EnumType.STRING)
     private TalentStatus status;
 
     public static Talent from(TalentRequest request) {
         return Talent.builder()
-                .name(request.getName())
-                .nameSuffix(request.getNameSuffix())
-                .email(request.getEmail())
-                .imdbProfileUrl(request.getImdbProfileUrl())
-                .spotlightProfileUrl(request.getSpotlightProfileUrl())
-                .agencyName(request.getAgencyName())
-                .agentName(request.getAgentName())
-                .agentEmail(request.getAgentEmail())
-                .profilePhotoUrl(request.getProfilePhotoUrl())
-                .status(TalentStatus.ACTIVE)
+            .firstName(request.getFirstName())
+            .lastName(request.getLastName())
+            .nameSuffix(request.getNameSuffix())
+            .email(request.getEmail())
+            .imdbProfileUrl(request.getImdbProfileUrl())
+            .spotlightProfileUrl(request.getSpotlightProfileUrl())
+            .profilePhotoUrl(request.getProfilePhotoUrl())
+            .status(TalentStatus.ACTIVE)
+            .contacts(request.getContacts())
             .workspaceId(ContextUtils.getWorkspaceId())
-                .build();
+            .build();
     }
 }

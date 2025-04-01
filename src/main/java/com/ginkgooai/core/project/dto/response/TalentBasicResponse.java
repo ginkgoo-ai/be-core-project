@@ -26,7 +26,7 @@ public class TalentBasicResponse {
     public static TalentBasicResponse from(Talent talent) {
         return TalentBasicResponse.builder()
                 .id(talent.getId())
-                .name(talent.getName())
+            .name(String.join(" ", talent.getFirstName(), talent.getLastName()))
                 .email(talent.getEmail())
                 .build();
     }

@@ -82,9 +82,9 @@ public class SubmissionService {
                 application.getId(),
                 ActivityType.SUBMISSION_ADDED_TO_SHORTLIST,
                 Map.of(
-                        "user", userId,
-                        "talentName", application.getTalent().getName(),
-                        "videoName", submission.getVideoName()),
+                    "user", userId,
+                    "talentName", String.join(" ", application.getTalent().getFirstName(), application.getTalent().getEmail()),
+                    "videoName", submission.getVideoName()),
                 null,
                 userId);
 
@@ -162,7 +162,7 @@ public class SubmissionService {
                 submission.getApplication().getId(),
                 ActivityType.PRODUCER_FEEDBACK_ADDED,
                 Map.of(
-                    "talentName", submission.getApplication().getTalent().getName()),
+                    "talentName", String.join(" ", submission.getApplication().getTalent().getFirstName(), submission.getApplication().getTalent().getLastName())),
                 null,
                 userId);
         }
@@ -291,7 +291,7 @@ public class SubmissionService {
             Map<String, String> placeholders = Map.of(
                     "ROLE_NAME", application.getRole().getName(),
                     "PROJECT_NAME", application.getProject().getName(),
-                    "FIRST_NAME", application.getTalent().getName(),
+                "FIRST_NAME", application.getTalent().getFirstName(),
                     "SENDER_NAME", userInfoResponse.getFirstName() + " " + userInfoResponse.getLastName(),
                         "SHARE_LINK","https://google.com"
             );

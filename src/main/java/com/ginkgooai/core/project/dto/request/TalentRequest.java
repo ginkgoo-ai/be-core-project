@@ -1,14 +1,15 @@
 package com.ginkgooai.core.project.dto.request;
 
-import com.ginkgooai.core.project.dto.TalentProfileData;
+import com.ginkgooai.core.project.domain.talent.Contact;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @Builder
@@ -17,11 +18,11 @@ import lombok.NoArgsConstructor;
 @Schema(description = "Request object for creating/update a new talent profile")
 public class TalentRequest {
 
-    @Schema(description = "Full name of the talent",
-            example = "John Smith",
-            required = true)
-    @NotBlank(message = "Name is required")
-    private String name;
+    @Schema(description = "User's first name")
+    private String firstName;
+
+    @Schema(description = "User's last name")
+    private String lastName;
 
     @Schema(description = "Name suffix (birth/death years, birthplace, etc., distinct from the name)",
             example = "1940-2010")
@@ -51,21 +52,6 @@ public class TalentRequest {
             required = true)
     private String profilePhotoUrl;
 
-    @Schema(description = "Name of the talent's agency",
-            example = "Creative Artists Agency") 
-    private String agencyName;
-
-    @Schema(description = "Name of the talent's agent",
-            example = "Jane Wilson",
-            required = true)
-    private String agentName;
-
-    @Schema(description = "Contact email of the talent's agent",
-            example = "jane.wilson@caa.com",
-            required = true)
-    @Email(message = "Must be a valid email address")
-    private String agentEmail;
-   
-//    @Schema(description = "Additional personal details about the talent")
-//    private TalentProfileData profile;
+    @Schema(description = "List of contact persons associated with the talent (agents, managers, etc.)")
+    private List<Contact> contacts;
 }

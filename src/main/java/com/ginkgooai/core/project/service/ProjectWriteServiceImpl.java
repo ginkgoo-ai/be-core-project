@@ -8,6 +8,7 @@ import com.ginkgooai.core.project.domain.application.Application;
 import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.project.ProjectStatus;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
+import com.ginkgooai.core.project.domain.role.RoleStatus;
 import com.ginkgooai.core.project.dto.request.*;
 import com.ginkgooai.core.project.dto.response.ProjectRoleResponse;
 import com.ginkgooai.core.project.repository.ApplicationRepository;
@@ -148,6 +149,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
 
 		ProjectRole role = new ProjectRole();
 		role.setName(request.getName());
+		role.setStatus(RoleStatus.DRAFTING);
 		role.setCharacterDescription(request.getCharacterDescription());
 		role.setSelfTapeInstructions(request.getSelfTapeInstructions());
 		role.setSides(request.getSides().toArray(new String[0]));

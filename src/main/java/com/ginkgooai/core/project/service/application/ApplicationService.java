@@ -77,7 +77,7 @@ public class ApplicationService {
                     null,
                     ActivityType.TALENT_ADDED,
                     Map.of(
-                            "talentName", talent.getName(),
+                        "talentName", String.join(" ", talent.getFirstName(), talent.getEmail()),
                             "user", userId),
                     null,
                     userId);
