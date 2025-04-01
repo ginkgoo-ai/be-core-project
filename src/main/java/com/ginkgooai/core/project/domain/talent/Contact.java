@@ -34,12 +34,12 @@ public class Contact {
 
     @Schema(
         description = "Phone number without country code",
-        example = "(123) 456-7890",
-        pattern = "^\\(?\\d{1,4}\\)?[-\\s]?\\d{1,4}[-\\s]?\\d{1,9}$"
+        example = "(020) 1234 5678",
+        pattern = "^[\\d\\s\\(\\)\\-]{6,20}$"
     )
     @Pattern(
-        regexp = "^\\(?\\d{1,4}\\)?[-\\s]?\\d{1,4}[-\\s]?\\d{1,9}$",
-        message = "Phone number must be in a valid format"
+        regexp = "^[\\d\\s\\(\\)\\-]{6,20}$",
+        message = "Phone number must contain 6-20 characters (digits, spaces, parentheses, or hyphens)"
     )
     private String phoneNumber;
 
