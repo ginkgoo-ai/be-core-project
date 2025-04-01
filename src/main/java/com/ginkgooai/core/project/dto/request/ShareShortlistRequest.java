@@ -16,6 +16,10 @@ import java.util.List;
 @Schema(description = "Request for sharing multiple submissions with multiple recipients")
 public class ShareShortlistRequest {
 
+	@NotEmpty(message = "Product ID cannot be empty")
+	@Schema(description = "Project identifier associated with this submission", example = "project-456")
+	private String projectId;
+
     @NotEmpty(message = "Redirect url cannot be empty")
     @Schema(description = "Redirect URL after user clicks the link", example = "https://www.slate.com/shared-shortlist")
     private String redirectUrl;

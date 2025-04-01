@@ -1,8 +1,10 @@
 package com.ginkgooai.core.project.service;
 
-import com.ginkgooai.core.project.domain.project.*;
+import com.ginkgooai.core.project.domain.project.Project;
+import com.ginkgooai.core.project.domain.project.ProjectStatus;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.dto.request.*;
+import com.ginkgooai.core.project.dto.response.ProjectRoleResponse;
 
 public interface ProjectWriteService {
 
@@ -14,7 +16,7 @@ public interface ProjectWriteService {
 
     void deleteProject(String id);
 
-    ProjectRole createRole(String projectId, ProjectRoleRequest request);
+	ProjectRoleResponse createRole(String projectId, ProjectRoleRequest request);
 
     ProjectRole updateRole(String roleId, ProjectRoleRequest request);
 
