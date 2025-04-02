@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Schema(description = "Contact person information")
 public class Contact {
     @Schema(description = "Full name of the contact person", example = "Jane Wilson")
-    private String fullName;
+    private String name;
 
     @Schema(description = "Email address of the contact person", example = "jane.wilson@caa.com")
     @Email(message = "Must be a valid email address")
