@@ -42,7 +42,7 @@ public class SecurityConfig {
                     "/health")
                 .permitAll()
                 .requestMatchers(
-                    "/shared-shortlists/**")
+                    "/shortlists/**")
                 .authenticated()
                 .anyRequest().hasRole("USER"))
             .exceptionHandling(exceptionHandling -> exceptionHandling
