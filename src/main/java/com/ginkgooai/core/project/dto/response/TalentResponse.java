@@ -22,11 +22,8 @@ public class TalentResponse {
     @Schema(description = "Workspace identifier that the talent belongs to")
     private String workspaceId;
 
-    @Schema(description = "User's first name")
-    private String firstName;
-
-    @Schema(description = "User's last name")
-    private String lastName;
+    @Schema(description = "User's name")
+    private String name;
 
     @Schema(description = "Contact email address")
     private String email;
@@ -69,7 +66,7 @@ public class TalentResponse {
         return TalentResponse.builder()
             .id(talent.getId())
             .workspaceId(talent.getWorkspaceId())
-            .lastName(talent.getName())
+            .name(talent.getName())
             .email(talent.getEmail())
             .imdbProfileUrl(talent.getImdbProfileUrl())
             .spotlightProfileUrl(talent.getSpotlightProfileUrl())
