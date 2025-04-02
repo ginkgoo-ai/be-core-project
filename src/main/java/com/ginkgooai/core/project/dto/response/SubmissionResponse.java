@@ -118,10 +118,6 @@ public class SubmissionResponse {
                 .createdBy(submission.getCreatedBy())
                 .createdAt(submission.getCreatedAt())
                 .updatedAt(submission.getUpdatedAt())
-                .publicComments(submission.getComments().stream()
-                        .filter(comment -> CommentType.PUBLIC.equals(comment.getType()))
-                        .map(t -> SubmissionCommentResponse.from(t))
-                        .toList())
                 .shortlisted(submission.getShortlistItems() != null &&
                         submission.getShortlistItems().stream()
                                 .anyMatch(item -> item.getShortlist().getOwnerId()

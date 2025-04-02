@@ -1,11 +1,19 @@
 package com.ginkgooai.core.project.controller;
 
+import com.ginkgooai.core.common.constant.ContextsConstant;
 import com.ginkgooai.core.common.utils.ContextUtils;
+import com.ginkgooai.core.common.utils.IpUtils;
+import com.ginkgooai.core.project.config.security.RequireShareShortlistScope;
+import com.ginkgooai.core.project.domain.application.CommentType;
+import com.ginkgooai.core.project.dto.request.CommentCreateRequest;
+import com.ginkgooai.core.project.dto.request.GuestCommentCreateRequest;
 import com.ginkgooai.core.project.dto.request.ShareShortlistRequest;
 import com.ginkgooai.core.project.dto.response.BatchShareShortlistResponse;
 import com.ginkgooai.core.project.dto.response.ShortlistItemResponse;
 import com.ginkgooai.core.project.dto.response.ShortlistShareResponse;
+import com.ginkgooai.core.project.dto.response.SubmissionResponse;
 import com.ginkgooai.core.project.service.application.ShortlistService;
+import com.ginkgooai.core.project.service.application.SubmissionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -13,6 +21,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -32,6 +41,8 @@ import java.util.Map;
 public class ShortlistController {
 
 	private final ShortlistService shortlistService;
+
+	private final SubmissionService submissionService;
 
 	@Operation(summary = "Add item to shortlist",
 			description = "Adds a submission to the user's shortlist with optional notes")
@@ -127,6 +138,76 @@ public class ShortlistController {
 			required = true, example = "share_123") @PathVariable String shareId) {
 		shortlistService.revokeShortlistShare(shareId);
 		return ResponseEntity.noContent().build();
+	}
+
+	@Operation(summary = "Guest(Producer) Get shortlist items by shortlist ID", description = "Retrieves a paginated list of items from a specific shortlist. "
+		+
+		"Requires ROLE_USER role or ROLE_GUEST role with appropriate shortlist scopes.")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved shortlist items", content = @Content(schema = @Schema(implementation = Page.class))),
+		@ApiResponse(responseCode = "400", description = "Invalid pagination parameters"),
+		@ApiResponse(responseCode = "403", description = "Not authorized to view this shortlist"),
+		@ApiResponse(responseCode = "404", description = "Shortlist not found")
+	})
+	@GetMapping("/{shortlistId}/items")
+	@RequireShareShortlistScope
+	public ResponseEntity<Page<ShortlistItemResponse>> getShortlistItemsByShortlistId(
+		@Parameter(description = "ID of the shortlist", required = true, example = "cfc08cb3-c87c-4190-9355-1ff73fe15c0e") @PathVariable String shortlistId,
+		@Parameter(description = "Optional search keyword to filter items", example = "John Smith") @RequestParam(required = false) String keyword,
+		@Parameter(description = "Page number (zero-based)", example = "0") @RequestParam(defaultValue = "0") int page,
+		@Parameter(description = "Page size", example = "10") @RequestParam(defaultValue = "10") int size,
+		@Parameter(description = "Sort direction (ASC/DESC)", example = "DESC") @RequestParam(defaultValue = "DESC") String sortDirection,
+		@Parameter(description = "Sort field (e.g., updatedAt)", example = "updatedAt") @RequestParam(defaultValue = "updatedAt") String sortField) {
+		Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
+		Pageable pageable = PageRequest.of(page, size, sort);
+		return ResponseEntity
+			.ok(shortlistService.listShortlistItemsByShortlistId(shortlistId, keyword, pageable));
+	}
+
+	@Operation(summary = "Guest(Producer) record video view", description = "Records that a video has been viewed, incrementing its view counter. "
+		+ "Requires ROLE_USER role or ROLE_GUEST role with appropriate shortlist scopes.")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully recorded video view"),
+		@ApiResponse(responseCode = "403", description = "Not authorized to view this submission"),
+		@ApiResponse(responseCode = "404", description = "Submission not found")
+	})
+	@PostMapping("/{shortlistId}/items/{itemId}/submissions/{submissionId}/view")
+	@RequireShareShortlistScope
+	public ResponseEntity<?> recordVideoView(
+		@Parameter(description = "ID of the shortlist", required = true, example = "cfc08cb3-c87c-4190-9355-1ff73fe15c0e") @PathVariable String shortlistId,
+		@Parameter(description = "ID of the shortlist item", required = true, example = "abc12345-1234-5678-90ab-1234567890ab") @PathVariable String itemId,
+		@Parameter(description = "ID of the submission", required = true, example = "afc08cb3-c88c-4191-9455-1ff73fe15c0f") @PathVariable String submissionId,
+		HttpServletRequest request) {
+
+		submissionService.incrementViewCount(submissionId, ContextUtils.getUserId(),
+			IpUtils.getClientIpAddress(request));
+
+		return ResponseEntity.ok().build();
+	}
+
+
+	@Operation(summary = "Guest(Producer) Add comment to submission", description = "Adds a new comment to an existing submission"
+		+
+		"Requires ROLE_GUEST role with appropriate shortlist scopes.")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Comment added successfully", content = @Content(schema = @Schema(implementation = SubmissionResponse.class))),
+		@ApiResponse(responseCode = "404", description = "Submission not found")
+	})
+	@PostMapping("/{shortlistId}/items/{itemId}/submissions/{submissionId}/comments")
+	@RequireShareShortlistScope
+	public ResponseEntity<SubmissionResponse> addComment(
+		@Parameter(description = "ID of the shortlist", required = true, example = "cfc08cb3-c87c-4190-9355-1ff73fe15c0e") @PathVariable String shortlistId,
+		@Parameter(description = "ID of the submission", required = true, example = "afc08cb3-c88c-4191-9455-1ff73fe15c0f") @PathVariable String submissionId,
+		@Valid @RequestBody GuestCommentCreateRequest request) {
+		return ResponseEntity.ok(submissionService.addComment(
+			submissionId,
+			ContextUtils.getWorkspaceId(),
+			CommentCreateRequest.builder()
+				.content(request.getContent())
+				.type(CommentType.PUBLIC)
+				.parentCommentId(request.getParentCommentId())
+				.build(),
+			ContextUtils.get(ContextsConstant.USER_EMAIL, String.class, "unknown")));
 	}
 
 }
