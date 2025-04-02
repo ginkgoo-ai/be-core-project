@@ -142,7 +142,7 @@ public class ShortlistController {
 
 	@Operation(summary = "Guest(Producer) Get shortlist items by shortlist ID", description = "Retrieves a paginated list of items from a specific shortlist. "
 		+
-		"Requires ROLE_USER role or ROLE_GUEST role with appropriate shortlist scopes.")
+		"Requires ROLE_USER role or ROLE_PRODUCER role with appropriate shortlist scopes.")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "Successfully retrieved shortlist items", content = @Content(schema = @Schema(implementation = Page.class))),
 		@ApiResponse(responseCode = "400", description = "Invalid pagination parameters"),
@@ -164,6 +164,23 @@ public class ShortlistController {
 			.ok(shortlistService.listShortlistItemsByShortlistId(shortlistId, keyword, pageable));
 	}
 
+	@Operation(summary = "Get shortlist item by ID", description = "Retrieves details of a specific shortlist item by its ID. "
+		+
+		"Requires ROLE_PRODUCER/ROLE_USER role with appropriate shortlist scopes.")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved shortlist item details", content = @Content(schema = @Schema(implementation = ShortlistItemResponse.class))),
+		@ApiResponse(responseCode = "403", description = "Not authorized to view this shortlist item"),
+		@ApiResponse(responseCode = "404", description = "Shortlist item not found")
+	})
+	@GetMapping("/{shortlistId}/items/{itemId}")
+	@RequireShareShortlistScope
+	public ResponseEntity<ShortlistItemResponse> getShortlistItemById(
+		@Parameter(description = "ID of the shortlist", required = true, example = "cfc08cb3-c87c-4190-9355-1ff73fe15c0e") @PathVariable String shortlistId,
+		@Parameter(description = "ID of the shortlist item", required = true, example = "abc12345-1234-5678-90ab-1234567890ab") @PathVariable String itemId) {
+
+		return ResponseEntity.ok(shortlistService.getShortlistItemById(itemId));
+	}
+
 	@Operation(summary = "Guest(Producer) Get submission details", description = "Retrieves detailed information about a specific submission including its comments")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "Submission found", content = @Content(schema = @Schema(implementation = SubmissionResponse.class))),
@@ -177,7 +194,7 @@ public class ShortlistController {
 	}
 
 	@Operation(summary = "Guest(Producer) record video view", description = "Records that a video has been viewed, incrementing its view counter. "
-		+ "Requires ROLE_USER role or ROLE_GUEST role with appropriate shortlist scopes.")
+		+ "Requires ROLE_USER role or ROLE_PRODUCER role with appropriate shortlist scopes.")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "Successfully recorded video view"),
 		@ApiResponse(responseCode = "403", description = "Not authorized to view this submission"),
@@ -200,7 +217,7 @@ public class ShortlistController {
 
 	@Operation(summary = "Guest(Producer) Add comment to submission", description = "Adds a new comment to an existing submission"
 		+
-		"Requires ROLE_GUEST role with appropriate shortlist scopes.")
+		"Requires ROLE_PRODUCER role with appropriate shortlist scopes.")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "Comment added successfully", content = @Content(schema = @Schema(implementation = SubmissionResponse.class))),
 		@ApiResponse(responseCode = "404", description = "Submission not found")
