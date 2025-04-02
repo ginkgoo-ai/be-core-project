@@ -204,7 +204,6 @@ public class ShortlistController {
 	@RequireShareShortlistScope
 	public ResponseEntity<?> recordVideoView(
 		@Parameter(description = "ID of the shortlist", required = true, example = "cfc08cb3-c87c-4190-9355-1ff73fe15c0e") @PathVariable String shortlistId,
-		@Parameter(description = "ID of the shortlist item", required = true, example = "abc12345-1234-5678-90ab-1234567890ab") @PathVariable String itemId,
 		@Parameter(description = "ID of the submission", required = true, example = "afc08cb3-c88c-4191-9455-1ff73fe15c0f") @PathVariable String submissionId,
 		HttpServletRequest request) {
 
