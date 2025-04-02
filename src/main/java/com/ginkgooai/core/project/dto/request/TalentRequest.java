@@ -17,12 +17,8 @@ import java.util.List;
 @AllArgsConstructor
 @Schema(description = "Request object for creating/update a new talent profile")
 public class TalentRequest {
-
-    @Schema(description = "User's first name")
-    private String firstName;
-
-    @Schema(description = "User's last name")
-    private String lastName;
+    @Schema(description = "User's full name")
+    private String name;
 
     @Schema(description = "Name suffix (birth/death years, birthplace, etc., distinct from the name)",
             example = "1940-2010")

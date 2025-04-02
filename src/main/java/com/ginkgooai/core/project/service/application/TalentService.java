@@ -90,11 +90,8 @@ public class TalentService {
         if (!ObjectUtils.isEmpty(request.getSpotlightProfileUrl())) {
             talent.setSpotlightProfileUrl(request.getSpotlightProfileUrl());
         }
-        if (!ObjectUtils.isEmpty(request.getFirstName())) {
-            talent.setFirstName(request.getFirstName());
-        }
-        if (!ObjectUtils.isEmpty(request.getLastName())) {
-            talent.setLastName(request.getLastName());
+        if (!ObjectUtils.isEmpty(request.getName())) {
+            talent.setName(request.getName());
         }
         if (!ObjectUtils.isEmpty(request.getProfilePhotoUrl())) {
             talent.setProfilePhotoUrl(request.getProfilePhotoUrl());
@@ -138,7 +135,7 @@ public class TalentService {
                                    TalentProfileData imdbProfile,
                                    TalentProfileData spotlightProfile) {
         return Talent.builder()
-            .firstName(request.getFirstName() != null ? request.getFirstName() :
+            .name(request.getName() != null ? request.getName() :
                 imdbProfile != null ? imdbProfile.getName() :
                     spotlightProfile != null ? spotlightProfile.getName() : null)
             .imdbProfileUrl(request.getImdbProfileUrl())

@@ -16,18 +16,18 @@ import lombok.NoArgsConstructor;
 public class TalentBasicResponse {
     @Schema(description = "Talent ID")
     private String id;
-    
+
     @Schema(description = "Talent name")
     private String name;
-    
+
     @Schema(description = "Talent email")
     private String email;
-    
+
     public static TalentBasicResponse from(Talent talent) {
         return TalentBasicResponse.builder()
-                .id(talent.getId())
-            .name(String.join(" ", talent.getFirstName(), talent.getLastName()))
-                .email(talent.getEmail())
-                .build();
+            .id(talent.getId())
+            .name(talent.getName())
+            .email(talent.getEmail())
+            .build();
     }
 }

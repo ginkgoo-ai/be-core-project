@@ -55,32 +55,32 @@ public class ApplicationService {
     public ApplicationResponse createApplication(ApplicationCreateRequest request, String workspaceId,
                                                  String userId) {
         Project project = projectRepository.findById(request.getProjectId())
-                .orElseThrow(() -> new ResourceNotFoundException("Project", "id",
-                        request.getProjectId()));
+            .orElseThrow(() -> new ResourceNotFoundException("Project", "id",
+                request.getProjectId()));
 
         ProjectRole role = projectRoleRepository.findById(request.getRoleId())
-                .orElseThrow(() -> new ResourceNotFoundException("ProjectRole", "id",
-                        request.getRoleId()));
+            .orElseThrow(() -> new ResourceNotFoundException("ProjectRole", "id",
+                request.getRoleId()));
 
         // Create the talent if not exits
         Talent talent;
         if (!ObjectUtils.isEmpty(request.getTalentId())) {
             talent = talentRepository.findById(request.getTalentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Talent", "id",
-                            request.getTalentId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Talent", "id",
+                    request.getTalentId()));
         } else if (Objects.nonNull(request.getTalent())) {
             talent = talentService.createTalentFromProfiles(request.getTalent());
 
             activityLogger.log(
-                    workspaceId,
-                    project.getId(),
-                    null,
-                    ActivityType.TALENT_ADDED,
-                    Map.of(
-                        "talentName", String.join(" ", talent.getFirstName(), talent.getEmail()),
-                            "user", userId),
-                    null,
-                    userId);
+                workspaceId,
+                project.getId(),
+                null,
+                ActivityType.TALENT_ADDED,
+                Map.of(
+                    "talentName", talent.getName(),
+                    "user", userId),
+                null,
+                userId);
 
         } else {
             throw new IllegalArgumentException("Talent ID or Talent object must be provided");
@@ -90,43 +90,43 @@ public class ApplicationService {
 
         // Create the application
         Application application = Application.builder()
-                .workspaceId(workspaceId)
-                .project(project)
-                .role(role)
-                .talent(talent)
-                .status(ApplicationStatus.ADDED)
-                .build();
+            .workspaceId(workspaceId)
+            .project(project)
+            .role(role)
+            .talent(talent)
+            .status(ApplicationStatus.ADDED)
+            .build();
 
         Application savedApplication = applicationRepository.save(application);
 
         // Log activity
         activityLogger.log(
-                project.getWorkspaceId(),
-                project.getId(),
-                savedApplication.getId(),
-                ActivityType.ROLE_STATUS_UPDATE,
-                Map.of(
-                        "roleName", role.getName(),
-                        "newStatus", role.getStatus().getValue()),
-                null,
-                userId);
+            project.getWorkspaceId(),
+            project.getId(),
+            savedApplication.getId(),
+            ActivityType.ROLE_STATUS_UPDATE,
+            Map.of(
+                "roleName", role.getName(),
+                "newStatus", role.getStatus().getValue()),
+            null,
+            userId);
 
         // Create submissions if provided
         log.debug("Video files: {}", request.getVideoIds());
         if (!ObjectUtils.isEmpty(request.getVideoIds())) {
             List<CloudFileResponse> videoFiles = storageClient.getFileDetails(request.getVideoIds())
-                    .getBody();
+                .getBody();
             log.debug("Video files: {}", videoFiles);
             List<Submission> submissions = videoFiles.stream().map(video -> Submission.builder()
-                    .workspaceId(workspaceId)
-                    .application(savedApplication)
-                    .videoName(video.getOriginalName())
-                    .videoUrl(video.getStoragePath())
-                    .videoDuration(video.getVideoDuration())
-                    .videoThumbnailUrl(video.getVideoThumbnailUrl())
-                    .videoResolution(video.getVideoResolution())
-                    .mimeType(video.getFileType())
-                    .build()).toList();
+                .workspaceId(workspaceId)
+                .application(savedApplication)
+                .videoName(video.getOriginalName())
+                .videoUrl(video.getStoragePath())
+                .videoDuration(video.getVideoDuration())
+                .videoThumbnailUrl(video.getVideoThumbnailUrl())
+                .videoResolution(video.getVideoResolution())
+                .mimeType(video.getFileType())
+                .build()).toList();
             List<Submission> savedSubmissions = submissionRepository.saveAll(submissions);
 
             savedApplication.setSubmissions(savedSubmissions);
@@ -144,7 +144,7 @@ public class ApplicationService {
         application.getComments().forEach(comment -> userIds.add(comment.getCreatedBy()));
         application.getNotes().forEach(note -> userIds.add(note.getCreatedBy()));
         application.getSubmissions().forEach(submission -> submission.getComments()
-                .forEach(comment -> userIds.add(comment.getCreatedBy())));
+            .forEach(comment -> userIds.add(comment.getCreatedBy())));
 
         final List<UserInfoResponse> finalUsers = getUserInfoByIds(userIds);
 
@@ -165,8 +165,8 @@ public class ApplicationService {
                                                       Pageable pageable) {
 
         Page<Application> applicationPage = applicationRepository.findAll(
-                buildSpecification(workspaceId, projectId, roleId, viewMode, talentId, startDateTime, endDateTime, keyword, status),
-                pageable);
+            buildSpecification(workspaceId, projectId, roleId, viewMode, talentId, startDateTime, endDateTime, keyword, status),
+            pageable);
 
         // If we're in submissions view mode and have date filters, filter the submissions in memory
         if ("submissions".equals(viewMode) && (startDateTime != null || endDateTime != null)) {
@@ -174,23 +174,23 @@ public class ApplicationService {
                 if (Objects.nonNull(app.getSubmissions())) {
                     // Filter submissions by date range
                     List<Submission> filteredSubmissions = app.getSubmissions().stream()
-                            .filter(submission -> {
-                                LocalDateTime createdAt = submission.getCreatedAt();
-                                if (createdAt == null) return false;
+                        .filter(submission -> {
+                            LocalDateTime createdAt = submission.getCreatedAt();
+                            if (createdAt == null) return false;
 
-                                boolean afterStart = startDateTime == null || !createdAt.isBefore(startDateTime);
-                                boolean beforeEnd = endDateTime == null || !createdAt.isAfter(endDateTime);
+                            boolean afterStart = startDateTime == null || !createdAt.isBefore(startDateTime);
+                            boolean beforeEnd = endDateTime == null || !createdAt.isAfter(endDateTime);
 
-                                return afterStart && beforeEnd;
-                            })
-                            .collect(Collectors.toList());
+                            return afterStart && beforeEnd;
+                        })
+                        .collect(Collectors.toList());
 
                     // Replace the submissions list with the filtered one
                     app.setSubmissions(filteredSubmissions);
                 }
             });
         }
-        
+
         List<String> userIds = new ArrayList<>();
         applicationPage.forEach(app -> {
             if (Objects.nonNull(app.getComments())) {
@@ -201,10 +201,10 @@ public class ApplicationService {
             }
             if (Objects.nonNull(app.getSubmissions())) {
                 app.getSubmissions().forEach(submission -> {
-                            if (Objects.nonNull(submission.getComments())) {
-                                submission.getComments().forEach(comment -> userIds.add(comment.getCreatedBy()));
-                            }
-                        });
+                    if (Objects.nonNull(submission.getComments())) {
+                        submission.getComments().forEach(comment -> userIds.add(comment.getCreatedBy()));
+                    }
+                });
             }
         });
 
@@ -244,7 +244,6 @@ public class ApplicationService {
                 predicates.add(cb.equal(root.get("talent").get("id"), talentId));
             }
 
-      
 
             // Status filter
             if (status != null) {
@@ -284,19 +283,19 @@ public class ApplicationService {
 
                 Predicate talentNamePredicate = cb.like(cb.lower(talentJoin.get("name")), likePattern);
                 Predicate talentEmailPredicate = cb.like(cb.lower(talentJoin.get("email")),
-                        likePattern);
+                    likePattern);
                 // Predicate agentNamePredicate = cb.like(cb.lower(root.get("agentName")),
                 // likePattern);
                 Predicate agentEmailPredicate = cb.like(cb.lower(talentJoin.get("agentEmail")),
-                        likePattern);
+                    likePattern);
                 Predicate roleNamePredicate = cb.like(cb.lower(roleJoin.get("name")), likePattern);
 
                 predicates.add(cb.or(
-                        talentNamePredicate,
-                        talentEmailPredicate,
-                        // agentNamePredicate,
-                        agentEmailPredicate,
-                        roleNamePredicate));
+                    talentNamePredicate,
+                    talentEmailPredicate,
+                    // agentNamePredicate,
+                    agentEmailPredicate,
+                    roleNamePredicate));
             }
 
             // Make query distinct to avoid duplicates
@@ -312,22 +311,22 @@ public class ApplicationService {
         Application application = findApplicationById(workspaceId, id);
 
         ApplicationComment comment = ApplicationComment.builder()
-                .application(application)
-                .content(content)
-                .build();
+            .application(application)
+            .content(content)
+            .build();
 
         List<String> userIds = application.getNotes().stream()
-                .filter(t -> !ObjectUtils.isEmpty(t.getCreatedBy()))
-                .map(ApplicationNote::getCreatedBy).distinct().toList();
+            .filter(t -> !ObjectUtils.isEmpty(t.getCreatedBy()))
+            .map(ApplicationNote::getCreatedBy).distinct().toList();
 
         Map<String, UserInfoResponse> userInfoResponses = getUserInfoByIds(userIds).stream().collect(
-                Collectors.toMap(UserInfoResponse::getId, userInfoResponse -> userInfoResponse));
+            Collectors.toMap(UserInfoResponse::getId, userInfoResponse -> userInfoResponse));
 
         application.getComments().add(comment);
         application.setStatus(ApplicationStatus.REVIEWED);
         return applicationRepository.save(application).getComments().stream()
-                .map(t -> ApplicationCommentResponse.from(t, userInfoResponses.get(t.getCreatedBy())))
-                .toList();
+            .map(t -> ApplicationCommentResponse.from(t, userInfoResponses.get(t.getCreatedBy())))
+            .toList();
     }
 
     @Transactional
@@ -335,38 +334,38 @@ public class ApplicationService {
         Application application = findApplicationById(workspaceId, id);
 
         ApplicationNote note = applicationNoteRepository.save(ApplicationNote.builder()
-                .application(application)
-                .content(content)
-                .build());
+            .application(application)
+            .content(content)
+            .build());
 
         ApplicationNote savedNote = applicationNoteRepository.findById(note.getId()).get();
         application.getNotes().add(savedNote);
 
         List<String> userIds = application.getNotes().stream()
-                .filter(t -> !ObjectUtils.isEmpty(t.getCreatedBy()))
-                .map(ApplicationNote::getCreatedBy).distinct().toList();
+            .filter(t -> !ObjectUtils.isEmpty(t.getCreatedBy()))
+            .map(ApplicationNote::getCreatedBy).distinct().toList();
 
         Map<String, UserInfoResponse> userInfoResponses = getUserInfoByIds(userIds).stream().collect(
-                Collectors.toMap(UserInfoResponse::getId, userInfoResponse -> userInfoResponse));
+            Collectors.toMap(UserInfoResponse::getId, userInfoResponse -> userInfoResponse));
 
         return application.getNotes().stream()
-                .map(t -> ApplicationNoteResponse.from(t, userInfoResponses.get(t.getCreatedBy())))
-                .toList();
+            .map(t -> ApplicationNoteResponse.from(t, userInfoResponses.get(t.getCreatedBy())))
+            .toList();
     }
 
     private Application findApplicationById(String workspaceId, String id) {
         return applicationRepository.findOne(
-                        (root, query, cb) -> cb.and(
-                                cb.equal(root.get("id"), id),
-                                cb.equal(root.get("workspaceId"), workspaceId)))
-                .orElseThrow(() -> new ResourceNotFoundException("Application", "id", id));
+                (root, query, cb) -> cb.and(
+                    cb.equal(root.get("id"), id),
+                    cb.equal(root.get("workspaceId"), workspaceId)))
+            .orElseThrow(() -> new ResourceNotFoundException("Application", "id", id));
     }
 
     private List<UserInfoResponse> getUserInfoByIds(List<String> userIds) {
         List<String> distinctUserIds = userIds.stream()
-                .filter(id -> id != null && !id.isEmpty())
-                .distinct()
-                .collect(Collectors.toList());
+            .filter(id -> id != null && !id.isEmpty())
+            .distinct()
+            .collect(Collectors.toList());
 
         List<UserInfoResponse> users = new ArrayList<>();
         if (!distinctUserIds.isEmpty()) {
