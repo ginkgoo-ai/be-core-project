@@ -164,6 +164,18 @@ public class ShortlistController {
 			.ok(shortlistService.listShortlistItemsByShortlistId(shortlistId, keyword, pageable));
 	}
 
+	@Operation(summary = "Guest(Producer) Get submission details", description = "Retrieves detailed information about a specific submission including its comments")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Submission found", content = @Content(schema = @Schema(implementation = SubmissionResponse.class))),
+		@ApiResponse(responseCode = "404", description = "Submission not found")
+	})
+	@GetMapping("/{shortlistId}/submissions/{submissionId}")
+	@RequireShareShortlistScope
+	public ResponseEntity<SubmissionResponse> getSubmission(
+		@Parameter(description = "ID of the submission to retrieve", required = true, example = "submission_123") @PathVariable String submissionId) {
+		return ResponseEntity.ok(submissionService.getSubmission(submissionId));
+	}
+
 	@Operation(summary = "Guest(Producer) record video view", description = "Records that a video has been viewed, incrementing its view counter. "
 		+ "Requires ROLE_USER role or ROLE_GUEST role with appropriate shortlist scopes.")
 	@ApiResponses(value = {
@@ -171,7 +183,7 @@ public class ShortlistController {
 		@ApiResponse(responseCode = "403", description = "Not authorized to view this submission"),
 		@ApiResponse(responseCode = "404", description = "Submission not found")
 	})
-	@PostMapping("/{shortlistId}/items/{itemId}/submissions/{submissionId}/view")
+	@PostMapping("/{shortlistId}/submissions/{submissionId}/view")
 	@RequireShareShortlistScope
 	public ResponseEntity<?> recordVideoView(
 		@Parameter(description = "ID of the shortlist", required = true, example = "cfc08cb3-c87c-4190-9355-1ff73fe15c0e") @PathVariable String shortlistId,
@@ -193,7 +205,7 @@ public class ShortlistController {
 		@ApiResponse(responseCode = "200", description = "Comment added successfully", content = @Content(schema = @Schema(implementation = SubmissionResponse.class))),
 		@ApiResponse(responseCode = "404", description = "Submission not found")
 	})
-	@PostMapping("/{shortlistId}/items/{itemId}/submissions/{submissionId}/comments")
+	@PostMapping("/{shortlistId}/submissions/{submissionId}/comments")
 	@RequireShareShortlistScope
 	public ResponseEntity<SubmissionResponse> addComment(
 		@Parameter(description = "ID of the shortlist", required = true, example = "cfc08cb3-c87c-4190-9355-1ff73fe15c0e") @PathVariable String shortlistId,
