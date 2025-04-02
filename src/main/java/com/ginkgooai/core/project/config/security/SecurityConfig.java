@@ -42,7 +42,8 @@ public class SecurityConfig {
                     "/health")
                 .permitAll()
                 .requestMatchers(
-                    "/shortlists/**")
+                    "/shortlists/**",
+                    "/applications/**")
                 .authenticated()
                 .anyRequest().hasRole("USER"))
             .exceptionHandling(exceptionHandling -> exceptionHandling

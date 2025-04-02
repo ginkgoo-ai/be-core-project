@@ -1,13 +1,18 @@
 package com.ginkgooai.core.project.controller;
 
 import com.ginkgooai.core.common.utils.ContextUtils;
+import com.ginkgooai.core.project.config.security.RequireApplicationReadScope;
+import com.ginkgooai.core.project.config.security.RequireApplicationWriteScope;
 import com.ginkgooai.core.project.domain.application.ApplicationStatus;
 import com.ginkgooai.core.project.dto.request.ApplicationCreateRequest;
 import com.ginkgooai.core.project.dto.request.NoteCreateRequest;
+import com.ginkgooai.core.project.dto.request.SubmissionCreateRequest;
 import com.ginkgooai.core.project.dto.response.ApplicationCommentResponse;
 import com.ginkgooai.core.project.dto.response.ApplicationNoteResponse;
 import com.ginkgooai.core.project.dto.response.ApplicationResponse;
+import com.ginkgooai.core.project.dto.response.SubmissionResponse;
 import com.ginkgooai.core.project.service.application.ApplicationService;
+import com.ginkgooai.core.project.service.application.SubmissionService;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -24,9 +29,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -37,6 +43,8 @@ import java.util.List;
 public class ApplicationController {
 
         private final ApplicationService applicationService;
+
+        private final SubmissionService submissionService;
 
         @Operation(summary = "Create new application", description = "Creates a new application for a talent applying to a specific role")
         @ApiResponses(value = {
@@ -56,10 +64,11 @@ public class ApplicationController {
                         @ApiResponse(responseCode = "200", description = "Application found", content = @Content(schema = @Schema(implementation = ApplicationResponse.class))),
                         @ApiResponse(responseCode = "404", description = "Application not found")
         })
-        @GetMapping("/{id}")
+        @RequireApplicationReadScope
+        @GetMapping("/{applicationId}")
         public ResponseEntity<ApplicationResponse> getApplication(
-                        @Parameter(description = "Application ID", example = "app_12345") @PathVariable String id) {
-                ApplicationResponse application = applicationService.getApplicationById(ContextUtils.getWorkspaceId(), id);
+            @Parameter(description = "Application ID", example = "app_12345") @PathVariable String applicationId) {
+                ApplicationResponse application = applicationService.getApplicationById(ContextUtils.getWorkspaceId(), applicationId);
                 return ResponseEntity.ok(application);
         }
 
@@ -104,5 +113,36 @@ public class ApplicationController {
                         @RequestBody NoteCreateRequest request) {
                 return ResponseEntity.ok(applicationService.addNote(ContextUtils.getWorkspaceId(), id,
                                 ContextUtils.getUserId(), request.getContent()));
+        }
+
+
+        @Operation(summary = "Guest(Talent) Create new submission", description = "Creates a new video submission for an existing application")
+        @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Submission created successfully", content = @Content(schema = @Schema(implementation = SubmissionResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid submission data"),
+            @ApiResponse(responseCode = "404", description = "Application not found")
+        })
+        @PostMapping("/{applicationId}/submissions")
+        @RequireApplicationWriteScope
+        public ResponseEntity<SubmissionResponse> createSubmission(
+            @Valid @RequestBody SubmissionCreateRequest request) {
+                return ResponseEntity.ok(submissionService.createSubmission(ContextUtils.getWorkspaceId(), request,
+                    ContextUtils.getUserId()));
+        }
+
+
+        @Operation(summary = "Guest(Talent) Delete submission", description = "Deletes a submission and its associated comments")
+        @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Submission successfully deleted"),
+            @ApiResponse(responseCode = "404", description = "Submission not found"),
+            @ApiResponse(responseCode = "403", description = "Not authorized to delete submission")
+        })
+        @RequireApplicationWriteScope
+        @DeleteMapping("/{applicationId}/submissions/{submissionId}")
+        public ResponseEntity<Void> deleteSubmission(
+            @Parameter(description = "ID of the submission to delete", required = true, example = "submission_123") @PathVariable String submissionId,
+            @AuthenticationPrincipal Jwt jwt) {
+                submissionService.deleteSubmission(submissionId, jwt.getSubject());
+                return ResponseEntity.noContent().build();
         }
 }
