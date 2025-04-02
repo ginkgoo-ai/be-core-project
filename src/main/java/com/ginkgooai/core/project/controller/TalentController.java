@@ -18,7 +18,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -79,9 +81,14 @@ public class TalentController {
         })
         @GetMapping
         public ResponseEntity<Page<TalentResponse>> searchTalents(
-                        @Parameter(description = "Search criteria and filters") @Valid @ParameterObject TalentSearchRequest request,
-                        @Parameter(description = "Pagination parameters") @ParameterObject Pageable pageable) {
+            @Parameter(description = "Search criteria and filters, fuzzy match firstName,lastName,email") @Valid @ParameterObject TalentSearchRequest request,
+            @Parameter(description = "Page number (zero-based)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "10") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Sort direction (ASC/DESC)", example = "DESC") @RequestParam(defaultValue = "DESC") String sortDirection,
+            @Parameter(description = "Sort field (e.g., updatedAt)", example = "updatedAt") @RequestParam(defaultValue = "updatedAt") String sortField) {
 
+                Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
+                Pageable pageable = PageRequest.of(page, size, sort);
                 return ResponseEntity.ok(talentService.searchTalents(ContextUtils.getWorkspaceId(), request, pageable));
         }
 
