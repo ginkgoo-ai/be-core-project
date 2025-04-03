@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 @Entity
@@ -50,7 +51,7 @@ public class Project extends BaseAuditableEntity {
         this.name = request.getName();
         this.description = request.getDescription();
         this.plotLine = request.getPlotLine();
-        this.status = ProjectStatus.DRAFTING;
+        this.status = Optional.ofNullable(request.getStatus()).orElse(ProjectStatus.DRAFTING);
         this.posterUrl = request.getPosterUrl();
         this.workspaceId = workspaceId;
     }
