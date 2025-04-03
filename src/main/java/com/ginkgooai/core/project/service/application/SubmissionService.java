@@ -1,10 +1,14 @@
 package com.ginkgooai.core.project.service.application;
 
 import com.ginkgooai.core.common.enums.ActivityType;
+import com.ginkgooai.core.common.enums.Role;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.message.InnerMailSendMessage;
 import com.ginkgooai.core.common.utils.ContextUtils;
+import com.ginkgooai.core.common.utils.UrlUtils;
 import com.ginkgooai.core.project.client.identity.IdentityClient;
+import com.ginkgooai.core.project.client.identity.dto.ShareCodeRequest;
+import com.ginkgooai.core.project.client.identity.dto.ShareCodeResponse;
 import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.client.storage.StorageClient;
 import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
@@ -19,6 +23,7 @@ import com.ginkgooai.core.project.service.ActivityLoggerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +37,13 @@ import static com.ginkgooai.core.common.constant.ContextsConstant.USER_ID;
 @Slf4j
 @RequiredArgsConstructor
 public class SubmissionService {
+
+    @Value("${SHARE_LINK_EXPIRATION_TIMES:168}")
+    private Integer shareLinkExpirationTimes;
+
+    @Value(("${SLATE_URI:}"))
+    private String slateUri;
+
     private final ApplicationRepository applicationRepository;
 
     private final SubmissionRepository submissionRepository;
@@ -287,13 +299,32 @@ public class SubmissionService {
             throw new ResourceNotFoundException("User", "id", ContextUtils.getUserId());
         }
 
+        String baseUrl = slateUri + "/shares/application";
         List<InnerMailSendMessage.Receipt> list = applications.stream().map(application -> {
+
+            ShareCodeResponse response =
+                    identityClient
+                            .generateShareCode(
+                                    ShareCodeRequest.builder()
+                                            .workspaceId(ContextUtils.getWorkspaceId())
+                                            .resource("application")
+                                            .resourceId(application.getId())
+                                            .guestName( application.getTalent().getName())
+                                            .guestEmail(application.getTalent().getEmail())
+                                            .roles(List.of(Role.ROLE_TALENT))
+                                            .write(true)
+                                            .expiryHours(shareLinkExpirationTimes)
+                                            .build())
+                            .getBody();
+
+            String shareLink = UrlUtils.appendQueryParam(baseUrl + "/" + application.getId(), "share_code", response.getShareCode());
+
             Map<String, String> placeholders = Map.of(
                     "ROLE_NAME", application.getRole().getName(),
                     "PROJECT_NAME", application.getProject().getName(),
                     "FIRST_NAME", application.getTalent().getName(),
                     "SENDER_NAME", userInfoResponse.getFirstName() + " " + userInfoResponse.getLastName(),
-                        "SHARE_LINK","https://google.com"
+                        "SHARE_LINK",shareLink
             );
             return InnerMailSendMessage.Receipt.builder()
                     .placeholders(placeholders)
