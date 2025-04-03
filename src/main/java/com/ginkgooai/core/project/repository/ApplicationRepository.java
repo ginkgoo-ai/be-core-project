@@ -1,8 +1,8 @@
 package com.ginkgooai.core.project.repository;
 
-import java.util.List;
-import java.util.Optional;
-
+import com.ginkgooai.core.project.domain.application.Application;
+import com.ginkgooai.core.project.domain.application.ApplicationStatus;
+import com.ginkgooai.core.project.dto.response.ProjectRoleStatisticsResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,9 +11,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.ginkgooai.core.project.domain.application.Application;
-import com.ginkgooai.core.project.domain.application.ApplicationStatus;
-import com.ginkgooai.core.project.dto.response.ProjectRoleStatisticsResponse;
+import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ApplicationRepository
@@ -21,6 +20,8 @@ public interface ApplicationRepository
 
         Optional<Application> findByIdAndWorkspaceId(String id, String workspaceId);
 
+        List<Application> findByTalentIdOrderByCreatedAtDesc(String talentId);
+        
         List<Application> findByProjectIdOrderByCreatedAtDesc(String projectId);
 
         List<Application> findByProjectIdAndRoleIdOrderByCreatedAtDesc(String projectId, String roleId);
@@ -39,6 +40,7 @@ public interface ApplicationRepository
                         SELECT new com.ginkgooai.core.project.dto.response.ProjectRoleStatisticsResponse(
                             a.role.id as id,
                             a.role.name as name,
+                a.role.status,
                             a.role.sides,
                             a.role.characterDescription,
                             a.role.selfTapeInstructions,
@@ -50,7 +52,7 @@ public interface ApplicationRepository
                         )
                         FROM Application a
                         WHERE a.role.id = :roleId
-                        GROUP BY a.role.id, a.role.name, a.role.sides, a.role.characterDescription, a.role.selfTapeInstructions
+            GROUP BY a.role.id, a.role.name, a.role.status, a.role.sides, a.role.characterDescription, a.role.selfTapeInstructions
                         """)
         ProjectRoleStatisticsResponse getRoleStatistics(@Param("roleId") String roleId);
 
@@ -58,6 +60,7 @@ public interface ApplicationRepository
                         SELECT new com.ginkgooai.core.project.dto.response.ProjectRoleStatisticsResponse(
                             a.role.id as id,
                             a.role.name as name,
+                a.role.status,
                             a.role.sides,
                             a.role.characterDescription,
                             a.role.selfTapeInstructions,
@@ -71,7 +74,7 @@ public interface ApplicationRepository
                         RIGHT JOIN a.role r
                         WHERE r.project.id = :projectId
                         AND (COALESCE(:name, '') = '' OR r.name LIKE CONCAT('%', :name, '%'))
-                        GROUP BY r.id, r.name, r.sides, r.characterDescription, r.selfTapeInstructions
+            GROUP BY r.id, r.name, r.status, r.sides, r.characterDescription, r.selfTapeInstructions
                         """)
         Page<ProjectRoleStatisticsResponse> getProjectRolesStatistics(@Param("projectId") String projectId,
                         @Param("name") String name, Pageable pageable);

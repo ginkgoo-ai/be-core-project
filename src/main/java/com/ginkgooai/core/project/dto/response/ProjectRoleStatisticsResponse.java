@@ -1,14 +1,14 @@
 package com.ginkgooai.core.project.dto.response;
 
-import java.util.List;
-
 import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
-
+import com.ginkgooai.core.project.domain.role.RoleStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @Builder
@@ -20,6 +20,9 @@ public class ProjectRoleStatisticsResponse {
 
     @Schema(description = "Name of the role", example = "Lead Character")
     private String name;
+
+    @Schema(description = "Status of the role", example = "CASTING")
+    private RoleStatus status;
 
     @Schema(description = "Sides for the role", example = "['side1', 'side2']")
     private String[] sideFileIds;
@@ -48,9 +51,10 @@ public class ProjectRoleStatisticsResponse {
     @Schema(description = "Number of talents declined")
     private long declined;
 
-    public ProjectRoleStatisticsResponse(String id, String name, String[] sideFileIds, String characterDescription, String selfTapeInstructions, long total, long added, long submitted, long shortlisted, long declined) {
+    public ProjectRoleStatisticsResponse(String id, String name, RoleStatus status, String[] sideFileIds, String characterDescription, String selfTapeInstructions, long total, long added, long submitted, long shortlisted, long declined) {
         this.id = id;
         this.name = name;
+        this.status = status;
         this.sideFileIds = sideFileIds;
         this.characterDescription = characterDescription;
         this.selfTapeInstructions = selfTapeInstructions;

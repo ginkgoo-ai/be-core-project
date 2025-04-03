@@ -4,10 +4,6 @@ import com.ginkgooai.core.project.domain.BaseAuditableEntity;
 import com.ginkgooai.core.project.domain.project.Project;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -33,6 +29,7 @@ public class ProjectRole extends BaseAuditableEntity {
 
     private Boolean isActive = true;
 
+    @Enumerated(EnumType.STRING)
     private RoleStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)

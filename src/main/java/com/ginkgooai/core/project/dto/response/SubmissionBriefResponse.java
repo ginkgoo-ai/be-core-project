@@ -1,22 +1,17 @@
 package com.ginkgooai.core.project.dto.response;
 
-import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
-import com.ginkgooai.core.project.domain.application.CommentType;
+import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.domain.application.Submission;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
-import org.apache.commons.collections4.CollectionUtils;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Data
 @Builder
-@Schema(description = "Submission response containing submission details and status")
-public class SubmissionResponse {
+@Schema(description = "Brief information about talent's video submission")
+public class SubmissionBriefResponse {
     @Schema(description = "Unique identifier of the submission", example = "123e4567-e89b-12d3-a456-426614174000")
     private String id;
 
@@ -25,9 +20,6 @@ public class SubmissionResponse {
 
     @Schema(description = "Application identifier associated with this submission", example = "application-456")
     private String applicationId;
-
-    @Schema(description = "Talent information related to this submission")
-    private TalentBasicResponse talent;
 
     @Schema(description = "Role identifier for which this submission was made", example = "role-789")
     private String roleId;
@@ -64,21 +56,11 @@ public class SubmissionResponse {
     @Schema(description = "Timestamp when the submission was last updated", example = "2025-03-03T02:09:57.713Z")
     private LocalDateTime updatedAt;
 
-    @Schema(description = "List of internal comments associated with this submission")
-    private List<SubmissionCommentResponse> internalComments;
-
-    @Schema(description = "List of public comments associated with this submission")
-    private List<SubmissionCommentResponse> publicComments;
-
-    public static SubmissionResponse from(Submission submission, List<UserInfoResponse> users, String userId) {
-        Map<String, UserInfoResponse> userInfoMap = CollectionUtils.emptyIfNull(users).stream()
-            .collect(Collectors.toMap(UserInfoResponse::getId, user -> user));
-
-        return SubmissionResponse.builder()
+    public static SubmissionBriefResponse from(Submission submission) {
+        return SubmissionBriefResponse.builder()
             .id(submission.getId())
             .projectId(submission.getApplication().getProject().getId())
             .applicationId(submission.getApplication().getId())
-            .talent(TalentBasicResponse.from(submission.getApplication().getTalent()))
             .roleId(submission.getApplication().getRole().getId())
             .videoName(submission.getVideoName())
             .videoUrl(submission.getVideoUrl())
@@ -86,48 +68,16 @@ public class SubmissionResponse {
             .videoDuration(submission.getVideoDuration())
             .videoResolution(submission.getVideoResolution())
             .viewCount(submission.getViewCount())
-            .createdBy(submission.getCreatedBy())
-            .createdAt(submission.getCreatedAt())
-            .updatedAt(submission.getUpdatedAt())
-            .publicComments(submission.getComments().stream()
-                .filter(comment -> CommentType.PUBLIC.equals(comment.getType()))
-                .map(t -> SubmissionCommentResponse.from(t,
-                    userInfoMap.get(t.getCreatedBy())))
-                .toList())
-            .internalComments(userId.equals(submission.getCreatedBy()) ? submission.getComments()
-                .stream()
-                .filter(comment -> CommentType.INTERNAL.equals(comment.getType()))
-                .map(t -> SubmissionCommentResponse.from(t,
-                    userInfoMap.get(t.getCreatedBy())))
-                .toList() : null)
             .shortlisted(submission.getShortlistItems() != null &&
                 submission.getShortlistItems().stream()
                     .anyMatch(item -> item.getShortlist().getCreatedBy()
-                        .equals(userId)))
-            .build();
-    }
-
-    public static SubmissionResponse from(Submission submission, String userId) {
-        return SubmissionResponse.builder()
-            .id(submission.getId())
-            .projectId(submission.getApplication().getProject().getId())
-            .applicationId(submission.getApplication().getId())
-            .talent(TalentBasicResponse.from(submission.getApplication().getTalent()))
-            .roleId(submission.getApplication().getRole().getId())
-            .videoName(submission.getVideoName())
-            .videoUrl(submission.getVideoUrl())
-            .videoThumbnailUrl(submission.getVideoThumbnailUrl())
-            .videoDuration(submission.getVideoDuration())
-            .videoResolution(submission.getVideoResolution())
-            .viewCount(submission.getViewCount())
+                        .equals(ContextUtils.getUserId())))
             .createdBy(submission.getCreatedBy())
             .createdAt(submission.getCreatedAt())
             .updatedAt(submission.getUpdatedAt())
-            .shortlisted(submission.getShortlistItems() != null &&
-                submission.getShortlistItems().stream()
-                    .anyMatch(item -> item.getShortlist().getOwnerId()
-                        .equals(userId)))
             .build();
     }
 
-}
+} 
+            
+            

@@ -9,9 +9,13 @@ import com.ginkgooai.core.project.dto.KnownForItem;
 import com.ginkgooai.core.project.dto.TalentProfileData;
 import com.ginkgooai.core.project.dto.request.TalentRequest;
 import com.ginkgooai.core.project.dto.request.TalentSearchRequest;
+import com.ginkgooai.core.project.dto.response.ApplicationBriefResponse;
+import com.ginkgooai.core.project.dto.response.SubmissionBriefResponse;
 import com.ginkgooai.core.project.dto.response.TalentBasicResponse;
 import com.ginkgooai.core.project.dto.response.TalentResponse;
+import com.ginkgooai.core.project.repository.ApplicationRepository;
 import com.ginkgooai.core.project.repository.ImdbMovieItemRepository;
+import com.ginkgooai.core.project.repository.SubmissionRepository;
 import com.ginkgooai.core.project.repository.TalentRepository;
 import com.ginkgooai.core.project.service.ActivityLoggerService;
 import jakarta.persistence.EntityNotFoundException;
@@ -34,6 +38,8 @@ import java.util.stream.Collectors;
 public class TalentService {
 
     private final TalentRepository talentRepository;
+    private final ApplicationRepository applicationRepository;
+    private final SubmissionRepository submissionRepository;
     private final ImdbMovieItemRepository movieItemRepository;
     private final TalentProfileScraperService profileScraperService;
     private final ActivityLoggerService activityLogger;
@@ -76,8 +82,8 @@ public class TalentService {
     @Transactional
     public Talent updateTalent(TalentRequest request, String talentId) {
         Talent talent = talentRepository.findById(talentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Talent", "id", talentId));
-        
+            .orElseThrow(() -> new ResourceNotFoundException("Talent", "id", talentId));
+
         if (!ObjectUtils.isEmpty(request.getImdbProfileUrl())) {
             talent.setImdbProfileUrl(request.getImdbProfileUrl());
         }
@@ -93,14 +99,8 @@ public class TalentService {
         if (!ObjectUtils.isEmpty(request.getEmail())) {
             talent.setEmail(request.getEmail());
         }
-        if (!ObjectUtils.isEmpty(request.getAgencyName())) {
-            talent.setAgencyName(request.getAgencyName());
-        }
-        if (!ObjectUtils.isEmpty(request.getAgentName())) {
-            talent.setAgentName(request.getAgentName());
-        }
-        if (!ObjectUtils.isEmpty(request.getAgentEmail())) {
-            talent.setAgentEmail(request.getAgentEmail());
+        if (!ObjectUtils.isEmpty(request.getContacts())) {
+            talent.setContacts(request.getContacts());
         }
 
         // Refresh profiles
@@ -122,10 +122,10 @@ public class TalentService {
     }
 
     private void updateTalentFromProfiles(Talent talent, TalentProfileData imdbProfile, TalentProfileData spotlightProfile) {
-        talent.setNameSuffix(imdbProfile != null ? imdbProfile.getNameSuffix() : 
-                      spotlightProfile != null ? spotlightProfile.getNameSuffix() : talent.getNameSuffix());
-        talent.setProfilePhotoUrl(imdbProfile != null ? imdbProfile.getPhotoUrl() : 
-                                 spotlightProfile != null ? spotlightProfile.getPhotoUrl() : talent.getProfilePhotoUrl());
+        talent.setNameSuffix(imdbProfile != null ? imdbProfile.getNameSuffix() :
+            spotlightProfile != null ? spotlightProfile.getNameSuffix() : talent.getNameSuffix());
+        talent.setProfilePhotoUrl(imdbProfile != null ? imdbProfile.getPhotoUrl() :
+            spotlightProfile != null ? spotlightProfile.getPhotoUrl() : talent.getProfilePhotoUrl());
         talent.setImdbProfileUrl(imdbProfile != null ? imdbProfile.getSourceUrl() : talent.getImdbProfileUrl());
         talent.setSpotlightProfileUrl(spotlightProfile != null ? spotlightProfile.getSourceUrl() : talent.getSpotlightProfileUrl());
         talent.setPersonalDetails(imdbProfile != null ? imdbProfile.getPersonalDetails() : talent.getPersonalDetails());
@@ -135,17 +135,17 @@ public class TalentService {
                                    TalentProfileData imdbProfile,
                                    TalentProfileData spotlightProfile) {
         return Talent.builder()
-                .name(request.getName() != null ? request.getName() : 
-                     imdbProfile != null ? imdbProfile.getName() :
-                     spotlightProfile != null ? spotlightProfile.getName() : null)
-                .imdbProfileUrl(request.getImdbProfileUrl())
-                .spotlightProfileUrl(request.getSpotlightProfileUrl())
-                .profilePhotoUrl(request.getProfilePhotoUrl() != null ? request.getProfilePhotoUrl() :
-                               imdbProfile != null ? imdbProfile.getPhotoUrl() :
-                               spotlightProfile != null ? spotlightProfile.getPhotoUrl() : null)
-                .personalDetails(imdbProfile != null ? imdbProfile.getPersonalDetails() : null)
-                .status(TalentStatus.ACTIVE)
-                .build();
+            .name(request.getName() != null ? request.getName() :
+                imdbProfile != null ? imdbProfile.getName() :
+                    spotlightProfile != null ? spotlightProfile.getName() : null)
+            .imdbProfileUrl(request.getImdbProfileUrl())
+            .spotlightProfileUrl(request.getSpotlightProfileUrl())
+            .profilePhotoUrl(request.getProfilePhotoUrl() != null ? request.getProfilePhotoUrl() :
+                imdbProfile != null ? imdbProfile.getPhotoUrl() :
+                    spotlightProfile != null ? spotlightProfile.getPhotoUrl() : null)
+            .personalDetails(imdbProfile != null ? imdbProfile.getPersonalDetails() : null)
+            .status(TalentStatus.ACTIVE)
+            .build();
     }
 
 
@@ -158,11 +158,32 @@ public class TalentService {
 
     public TalentResponse getTalentById(String id) {
         Talent talent = talentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Talent", "id", id));
+            .orElseThrow(() -> new ResourceNotFoundException("Talent", "id", id));
+
+        List<ApplicationBriefResponse> applications = applicationRepository
+            .findByTalentIdOrderByCreatedAtDesc(id)
+            .stream()
+            .map(app -> ApplicationBriefResponse.builder()
+                .id(app.getId())
+                .projectId(app.getProject().getId())
+                .projectName(app.getProject().getName())
+                .roleName(app.getRole().getName())
+                .status(app.getStatus())
+                .submittedAt(app.getCreatedAt())
+                .build())
+            .collect(Collectors.toList());
+
+        List<SubmissionBriefResponse> submissions = submissionRepository
+            .findByTalentIdOrderByCreatedAtDesc(id)
+            .stream()
+            .map(SubmissionBriefResponse::from)
+            .collect(Collectors.toList());
 
         TalentResponse talentResponse = TalentResponse.from(talent);
         talentResponse.setKnownFor(getKnownForMovies(id).stream().map(KnownForItem::from).collect(Collectors.toSet()));
-    
+        talentResponse.setSubmissions(submissions);
+        talentResponse.setApplications(applications);
+
         return talentResponse;
     }
 
@@ -174,10 +195,9 @@ public class TalentService {
             if (StringUtils.hasText(request.getKeyword())) {
                 String keyword = "%" + request.getKeyword().toLowerCase() + "%";
                 predicates.add(criteriaBuilder.or(
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), keyword),
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), keyword),
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("agencyName")), keyword),
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("agentName")), keyword)
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("firstName")), keyword),
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("lastName")), keyword),
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), keyword)
                 ));
             }
 
@@ -187,7 +207,7 @@ public class TalentService {
 
     public List<ImdbMovieItem> getKnownForMovies(String talentId) {
         Talent talent = talentRepository.findById(talentId)
-                .orElseThrow(() -> new EntityNotFoundException("Talent not found"));
+            .orElseThrow(() -> new EntityNotFoundException("Talent not found"));
 
         if (talent.getKnownForMovieIds() == null || talent.getKnownForMovieIds().length == 0) {
             return Collections.emptyList();
@@ -198,7 +218,7 @@ public class TalentService {
 
     public List<TalentBasicResponse> findAllTalentsBasicInfo() {
         return talentRepository.findAll().stream()
-                .map(TalentBasicResponse::from)
-                .collect(Collectors.toList());
+            .map(TalentBasicResponse::from)
+            .collect(Collectors.toList());
     }
 }
