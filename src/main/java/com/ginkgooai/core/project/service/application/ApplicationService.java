@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -166,9 +167,8 @@ public class ApplicationService {
                                                       String keyword,
                                                       ApplicationStatus status,
                                                       Pageable pageable) {
-
         Page<Application> applicationPage = applicationRepository.findAll(
-            buildSpecification(workspaceId, projectId, roleId, viewMode, talentId, startDateTime, endDateTime, keyword, status),
+            buildSpecification(workspaceId, projectId, roleId, viewMode, talentId, startDateTime, endDateTime, keyword, status, pageable.getSort()),
             pageable);
 
         // If we're in submissions view mode and have date filters, filter the submissions in memory
@@ -224,10 +224,13 @@ public class ApplicationService {
                                                           LocalDateTime startDateTime,
                                                           LocalDateTime endDateTime,
                                                           String keyword,
-                                                          ApplicationStatus status) {
+                                                          ApplicationStatus status,
+                                                          Sort sort) {
 
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
+
+            Join<Application, Talent> talentJoin = root.join("talent", JoinType.LEFT);
 
             // Workspace filter (required)
             predicates.add(cb.equal(root.get("workspaceId"), workspaceId));
@@ -281,28 +284,32 @@ public class ApplicationService {
             if (StringUtils.hasText(keyword)) {
                 String likePattern = "%" + keyword.toLowerCase() + "%";
 
-                Join<Application, Talent> talentJoin = root.join("talent", JoinType.LEFT);
                 Join<Application, ProjectRole> roleJoin = root.join("role", JoinType.LEFT);
 
                 Predicate talentNamePredicate = cb.like(cb.lower(talentJoin.get("name")), likePattern);
-                Predicate talentEmailPredicate = cb.like(cb.lower(talentJoin.get("email")),
-                    likePattern);
-                // Predicate agentNamePredicate = cb.like(cb.lower(root.get("agentName")),
-                // likePattern);
-                Predicate agentEmailPredicate = cb.like(cb.lower(talentJoin.get("agentEmail")),
-                    likePattern);
+                Predicate talentEmailPredicate = cb.like(cb.lower(talentJoin.get("email")), likePattern);
                 Predicate roleNamePredicate = cb.like(cb.lower(roleJoin.get("name")), likePattern);
 
                 predicates.add(cb.or(
                     talentNamePredicate,
                     talentEmailPredicate,
-                    // agentNamePredicate,
-                    agentEmailPredicate,
                     roleNamePredicate));
             }
 
-            // Make query distinct to avoid duplicates
-            query.distinct(true);
+            if (query.getResultType() != Long.class && query.getResultType() != long.class) {
+                // Add groupBy on the Application ID
+                query.groupBy(root.get("id"));
+
+                // If sorting by talent.name, add it to the groupBy
+                if (sort != null && sort.isSorted()) {
+                    for (Sort.Order order : sort) {
+                        if ("talent.name".equals(order.getProperty())) {
+                            query.groupBy(root.get("id"), talentJoin.get("name"));
+                            break;
+                        }
+                    }
+                }
+            }
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };

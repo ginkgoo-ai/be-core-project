@@ -90,6 +90,10 @@ public class ApplicationController {
                         @Parameter(description = "Sort direction (ASC/DESC)", example = "DESC") @RequestParam(defaultValue = "DESC") String sortDirection,
                         @Parameter(description = "Sort field (e.g., updatedAt)", example = "updatedAt") @RequestParam(defaultValue = "updatedAt") String sortField) {
 
+                if (sortField.equals("name")) {
+                        sortField = "talent.name";
+                }
+                
                 Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
                 Pageable pageable = PageRequest.of(page, size, sort);
                 return ResponseEntity.ok(applicationService.listApplications(ContextUtils.getWorkspaceId(),
