@@ -100,6 +100,9 @@ public class SubmissionService {
                 null,
                 userId);
 
+        application.getTalent().incrementSubmissionCount();
+        applicationRepository.save(application);
+
         return SubmissionResponse.from(savedSubmission, Collections.EMPTY_LIST, userId);
     }
 
@@ -141,6 +144,9 @@ public class SubmissionService {
         }
 
         submissionRepository.delete(submission);
+       
+        submission.getApplication().getTalent().decrementSubmissionCount();
+        applicationRepository.save(submission.getApplication());
 
         log.info("Deleted submission: {}", submissionId);
     }

@@ -55,7 +55,13 @@ public class TalentResponse {
     @Schema(description = "List of contact persons associated with the talent (agents, managers, etc.)")
     private List<Contact> contacts;
 
-    @Schema(description = "List of applications submitted by the talent")
+    @Schema(description = "Count of applications submitted by the talent")
+    private Long applicationCount = 0L;
+
+    @Schema(description = "Count of video submissions uploaded for the talent")
+    private Long submissionCount = 0L;
+
+    @Schema(description = "List of applications submitted for the talent")
     private List<ApplicationBriefResponse> applications;
 
     @Schema(description = "List of video submissions by the talent")
@@ -74,6 +80,8 @@ public class TalentResponse {
             .contacts(talent.getContacts())
             .personalDetails(talent.getPersonalDetails())
             .status(talent.getStatus().name())
+            .applicationCount(talent.getApplicationCount())
+            .submissionCount(talent.getSubmissionCount())
             .createdAt(talent.getCreatedAt())
             .updatedAt(talent.getUpdatedAt())
             .build();

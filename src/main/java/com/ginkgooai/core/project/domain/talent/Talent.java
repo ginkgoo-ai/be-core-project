@@ -60,6 +60,12 @@ public class Talent extends BaseAuditableEntity {
     @Enumerated(EnumType.STRING)
     private TalentStatus status;
 
+    @Column
+    private Long applicationCount = 0L;
+
+    @Column
+    private Long submissionCount = 0L;
+
     public static Talent from(TalentRequest request) {
         return Talent.builder()
             .name(request.getName())
@@ -72,5 +78,21 @@ public class Talent extends BaseAuditableEntity {
             .contacts(request.getContacts())
             .workspaceId(ContextUtils.getWorkspaceId())
             .build();
+    }
+
+    public void incrementApplicationCount() {
+        this.applicationCount = (this.applicationCount == null ? 0 : this.applicationCount) + 1;
+    }
+
+    public void decrementApplicationCount() {
+        this.applicationCount = (this.applicationCount == null || this.applicationCount < 1) ? 0 : this.applicationCount - 1;
+    }
+
+    public void incrementSubmissionCount() {
+        this.submissionCount = (this.submissionCount == null ? 0 : this.submissionCount) + 1;
+    }
+    
+    public void decrementSubmissionCount() {
+        this.submissionCount = (this.submissionCount == null || this.submissionCount < 1) ? 0 : this.submissionCount - 1;
     }
 }

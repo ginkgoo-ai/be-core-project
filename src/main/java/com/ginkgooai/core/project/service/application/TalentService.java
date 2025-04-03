@@ -195,8 +195,7 @@ public class TalentService {
             if (StringUtils.hasText(request.getKeyword())) {
                 String keyword = "%" + request.getKeyword().toLowerCase() + "%";
                 predicates.add(criteriaBuilder.or(
-                    criteriaBuilder.like(criteriaBuilder.lower(root.get("firstName")), keyword),
-                    criteriaBuilder.like(criteriaBuilder.lower(root.get("lastName")), keyword),
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), keyword),
                     criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), keyword)
                 ));
             }

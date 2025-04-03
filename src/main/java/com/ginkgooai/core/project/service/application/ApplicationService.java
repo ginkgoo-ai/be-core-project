@@ -86,6 +86,9 @@ public class ApplicationService {
             throw new IllegalArgumentException("Talent ID or Talent object must be provided");
         }
 
+        talent.incrementApplicationCount();
+        talentRepository.save(talent);
+
         role.setStatus(RoleStatus.CASTING);
 
         // Create the application
