@@ -325,12 +325,14 @@ public class SubmissionService {
 
             String shareLink = UrlUtils.appendQueryParam(baseUrl + "/" + application.getId(), "share_code", response.getShareCode());
 
+            log.info("BaseUrl:{},applicationId:{},shareCode:{},Share link:{}",baseUrl, application.getId(), response.getShareCode(), shareLink);
+            
             Map<String, String> placeholders = Map.of(
                     "ROLE_NAME", application.getRole().getName(),
                     "PROJECT_NAME", application.getProject().getName(),
-                "FIRST_NAME", application.getTalent().getName(),
+                    "FIRST_NAME", application.getTalent().getName(),
                     "SENDER_NAME", userInfoResponse.getFirstName() + " " + userInfoResponse.getLastName(),
-                        "SHARE_LINK",shareLink
+                    "SHARE_LINK",shareLink
             );
             return InnerMailSendMessage.Receipt.builder()
                     .placeholders(placeholders)
