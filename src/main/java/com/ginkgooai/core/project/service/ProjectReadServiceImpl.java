@@ -1,22 +1,5 @@
 package com.ginkgooai.core.project.service;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import com.ginkgooai.core.project.dto.response.RoleBasicResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.client.storage.StorageClient;
 import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
@@ -26,12 +9,22 @@ import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.dto.request.ProjectResponse;
 import com.ginkgooai.core.project.dto.response.ProjectBasicResponse;
 import com.ginkgooai.core.project.dto.response.ProjectRoleStatisticsResponse;
+import com.ginkgooai.core.project.dto.response.RoleBasicResponse;
 import com.ginkgooai.core.project.repository.ApplicationRepository;
 import com.ginkgooai.core.project.repository.ProjectRepository;
 import com.ginkgooai.core.project.repository.ProjectRoleRepository;
 import com.ginkgooai.core.project.specification.ProjectSpecification;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -161,8 +154,8 @@ public class ProjectReadServiceImpl implements ProjectReadService {
 
 
     @Override
-    public List<RoleBasicResponse> findAllRolesBasicInfo() {
-        return projectRoleRepository.findAll().stream()
+    public List<RoleBasicResponse> findAllRolesBasicInfo(String projectId) {
+        return projectRoleRepository.findByProjectId(projectId).stream()
                 .map(RoleBasicResponse::from)
                 .collect(Collectors.toList());
     }

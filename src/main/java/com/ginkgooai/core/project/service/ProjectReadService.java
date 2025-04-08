@@ -1,17 +1,16 @@
 package com.ginkgooai.core.project.service;
 
-import java.util.List;
-import java.util.Optional;
-
-import com.ginkgooai.core.project.dto.response.RoleBasicResponse;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
 import com.ginkgooai.core.project.domain.project.ProjectStatus;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.dto.request.ProjectResponse;
 import com.ginkgooai.core.project.dto.response.ProjectBasicResponse;
 import com.ginkgooai.core.project.dto.response.ProjectRoleStatisticsResponse;
+import com.ginkgooai.core.project.dto.response.RoleBasicResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
+import java.util.Optional;
 
 public interface ProjectReadService {
 
@@ -37,5 +36,5 @@ public interface ProjectReadService {
 
     Page<ProjectRoleStatisticsResponse> getProjectRolesStatistics(String projectId, String name, Pageable pageable);
 
-    List<RoleBasicResponse> findAllRolesBasicInfo();
+    List<RoleBasicResponse> findAllRolesBasicInfo(String projectId);
 }
