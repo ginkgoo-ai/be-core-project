@@ -1,6 +1,5 @@
 package com.ginkgooai.core.project.controller;
 
-import com.ginkgooai.core.common.constant.ContextsConstant;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.common.utils.IpUtils;
 import com.ginkgooai.core.project.config.security.RequireShareShortlistScope;
@@ -235,7 +234,7 @@ public class ShortlistController {
 				.type(CommentType.PUBLIC)
 				.parentCommentId(request.getParentCommentId())
 				.build(),
-			ContextUtils.get(ContextsConstant.USER_EMAIL, String.class, "unknown")));
+			ContextUtils.getUserId()));
 	}
 
 }
