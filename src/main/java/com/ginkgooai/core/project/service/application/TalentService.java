@@ -47,15 +47,15 @@ public class TalentService {
     @Transactional
     public Talent createTalentFromProfiles(TalentRequest request) {
         // Scrape profiles if URLs are provided
-        TalentProfileMeta imdbProfile = null;
-        if (StringUtils.hasText(request.getImdbProfileUrl())) {
-            imdbProfile = profileScraperService.scrapeFromImdb(request.getImdbProfileUrl());
-        }
-
-        TalentProfileMeta spotlightProfile = null;
-        if (StringUtils.hasText(request.getSpotlightProfileUrl())) {
-            spotlightProfile = profileScraperService.scrapeFromSpotlight(request.getSpotlightProfileUrl());
-        }
+//        TalentProfileMeta imdbProfile = null;
+//        if (StringUtils.hasText(request.getImdbProfileUrl())) {
+//            imdbProfile = profileScraperService.scrapeFromImdb(request.getImdbProfileUrl());
+//        }
+//
+//        TalentProfileMeta spotlightProfile = null;
+//        if (StringUtils.hasText(request.getSpotlightProfileUrl())) {
+//            spotlightProfile = profileScraperService.scrapeFromSpotlight(request.getSpotlightProfileUrl());
+//        }
 
         // Merge profiles with manual input
 //        Talent talent = mergeTalentData(request, imdbProfile.getData(), spotlightProfile.getData());

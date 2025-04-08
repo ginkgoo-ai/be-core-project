@@ -64,6 +64,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
 					.selfTapeInstructions(roleRequest.getSelfTapeInstructions())
 					.isActive(roleRequest.getIsActive() != null ? roleRequest.getIsActive() : true)
 					.sides(roleRequest.getSides().toArray(new String[0]))
+					.status(RoleStatus.DRAFTING)
 					.project(savedProject)
 					.build();
 				projectRoleRepository.save(role);
@@ -216,10 +217,8 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
 			throw new IllegalArgumentException("Role '" + roleId + "' already has applications");
 		}
 
-		Project project = role.getProject();
-		project.removeRole(roleId);
+		applicationRepository.deleteByRoleId(roleId);
 
-		projectRepository.save(project);
 		projectRoleRepository.delete(role);
 	}
 

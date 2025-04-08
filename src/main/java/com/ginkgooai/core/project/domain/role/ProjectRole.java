@@ -1,6 +1,6 @@
 package com.ginkgooai.core.project.domain.role;
 
-import com.ginkgooai.core.project.domain.BaseAuditableEntity;
+import com.ginkgooai.core.project.domain.BaseLogicalDeleteEntity;
 import com.ginkgooai.core.project.domain.project.Project;
 import jakarta.persistence.*;
 import lombok.*;
@@ -12,7 +12,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "project_role")
-public class ProjectRole extends BaseAuditableEntity {
+public class ProjectRole extends BaseLogicalDeleteEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -32,7 +32,7 @@ public class ProjectRole extends BaseAuditableEntity {
     @Enumerated(EnumType.STRING)
     private RoleStatus status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 }

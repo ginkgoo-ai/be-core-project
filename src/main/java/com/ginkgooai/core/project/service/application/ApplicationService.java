@@ -393,4 +393,13 @@ public class ApplicationService {
         return users;
     }
 
+    public void deleteApplication(String applicationId) {
+        Application application = applicationRepository.findByIdAndWorkspaceId(applicationId, ContextUtils.getWorkspaceId())
+            .orElseThrow(() -> new ResourceNotFoundException("Application", "id", applicationId));
+
+        if (application.getStatus() != ApplicationStatus.ADDED) {
+            throw new IllegalStateException("Cannot delete application with status: " + application.getStatus());
+        }
+
+    }
 }

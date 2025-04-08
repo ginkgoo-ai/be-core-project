@@ -1,6 +1,6 @@
 package com.ginkgooai.core.project.domain.application;
 
-import com.ginkgooai.core.project.domain.BaseAuditableEntity;
+import com.ginkgooai.core.project.domain.BaseLogicalDeleteEntity;
 import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.domain.talent.Talent;
@@ -17,7 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "application")
-public class Application extends BaseAuditableEntity {
+public class Application extends BaseLogicalDeleteEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -25,15 +25,15 @@ public class Application extends BaseAuditableEntity {
 
     private String workspaceId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "project_id")
     private Project project;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id")
     private ProjectRole role;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "talent_id")
     private Talent talent;
 

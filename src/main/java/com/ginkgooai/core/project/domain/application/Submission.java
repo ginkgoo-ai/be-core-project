@@ -1,6 +1,6 @@
 package com.ginkgooai.core.project.domain.application;
 
-import com.ginkgooai.core.project.domain.BaseAuditableEntity;
+import com.ginkgooai.core.project.domain.BaseLogicalDeleteEntity;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -17,7 +17,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "submission")
-public class Submission extends BaseAuditableEntity {
+public class Submission extends BaseLogicalDeleteEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -25,7 +25,7 @@ public class Submission extends BaseAuditableEntity {
 
     private String workspaceId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "application_id")
     private Application application;
 
@@ -60,7 +60,7 @@ public class Submission extends BaseAuditableEntity {
     @Column(columnDefinition = "jsonb")
     private Map<String, Object> metadata;
 
-    @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
     private List<SubmissionComment> comments = new ArrayList<>();
 

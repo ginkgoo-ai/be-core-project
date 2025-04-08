@@ -41,7 +41,11 @@ public class ShareShortlistRequest {
         private String email;
 
         @NotBlank
-        @Schema(description = "Name of public recipient", example = "Recipient")
-        private String name;
+        @Schema(description = "First name of public recipient", example = "Recipient")
+        private String firstName;
+
+        @NotBlank
+        @Schema(description = "Last name of public recipient", example = "Recipient")
+        private String lastName;
     }
 }

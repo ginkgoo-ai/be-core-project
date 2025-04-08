@@ -14,8 +14,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Schema(description = "Contact person information")
 public class Contact {
-    @Schema(description = "Full name of the contact person", example = "Jane Wilson")
-    private String name;
+    @Schema(description = "First name of the contact person", example = "Jane")
+    private String firstName;
+
+    @Schema(description = "Last name of the contact person", example = "Wilson")
+    private String lastName;
 
     @Schema(description = "Email address of the contact person", example = "jane.wilson@caa.com")
     @Email(message = "Must be a valid email address")
