@@ -53,91 +53,93 @@ public class ApplicationService {
     private final ActivityLoggerService activityLogger;
 
     @Transactional
-    public ApplicationResponse createApplication(ApplicationCreateRequest request, String workspaceId,
-                                                 String userId) {
-        Project project = projectRepository.findById(request.getProjectId())
-            .orElseThrow(() -> new ResourceNotFoundException("Project", "id",
-                request.getProjectId()));
+    public List<ApplicationResponse> createApplications(ApplicationCreateRequest request,
+                                                        String workspaceId, String userId) {
+        Project project = projectRepository.findById(request.getProjectId()).orElseThrow(
+            () -> new ResourceNotFoundException("Project", "id", request.getProjectId()));
 
-        ProjectRole role = projectRoleRepository.findById(request.getRoleId())
-            .orElseThrow(() -> new ResourceNotFoundException("ProjectRole", "id",
-                request.getRoleId()));
+        ProjectRole role = projectRoleRepository.findById(request.getRoleId()).orElseThrow(
+            () -> new ResourceNotFoundException("ProjectRole", "id", request.getRoleId()));
 
-        // Create the talent if not exits
-        Talent talent;
-        if (!ObjectUtils.isEmpty(request.getTalentId())) {
-            talent = talentRepository.findById(request.getTalentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Talent", "id",
-                    request.getTalentId()));
-        } else if (Objects.nonNull(request.getTalent())) {
-            talent = talentService.createTalentFromProfiles(request.getTalent());
+        List<Application> createdApplications = new ArrayList<>();
+        List<String> notFoundTalentIds = new ArrayList<>();
+        List<Talent> talentsToSave = new ArrayList<>();
 
-            activityLogger.log(
-                workspaceId,
-                project.getId(),
-                null,
-                ActivityType.TALENT_ADDED,
-                Map.of(
-                    "talentName", talent.getName(),
-                    "user", userId),
-                null,
-                userId);
+        for (String talentId : request.getTalentIds()) {
+            Optional<Talent> talentOpt = talentRepository.findById(talentId);
+            if (talentOpt.isPresent()) {
+                Talent talent = talentOpt.get();
+                talent.incrementApplicationCount();
+                talentsToSave.add(talent);
 
-        } else {
-            throw new IllegalArgumentException("Talent ID or Talent object must be provided");
+                Application application =
+                    Application.builder().workspaceId(workspaceId).project(project).role(role)
+                        .talent(talent).status(ApplicationStatus.ADDED).build();
+                createdApplications.add(application);
+            } else {
+                notFoundTalentIds.add(talentId);
+            }
         }
 
-        talent.incrementApplicationCount();
-        talentRepository.save(talent);
+        if (!notFoundTalentIds.isEmpty()) {
+            throw new ResourceNotFoundException("Talent", "ids",
+                String.join(", ", notFoundTalentIds));
+        }
+
+        talentRepository.saveAll(talentsToSave);
+        List<Application> savedApplications = applicationRepository.saveAll(createdApplications);
 
         role.setStatus(RoleStatus.CASTING);
+        projectRoleRepository.save(role);
 
-        // Create the application
-        Application application = Application.builder()
-            .workspaceId(workspaceId)
-            .project(project)
-            .role(role)
-            .talent(talent)
-            .status(ApplicationStatus.ADDED)
-            .build();
-
-        Application savedApplication = applicationRepository.save(application);
-
-        // Log activity
-        activityLogger.log(
-            project.getWorkspaceId(),
-            project.getId(),
-            savedApplication.getId(),
-            ActivityType.ROLE_STATUS_UPDATE,
-            Map.of(
-                "roleName", role.getName(),
-                "newStatus", role.getStatus().getValue()),
-            null,
-            userId);
-
-        // Create submissions if provided
-        log.debug("Video files: {}", request.getVideoIds());
+        List<CloudFileResponse> videoFiles = Collections.emptyList();
         if (!ObjectUtils.isEmpty(request.getVideoIds())) {
-            List<CloudFileResponse> videoFiles = storageClient.getFileDetails(request.getVideoIds())
-                .getBody();
-            log.debug("Video files: {}", videoFiles);
-            List<Submission> submissions = videoFiles.stream().map(video -> Submission.builder()
-                .workspaceId(workspaceId)
-                .application(savedApplication)
-                .videoName(video.getOriginalName())
-                .videoUrl(video.getStoragePath())
-                .videoDuration(video.getVideoDuration())
-                .videoThumbnailUrl(video.getVideoThumbnailUrl())
-                .videoResolution(video.getVideoResolution())
-                .mimeType(video.getFileType())
-                .build()).toList();
-            List<Submission> savedSubmissions = submissionRepository.saveAll(submissions);
-
-            savedApplication.setSubmissions(savedSubmissions);
-            savedApplication.setStatus(ApplicationStatus.SUBMITTED);
+            videoFiles = storageClient.getFileDetails(request.getVideoIds()).getBody();
         }
 
-        return ApplicationResponse.from(savedApplication, Collections.emptyList(), userId);
+        final List<CloudFileResponse> finalVideoFiles = videoFiles;
+        List<Submission> allSubmissions = new ArrayList<>();
+
+        savedApplications.forEach(savedApplication -> {
+            // Log activity for application creation
+            activityLogger.log(project.getWorkspaceId(), project.getId(), savedApplication.getId(),
+                ActivityType.ROLE_STATUS_UPDATE,
+                Map.of("talentName", savedApplication.getTalent().getName(), "roleName",
+                    role.getName(), "user", userId),
+                null, userId);
+
+            // Create submissions if provided
+            if (!finalVideoFiles.isEmpty()) {
+                List<Submission> submissions = finalVideoFiles.stream()
+                    .map(video -> Submission.builder().workspaceId(workspaceId)
+                        .application(savedApplication).videoName(video.getOriginalName())
+                        .videoUrl(video.getStoragePath())
+                        .videoDuration(video.getVideoDuration())
+                        .videoThumbnailUrl(video.getVideoThumbnailUrl())
+                        .videoResolution(video.getVideoResolution())
+                        .mimeType(video.getFileType()).build())
+                    .toList();
+                allSubmissions.addAll(submissions);
+                savedApplication.setStatus(ApplicationStatus.SUBMITTED);
+            }
+        });
+
+        if (!allSubmissions.isEmpty()) {
+            submissionRepository.saveAll(allSubmissions);
+            applicationRepository.saveAll(savedApplications);
+        }
+
+        // Log role status update activity once after all applications are processed
+        activityLogger.log(project.getWorkspaceId(), project.getId(), null, // No specific
+            // application ID for
+            // this log
+            ActivityType.ROLE_STATUS_UPDATE, Map.of("roleName", role.getName(), "newStatus",
+                role.getStatus().getValue(), "user", userId),
+            null, userId);
+
+        return savedApplications.stream()
+            .map(app -> ApplicationResponse.from(app, Collections.emptyList(), userId))
+            .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -156,37 +158,34 @@ public class ApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ApplicationResponse> listApplications(String workspaceId,
-                                                      String userId,
-                                                      String projectId,
-                                                      String roleId,
-                                                      String talentId,
-                                                      LocalDateTime startDateTime,
-                                                      LocalDateTime endDateTime,
-                                                      String viewMode,
-                                                      String keyword,
-                                                      ApplicationStatus status,
+    public Page<ApplicationResponse> listApplications(String workspaceId, String userId,
+                                                      String projectId, String roleId, String talentId, LocalDateTime startDateTime,
+                                                      LocalDateTime endDateTime, String viewMode, String keyword, ApplicationStatus status,
                                                       Pageable pageable) {
-        Page<Application> applicationPage = applicationRepository.findAll(
-            buildSpecification(workspaceId, projectId, roleId, viewMode, talentId, startDateTime, endDateTime, keyword, status, pageable.getSort()),
-            pageable);
+        Page<Application> applicationPage =
+            applicationRepository.findAll(
+                buildSpecification(workspaceId, projectId, roleId, viewMode, talentId,
+                    startDateTime, endDateTime, keyword, status, pageable.getSort()),
+                pageable);
 
         // If we're in submissions view mode and have date filters, filter the submissions in memory
         if ("submissions".equals(viewMode) && (startDateTime != null || endDateTime != null)) {
             applicationPage.forEach(app -> {
                 if (Objects.nonNull(app.getSubmissions())) {
                     // Filter submissions by date range
-                    List<Submission> filteredSubmissions = app.getSubmissions().stream()
-                        .filter(submission -> {
+                    List<Submission> filteredSubmissions =
+                        app.getSubmissions().stream().filter(submission -> {
                             LocalDateTime createdAt = submission.getCreatedAt();
-                            if (createdAt == null) return false;
+                            if (createdAt == null)
+                                return false;
 
-                            boolean afterStart = startDateTime == null || !createdAt.isBefore(startDateTime);
-                            boolean beforeEnd = endDateTime == null || !createdAt.isAfter(endDateTime);
+                            boolean afterStart =
+                                startDateTime == null || !createdAt.isBefore(startDateTime);
+                            boolean beforeEnd =
+                                endDateTime == null || !createdAt.isAfter(endDateTime);
 
                             return afterStart && beforeEnd;
-                        })
-                        .collect(Collectors.toList());
+                        }).collect(Collectors.toList());
 
                     // Replace the submissions list with the filtered one
                     app.setSubmissions(filteredSubmissions);
@@ -205,7 +204,8 @@ public class ApplicationService {
             if (Objects.nonNull(app.getSubmissions())) {
                 app.getSubmissions().forEach(submission -> {
                     if (Objects.nonNull(submission.getComments())) {
-                        submission.getComments().forEach(comment -> userIds.add(comment.getCreatedBy()));
+                        submission.getComments()
+                            .forEach(comment -> userIds.add(comment.getCreatedBy()));
                     }
                 });
             }
@@ -213,19 +213,13 @@ public class ApplicationService {
 
         final List<UserInfoResponse> finalUsers = getUserInfoByIds(userIds);
 
-        return applicationPage.map(application -> ApplicationResponse.from(application, finalUsers, userId));
+        return applicationPage
+            .map(application -> ApplicationResponse.from(application, finalUsers, userId));
     }
 
-    private Specification<Application> buildSpecification(String workspaceId,
-                                                          String projectId,
-                                                          String roleId,
-                                                          String viewMode,
-                                                          String talentId,
-                                                          LocalDateTime startDateTime,
-                                                          LocalDateTime endDateTime,
-                                                          String keyword,
-                                                          ApplicationStatus status,
-                                                          Sort sort) {
+    private Specification<Application> buildSpecification(String workspaceId, String projectId,
+                                                          String roleId, String viewMode, String talentId, LocalDateTime startDateTime,
+                                                          LocalDateTime endDateTime, String keyword, ApplicationStatus status, Sort sort) {
 
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -258,17 +252,21 @@ public class ApplicationService {
 
             // viewMode filter
             if ("submissions".equals(viewMode)) {
-                Join<Application, Submission> submissionJoin = root.join("submissions", JoinType.LEFT);
+                Join<Application, Submission> submissionJoin =
+                    root.join("submissions", JoinType.LEFT);
                 predicates.add(cb.isNotNull(submissionJoin.get("id")));
                 query.distinct(true);
 
                 // Date filter
                 if (startDateTime != null && endDateTime != null) {
-                    predicates.add(cb.between(submissionJoin.get("createdAt"), startDateTime, endDateTime));
+                    predicates.add(cb.between(submissionJoin.get("createdAt"), startDateTime,
+                        endDateTime));
                 } else if (startDateTime != null) {
-                    predicates.add(cb.greaterThanOrEqualTo(submissionJoin.get("createdAt"), startDateTime));
+                    predicates.add(cb.greaterThanOrEqualTo(submissionJoin.get("createdAt"),
+                        startDateTime));
                 } else if (endDateTime != null) {
-                    predicates.add(cb.lessThanOrEqualTo(submissionJoin.get("createdAt"), endDateTime));
+                    predicates.add(
+                        cb.lessThanOrEqualTo(submissionJoin.get("createdAt"), endDateTime));
                 }
             } else {
                 if (startDateTime != null && endDateTime != null) {
@@ -286,14 +284,13 @@ public class ApplicationService {
 
                 Join<Application, ProjectRole> roleJoin = root.join("role", JoinType.LEFT);
 
-                Predicate talentNamePredicate = cb.like(cb.lower(talentJoin.get("name")), likePattern);
-                Predicate talentEmailPredicate = cb.like(cb.lower(talentJoin.get("email")), likePattern);
+                Predicate talentNamePredicate =
+                    cb.like(cb.lower(talentJoin.get("name")), likePattern);
+                Predicate talentEmailPredicate =
+                    cb.like(cb.lower(talentJoin.get("email")), likePattern);
                 Predicate roleNamePredicate = cb.like(cb.lower(roleJoin.get("name")), likePattern);
 
-                predicates.add(cb.or(
-                    talentNamePredicate,
-                    talentEmailPredicate,
-                    roleNamePredicate));
+                predicates.add(cb.or(talentNamePredicate, talentEmailPredicate, roleNamePredicate));
             }
 
             if (query.getResultType() != Long.class && query.getResultType() != long.class) {
@@ -320,43 +317,42 @@ public class ApplicationService {
                                                        String content) {
         Application application = findApplicationById(workspaceId, id);
 
-        ApplicationComment comment = ApplicationComment.builder()
-            .application(application)
-            .content(content)
-            .build();
+        ApplicationComment comment =
+            ApplicationComment.builder().application(application).content(content).build();
 
-        List<String> userIds = application.getNotes().stream()
-            .filter(t -> !ObjectUtils.isEmpty(t.getCreatedBy()))
-            .map(ApplicationNote::getCreatedBy).distinct().toList();
+        List<String> userIds =
+            application.getNotes().stream().filter(t -> !ObjectUtils.isEmpty(t.getCreatedBy()))
+                .map(ApplicationNote::getCreatedBy).distinct().toList();
 
-        Map<String, UserInfoResponse> userInfoResponses = getUserInfoByIds(userIds).stream().collect(
-            Collectors.toMap(UserInfoResponse::getId, userInfoResponse -> userInfoResponse));
+        Map<String, UserInfoResponse> userInfoResponses =
+            getUserInfoByIds(userIds).stream().collect(Collectors.toMap(UserInfoResponse::getId,
+                userInfoResponse -> userInfoResponse));
 
         application.getComments().add(comment);
         application.setStatus(ApplicationStatus.REVIEWED);
-        return applicationRepository.save(application).getComments().stream()
-            .map(t -> ApplicationCommentResponse.from(t, userInfoResponses.get(t.getCreatedBy())))
+        return applicationRepository.save(application).getComments().stream().map(
+                t -> ApplicationCommentResponse.from(t, userInfoResponses.get(t.getCreatedBy())))
             .toList();
     }
 
     @Transactional
-    public List<ApplicationNoteResponse> addNote(String workspaceId, String id, String userId, String content) {
+    public List<ApplicationNoteResponse> addNote(String workspaceId, String id, String userId,
+                                                 String content) {
         Application application = findApplicationById(workspaceId, id);
 
-        ApplicationNote note = applicationNoteRepository.save(ApplicationNote.builder()
-            .application(application)
-            .content(content)
-            .build());
+        ApplicationNote note = applicationNoteRepository
+            .save(ApplicationNote.builder().application(application).content(content).build());
 
         ApplicationNote savedNote = applicationNoteRepository.findById(note.getId()).get();
         application.getNotes().add(savedNote);
 
-        List<String> userIds = application.getNotes().stream()
-            .filter(t -> !ObjectUtils.isEmpty(t.getCreatedBy()))
-            .map(ApplicationNote::getCreatedBy).distinct().toList();
+        List<String> userIds =
+            application.getNotes().stream().filter(t -> !ObjectUtils.isEmpty(t.getCreatedBy()))
+                .map(ApplicationNote::getCreatedBy).distinct().toList();
 
-        Map<String, UserInfoResponse> userInfoResponses = getUserInfoByIds(userIds).stream().collect(
-            Collectors.toMap(UserInfoResponse::getId, userInfoResponse -> userInfoResponse));
+        Map<String, UserInfoResponse> userInfoResponses =
+            getUserInfoByIds(userIds).stream().collect(Collectors.toMap(UserInfoResponse::getId,
+                userInfoResponse -> userInfoResponse));
 
         return application.getNotes().stream()
             .map(t -> ApplicationNoteResponse.from(t, userInfoResponses.get(t.getCreatedBy())))
@@ -364,18 +360,15 @@ public class ApplicationService {
     }
 
     private Application findApplicationById(String workspaceId, String id) {
-        return applicationRepository.findOne(
-                (root, query, cb) -> cb.and(
-                    cb.equal(root.get("id"), id),
-                    cb.equal(root.get("workspaceId"), workspaceId)))
+        return applicationRepository
+            .findOne((root, query, cb) -> cb.and(cb.equal(root.get("id"), id),
+                cb.equal(root.get("workspaceId"), workspaceId)))
             .orElseThrow(() -> new ResourceNotFoundException("Application", "id", id));
     }
 
     private List<UserInfoResponse> getUserInfoByIds(List<String> userIds) {
-        List<String> distinctUserIds = userIds.stream()
-            .filter(id -> id != null && !id.isEmpty())
-            .distinct()
-            .collect(Collectors.toList());
+        List<String> distinctUserIds = userIds.stream().filter(id -> id != null && !id.isEmpty())
+            .distinct().collect(Collectors.toList());
 
         List<UserInfoResponse> users = new ArrayList<>();
         if (!distinctUserIds.isEmpty()) {
@@ -394,11 +387,13 @@ public class ApplicationService {
     }
 
     public void deleteApplication(String applicationId) {
-        Application application = applicationRepository.findByIdAndWorkspaceId(applicationId, ContextUtils.getWorkspaceId())
-            .orElseThrow(() -> new ResourceNotFoundException("Application", "id", applicationId));
+        Application application = applicationRepository
+            .findByIdAndWorkspaceId(applicationId, ContextUtils.getWorkspaceId()).orElseThrow(
+                () -> new ResourceNotFoundException("Application", "id", applicationId));
 
         if (application.getStatus() != ApplicationStatus.ADDED) {
-            throw new IllegalStateException("Cannot delete application with status: " + application.getStatus());
+            throw new IllegalStateException(
+                "Cannot delete application with status: " + application.getStatus());
         }
 
     }
