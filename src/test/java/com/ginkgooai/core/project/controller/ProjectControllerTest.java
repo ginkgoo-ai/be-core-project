@@ -111,7 +111,7 @@ class ProjectControllerTest {
 
     @Test
     void createProject_Success() {
-        when(projectWriteService.createProject(any(ProjectCreateRequest.class), anyString(), anyString()))
+        when(projectWriteService.createProject(any(ProjectCreateRequest.class)))
                 .thenReturn(ProjectResponse.from(project));
         
         ResponseEntity<ProjectResponse> response = projectController.createProject(createRequest);
@@ -119,7 +119,7 @@ class ProjectControllerTest {
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
 
-        verify(projectWriteService).createProject(eq(createRequest), eq(workspaceId), eq(userId));
+        verify(projectWriteService).createProject(eq(createRequest));
     }
 
     @Test
