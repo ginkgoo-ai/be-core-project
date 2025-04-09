@@ -60,7 +60,9 @@ public class WorkspaceAuthFilter extends OncePerRequestFilter {
         }
 
         //let GUEST(ROLE_TALENT, ROLE_PRODUCER...) pass workspace access check 
-        log.debug("Workspace ID in clams: {}", jwt);
+        log.debug("JWT in claims: {}, headers: {}, subject: {}, issuedAt: {}, expiresAt: {}, claims: {}",
+            jwt, jwt.getHeaders(), jwt.getSubject(), jwt.getIssuedAt(), jwt.getExpiresAt(), jwt.getClaims());
+
         if (Objects.equals(jwt.getClaimAsString("workspace_id"), workspaceId)) {
             ContextUtils.set(ContextsConstant.WORKSPACE_ID, jwt.getClaimAsString("workspace_id"));
             chain.doFilter(request, response);
