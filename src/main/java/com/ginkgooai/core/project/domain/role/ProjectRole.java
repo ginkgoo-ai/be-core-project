@@ -32,7 +32,7 @@ public class ProjectRole extends BaseLogicalDeleteEntity {
     @Enumerated(EnumType.STRING)
     private RoleStatus status;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 }

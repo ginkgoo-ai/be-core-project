@@ -25,11 +25,11 @@ public class Application extends BaseLogicalDeleteEntity {
 
     private String workspaceId;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "project_id")
     private Project project;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "role_id")
     private ProjectRole role;
 

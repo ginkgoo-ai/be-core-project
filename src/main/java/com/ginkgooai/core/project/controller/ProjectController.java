@@ -55,8 +55,7 @@ public class ProjectController {
     })
     @PostMapping
     public ResponseEntity<ProjectResponse> createProject(@RequestBody ProjectCreateRequest request) {
-        ProjectResponse project = projectWriteService.createProject(request, ContextUtils.getWorkspaceId(),
-                ContextUtils.getUserId());
+        ProjectResponse project = projectWriteService.createProject(request);
 
         return new ResponseEntity<>(project, HttpStatus.CREATED);
     }

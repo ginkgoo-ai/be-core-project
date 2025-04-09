@@ -25,14 +25,14 @@ public class SubmissionComment extends BaseAuditableEntity {
     @Column(nullable = false)
     private CommentType type;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "submission_id")
     private Submission submission;
     
     @Column(columnDefinition = "TEXT")
     private String content;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "parent_comment_id")
     private SubmissionComment parentComment;
 }

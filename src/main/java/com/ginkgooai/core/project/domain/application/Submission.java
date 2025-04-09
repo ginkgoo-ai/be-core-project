@@ -25,7 +25,7 @@ public class Submission extends BaseLogicalDeleteEntity {
 
     private String workspaceId;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "application_id")
     private Application application;
 

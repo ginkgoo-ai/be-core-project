@@ -20,11 +20,11 @@ public class ShortlistItem extends BaseAuditableEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "shortlist_id")
     private Shortlist shortlist;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "application_id")
     private Application application;
 

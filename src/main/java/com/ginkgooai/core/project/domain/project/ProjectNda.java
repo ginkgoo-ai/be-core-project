@@ -4,11 +4,6 @@ import com.ginkgooai.core.project.domain.BaseAuditableEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -34,7 +29,7 @@ public class ProjectNda extends BaseAuditableEntity {
 
     private String signatureUrl;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 

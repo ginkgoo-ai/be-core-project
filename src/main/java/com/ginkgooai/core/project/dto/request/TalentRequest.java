@@ -3,7 +3,6 @@ package com.ginkgooai.core.project.dto.request;
 import com.ginkgooai.core.project.domain.talent.Contact;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,15 +31,15 @@ public class TalentRequest {
     @Schema(description = "IMDB profile URL for talent information scraping",
             example = "https://www.imdb.com/name/nm0000123/",
             pattern = "^https?://(?:www\\.)?imdb\\.com/.*$")
-    @Pattern(regexp = "^https?://(?:www\\.)?imdb\\.com/.*$",
-            message = "Must be a valid IMDB URL")
+//    @Pattern(regexp = "^https?://(?:www\\.)?imdb\\.com/.*$",
+//            message = "Must be a valid IMDB URL")
     private String imdbProfileUrl;
 
     @Schema(description = "Spotlight profile URL for talent information scraping",
             example = "https://www.spotlight.com/1234-5678-9012-3456/",
             pattern = "^https?://(?:www\\.)?spotlight\\.com/.*$")
-    @Pattern(regexp = "^https?://(?:www\\.)?spotlight\\.com/.*$",
-            message = "Must be a valid Spotlight URL")
+//    @Pattern(regexp = "^https?://(?:www\\.)?spotlight\\.com/.*$",
+//            message = "Must be a valid Spotlight URL")
     private String spotlightProfileUrl;
 
     @Schema(description = "URL of the talent's profile photo",

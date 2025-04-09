@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.domain.project;
 
+import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.domain.BaseLogicalDeleteEntity;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.dto.request.ProjectCreateRequest;
@@ -7,7 +8,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 
 @Entity
@@ -47,13 +47,13 @@ public class Project extends BaseLogicalDeleteEntity {
 
     private String posterUrl;
 
-    public Project(ProjectCreateRequest request, String workspaceId, String userId) {
+    public Project(ProjectCreateRequest request) {
         this.name = request.getName();
         this.description = request.getDescription();
         this.plotLine = request.getPlotLine();
-        this.status = Optional.ofNullable(request.getStatus()).orElse(ProjectStatus.DRAFTING);
+        this.status = ProjectStatus.DRAFTING;
         this.posterUrl = request.getPosterUrl();
-        this.workspaceId = workspaceId;
+        this.workspaceId = ContextUtils.getWorkspaceId();
     }
 
     public void updateDetails(String name, String description, String plotLine, ProjectStatus status,
@@ -71,16 +71,21 @@ public class Project extends BaseLogicalDeleteEntity {
         this.producer = producer;
     }
 
+    public static Project create(ProjectCreateRequest request, String workspaceId) {
+        return Project.builder()
+            .workspaceId(workspaceId)
+            .name(request.getName())
+            .description(request.getDescription())
+            .status(ProjectStatus.DRAFTING)
+            .build();
+    }
+    
     public void addRole(ProjectRole role) {
-        if (role == null) {
-            throw new IllegalArgumentException("Role cannot be null");
-        }
-        role.setProject(this);
         roles.add(role);
+        role.setProject(this);
     }
 
     public void removeRole(String roleId) {
         roles.removeIf(role -> role.getId().equals(roleId));
     }
-
 }

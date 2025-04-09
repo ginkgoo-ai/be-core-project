@@ -20,7 +20,7 @@ public class ShortlistShare extends BaseAuditableEntity {
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private String id;
 
-	@ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
 	@JoinColumn(name = "shortlist_id")
 	private Shortlist shortlist;
 

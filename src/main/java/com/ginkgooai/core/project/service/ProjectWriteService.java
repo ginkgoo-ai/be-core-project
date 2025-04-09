@@ -8,7 +8,7 @@ import com.ginkgooai.core.project.dto.response.ProjectRoleResponse;
 
 public interface ProjectWriteService {
 
-    ProjectResponse createProject(ProjectCreateRequest request, String workspaceId, String userId);
+    ProjectResponse createProject(ProjectCreateRequest request);
 
     Project updateProject(String id, ProjectUpdateRequest request, String workspaceId);
 

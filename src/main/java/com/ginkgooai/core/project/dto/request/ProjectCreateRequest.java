@@ -1,9 +1,7 @@
 package com.ginkgooai.core.project.dto.request;
 
-import com.ginkgooai.core.project.domain.project.ProjectStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.util.List;
@@ -24,10 +22,6 @@ public class ProjectCreateRequest {
     @NotEmpty
     private String plotLine;
 
-    @Schema(description = "Status of the project", example = "IN_PROGRESS")
-    @NotNull
-    private ProjectStatus status;
-
     @Schema(description = "List of roles associated with the project")
     private List<ProjectRoleRequest> roles;
 
@@ -38,32 +32,4 @@ public class ProjectCreateRequest {
     @Schema(description = "Project poster Url", example = "www.example.com/poster.jpg")
     @NotEmpty
     private String posterUrl;
-
-    public String getName() {
-        return name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public String getPlotLine() {
-        return plotLine;
-    }
-
-    public ProjectStatus getStatus() {
-        return status;
-    }
-
-    public List<ProjectRoleRequest> getRoles() {
-        return roles;
-    }
-
-    public String getProducer() {
-        return producer;
-    }
-
-    public String getPosterUrl() {
-        return posterUrl;
-    }
 }

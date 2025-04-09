@@ -19,14 +19,14 @@ public class ApplicationComment extends BaseLogicalDeleteEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "application_id")
     private Application application;
     
     @Column(columnDefinition = "TEXT")
     private String content;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "parent_comment_id")
     private ApplicationComment parentComment;
 }

@@ -19,7 +19,7 @@ public class ApplicationNote extends BaseLogicalDeleteEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "application_id")
     private Application application;
     
