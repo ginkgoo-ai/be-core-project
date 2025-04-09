@@ -59,8 +59,7 @@ public class WorkspaceAuthFilter extends OncePerRequestFilter {
         }
 
         //let GUEST(ROLE_TALENT, ROLE_PRODUCER...) pass workspace access check 
-        List<String> roles = jwt.getClaim("role");
-        if (!ObjectUtils.isEmpty(jwt.getClaimAsString("workspace_id")) && roles != null && !roles.contains("ROLE_USER")) {
+        if (!ObjectUtils.isEmpty(jwt.getClaimAsString("workspace_id"))) {
             ContextUtils.set(ContextsConstant.WORKSPACE_ID, jwt.getClaimAsString("workspace_id"));
             chain.doFilter(request, response);
             return;
