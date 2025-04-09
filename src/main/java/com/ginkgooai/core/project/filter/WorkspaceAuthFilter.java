@@ -12,12 +12,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -52,6 +52,7 @@ public class WorkspaceAuthFilter extends OncePerRequestFilter {
 
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String workspaceId = request.getHeader("x-workspace-id");
+        log.debug("Workspace ID in header: {}", workspaceId);
         if (workspaceId == null || workspaceId.isEmpty()) {
             log.warn("User {} must choose workspace before visit project", jwt.getSubject());
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -59,7 +60,8 @@ public class WorkspaceAuthFilter extends OncePerRequestFilter {
         }
 
         //let GUEST(ROLE_TALENT, ROLE_PRODUCER...) pass workspace access check 
-        if (!ObjectUtils.isEmpty(jwt.getClaimAsString("workspace_id"))) {
+        log.debug("Workspace ID in clams: {}", jwt);
+        if (Objects.equals(jwt.getClaimAsString("workspace_id"), workspaceId)) {
             ContextUtils.set(ContextsConstant.WORKSPACE_ID, jwt.getClaimAsString("workspace_id"));
             chain.doFilter(request, response);
             return;
