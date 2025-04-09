@@ -17,17 +17,25 @@ public class TalentBasicResponse {
     @Schema(description = "Talent ID")
     private String id;
 
-    @Schema(description = "Talent name")
-    private String name;
+    @Schema(description = "Talent's first name")
+    private String firstName;
+
+    @Schema(description = "Talent's last name")
+    private String lastName;
 
     @Schema(description = "Talent email")
     private String email;
 
+    @Schema(description = "URL of the talent's profile photo")
+    private String profilePhotoUrl;
+
     public static TalentBasicResponse from(Talent talent) {
         return TalentBasicResponse.builder()
             .id(talent.getId())
-            .name(talent.getName())
+            .firstName(talent.getFirstName())
+            .lastName(talent.getLastName())
             .email(talent.getEmail())
+            .profilePhotoUrl(talent.getProfilePhotoUrl())
             .build();
     }
 }

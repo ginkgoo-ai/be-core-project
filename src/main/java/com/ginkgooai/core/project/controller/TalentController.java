@@ -113,11 +113,14 @@ public class TalentController {
         @GetMapping("/roles/{roleId}")
         public ResponseEntity<List<TalentWithApplicationStatusResponse>> getTalentsForRole(
             @Parameter(description = "ID of the role to check applications for", required = true)
-            @PathVariable String roleId) {
+            @PathVariable String roleId,
+            @Parameter(description = "Optional name parameter for fuzzy matching")
+            @RequestParam(required = false) String name) {
 
                 List<TalentWithApplicationStatusResponse> talents = talentService.getAllTalentsWithApplicationStatus(
                     ContextUtils.getWorkspaceId(),
-                    roleId
+                    roleId,
+                    name
                 );
 
                 return ResponseEntity.ok(talents);

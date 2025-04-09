@@ -91,8 +91,11 @@ public class TalentService {
         if (!ObjectUtils.isEmpty(request.getSpotlightProfileUrl())) {
             talent.setSpotlightProfileUrl(request.getSpotlightProfileUrl());
         }
-        if (!ObjectUtils.isEmpty(request.getName())) {
-            talent.setName(request.getName());
+        if (!ObjectUtils.isEmpty(request.getFirstName())) {
+            talent.setFirstName(request.getFirstName());
+        }
+        if (!ObjectUtils.isEmpty(request.getLastName())) {
+            talent.setLastName(request.getLastName());
         }
         if (!ObjectUtils.isEmpty(request.getProfilePhotoUrl())) {
             talent.setProfilePhotoUrl(request.getProfilePhotoUrl());
@@ -136,9 +139,6 @@ public class TalentService {
                                    TalentProfileData imdbProfile,
                                    TalentProfileData spotlightProfile) {
         return Talent.builder()
-            .name(request.getName() != null ? request.getName() :
-                imdbProfile != null ? imdbProfile.getName() :
-                    spotlightProfile != null ? spotlightProfile.getName() : null)
             .imdbProfileUrl(request.getImdbProfileUrl())
             .spotlightProfileUrl(request.getSpotlightProfileUrl())
             .profilePhotoUrl(request.getProfilePhotoUrl() != null ? request.getProfilePhotoUrl() :
@@ -196,7 +196,8 @@ public class TalentService {
             if (StringUtils.hasText(request.getKeyword())) {
                 String keyword = "%" + request.getKeyword().toLowerCase() + "%";
                 predicates.add(criteriaBuilder.or(
-                    criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), keyword),
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("firstName")), keyword),
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("lastName")), keyword),
                     criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), keyword)
                 ));
             }
@@ -227,12 +228,20 @@ public class TalentService {
      * Get all talents with their application status for a specific role
      *
      * @param workspaceId The workspace ID
-     * @param roleId      The role ID to check application status
+     * @param roleId The role ID to check application status
+     * @param name Optional name parameter for fuzzy matching
      * @return List of talents with application status
      */
-    public List<TalentWithApplicationStatusResponse> getAllTalentsWithApplicationStatus(String workspaceId, String roleId) {
-        // Get all talents in the workspace
-        List<Talent> talents = talentRepository.findByWorkspaceId(workspaceId);
+    public List<TalentWithApplicationStatusResponse> getAllTalentsWithApplicationStatus(
+        String workspaceId, String roleId, String name) {
+        // Get talents in the workspace with optional name filter
+        List<Talent> talents;
+        if (StringUtils.hasText(name)) {
+            // Use fuzzy matching for name
+            talents = talentRepository.findByWorkspaceIdAndNameMatching(workspaceId, name);
+        } else {
+            talents = talentRepository.findByWorkspaceId(workspaceId);
+        }
 
         // Get all applications for the role
         List<Application> applications = applicationRepository.findByRoleId(roleId);

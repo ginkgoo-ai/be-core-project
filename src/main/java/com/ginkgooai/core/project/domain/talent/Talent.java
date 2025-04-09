@@ -28,7 +28,9 @@ public class Talent extends BaseAuditableEntity {
 
     private String workspaceId;
 
-    private String name;
+    private String firstName;
+
+    private String lastName;
 
     private String nameSuffix;
 
@@ -68,7 +70,8 @@ public class Talent extends BaseAuditableEntity {
 
     public static Talent from(TalentRequest request) {
         return Talent.builder()
-            .name(request.getName())
+            .firstName(request.getFirstName())
+            .lastName(request.getLastName())
             .nameSuffix(request.getNameSuffix())
             .email(request.getEmail())
             .imdbProfileUrl(request.getImdbProfileUrl())

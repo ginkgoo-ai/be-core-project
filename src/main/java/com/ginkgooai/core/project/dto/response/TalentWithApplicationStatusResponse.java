@@ -13,8 +13,11 @@ public class TalentWithApplicationStatusResponse {
     @Schema(description = "Unique identifier for the talent")
     private String id;
 
-    @Schema(description = "User's name")
-    private String name;
+    @Schema(description = "Talent's first name")
+    private String firstName;
+
+    @Schema(description = "Talent's last name")
+    private String lastName;
 
     @Schema(description = "Contact email address")
     private String email;
@@ -38,7 +41,8 @@ public class TalentWithApplicationStatusResponse {
                                                            boolean hasApplied, String applicationId) {
         return TalentWithApplicationStatusResponse.builder()
             .id(talent.getId())
-            .name(talent.getName())
+            .firstName(talent.getFirstName())
+            .lastName(talent.getLastName())
             .email(talent.getEmail())
             .profilePhotoUrl(talent.getProfilePhotoUrl())
             .status(talent.getStatus().name())

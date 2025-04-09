@@ -104,8 +104,9 @@ public class ApplicationService {
             // Log activity for application creation
             activityLogger.log(project.getWorkspaceId(), project.getId(), savedApplication.getId(),
                 ActivityType.ROLE_STATUS_UPDATE,
-                Map.of("talentName", savedApplication.getTalent().getName(), "roleName",
-                    role.getName(), "user", userId),
+                Map.of(
+                    "talentName", String.join(" ", savedApplication.getTalent().getFirstName(), savedApplication.getTalent().getLastName()),
+                    "roleName", role.getName(), "user", userId),
                 null, userId);
 
             // Create submissions if provided

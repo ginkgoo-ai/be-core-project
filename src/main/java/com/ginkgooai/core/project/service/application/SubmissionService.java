@@ -95,7 +95,7 @@ public class SubmissionService {
                 ActivityType.SUBMISSION_ADDED_TO_SHORTLIST,
                 Map.of(
                     "user", userId,
-                    "talentName", String.join(" ", application.getTalent().getName()),
+                    "talentName", String.join(" ", application.getTalent().getFirstName(), application.getTalent().getLastName()),
                     "videoName", submission.getVideoName()),
                 null,
                 userId);
@@ -180,7 +180,8 @@ public class SubmissionService {
                 submission.getApplication().getId(),
                 ActivityType.PRODUCER_FEEDBACK_ADDED,
                 Map.of(
-                    "talentName", submission.getApplication().getTalent().getName()),
+                    "talentName", String.join(" ", submission.getApplication().getTalent().getFirstName(), submission.getApplication().getTalent().getLastName())
+                ),
                 null,
                 userId);
         }
@@ -315,7 +316,7 @@ public class SubmissionService {
                                             .workspaceId(ContextUtils.getWorkspaceId())
                                             .resource("application")
                                             .resourceId(application.getId())
-                                            .guestName( application.getTalent().getName())
+                                        .guestName(String.join(" ", application.getTalent().getFirstName(), application.getTalent().getLastName()))
                                             .guestEmail(application.getTalent().getEmail())
                                             .roles(List.of(Role.ROLE_TALENT))
                                             .write(true)
@@ -330,7 +331,7 @@ public class SubmissionService {
             Map<String, String> placeholders = Map.of(
                     "ROLE_NAME", application.getRole().getName(),
                     "PROJECT_NAME", application.getProject().getName(),
-                    "FIRST_NAME", application.getTalent().getName(),
+                "FIRST_NAME", application.getTalent().getFirstName(),
                     "SENDER_NAME", userInfoResponse.getFirstName() + " " + userInfoResponse.getLastName(),
                     "SHARE_LINK",shareLink
             );
