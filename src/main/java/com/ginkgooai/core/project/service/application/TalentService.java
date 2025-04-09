@@ -1,6 +1,9 @@
 package com.ginkgooai.core.project.service.application;
 
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
+import com.ginkgooai.core.common.utils.ContextUtils;
+import com.ginkgooai.core.project.domain.application.Application;
+import com.ginkgooai.core.project.domain.application.ApplicationStatus;
 import com.ginkgooai.core.project.domain.talent.ImdbMovieItem;
 import com.ginkgooai.core.project.domain.talent.Talent;
 import com.ginkgooai.core.project.domain.talent.TalentProfileMeta;
@@ -9,10 +12,7 @@ import com.ginkgooai.core.project.dto.KnownForItem;
 import com.ginkgooai.core.project.dto.TalentProfileData;
 import com.ginkgooai.core.project.dto.request.TalentRequest;
 import com.ginkgooai.core.project.dto.request.TalentSearchRequest;
-import com.ginkgooai.core.project.dto.response.ApplicationBriefResponse;
-import com.ginkgooai.core.project.dto.response.SubmissionBriefResponse;
-import com.ginkgooai.core.project.dto.response.TalentBasicResponse;
-import com.ginkgooai.core.project.dto.response.TalentResponse;
+import com.ginkgooai.core.project.dto.response.*;
 import com.ginkgooai.core.project.repository.ApplicationRepository;
 import com.ginkgooai.core.project.repository.ImdbMovieItemRepository;
 import com.ginkgooai.core.project.repository.SubmissionRepository;
@@ -30,6 +30,7 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -216,8 +217,50 @@ public class TalentService {
     }
 
     public List<TalentBasicResponse> findAllTalentsBasicInfo() {
-        return talentRepository.findAll().stream()
+        return talentRepository.findByWorkspaceId(ContextUtils.getWorkspaceId()).stream()
             .map(TalentBasicResponse::from)
             .collect(Collectors.toList());
     }
+
+
+    /**
+     * Get all talents with their application status for a specific role
+     *
+     * @param workspaceId The workspace ID
+     * @param roleId      The role ID to check application status
+     * @return List of talents with application status
+     */
+    public List<TalentWithApplicationStatusResponse> getAllTalentsWithApplicationStatus(String workspaceId, String roleId) {
+        // Get all talents in the workspace
+        List<Talent> talents = talentRepository.findByWorkspaceId(workspaceId);
+
+        // Get all applications for the role
+        List<Application> applications = applicationRepository.findByRoleId(roleId);
+
+        // Create a map of talent ID to application for quick lookup
+        Map<String, Application> applicationMap = applications.stream()
+            .collect(Collectors.toMap(
+                app -> app.getTalent().getId(),
+                Function.identity(),
+                (existing, replacement) -> existing
+            ));
+
+        // Map talents to response objects with application status
+        return talents.stream()
+            .map(talent -> {
+                Application application = applicationMap.get(talent.getId());
+                boolean hasApplied = application != null;
+                ApplicationStatus status = hasApplied ? application.getStatus() : null;
+                String applicationId = hasApplied ? application.getId() : null;
+
+                return TalentWithApplicationStatusResponse.from(
+                    talent,
+                    status,
+                    hasApplied,
+                    applicationId
+                );
+            })
+            .collect(Collectors.toList());
+    }
+
 }

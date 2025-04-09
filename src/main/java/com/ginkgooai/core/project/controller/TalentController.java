@@ -6,6 +6,7 @@ import com.ginkgooai.core.project.dto.request.TalentRequest;
 import com.ginkgooai.core.project.dto.request.TalentSearchRequest;
 import com.ginkgooai.core.project.dto.response.TalentBasicResponse;
 import com.ginkgooai.core.project.dto.response.TalentResponse;
+import com.ginkgooai.core.project.dto.response.TalentWithApplicationStatusResponse;
 import com.ginkgooai.core.project.service.application.TalentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -101,4 +102,25 @@ public class TalentController {
                 List<TalentBasicResponse> basicInfo = talentService.findAllTalentsBasicInfo();
                 return new ResponseEntity<>(basicInfo, HttpStatus.OK);
         }
+
+
+        @Operation(summary = "Get all talents with application status for a role",
+            description = "Retrieves all talents and checks if they have applied for a specific role")
+        @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Talents retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Role not found")
+        })
+        @GetMapping("/roles/{roleId}")
+        public ResponseEntity<List<TalentWithApplicationStatusResponse>> getTalentsForRole(
+            @Parameter(description = "ID of the role to check applications for", required = true)
+            @PathVariable String roleId) {
+
+                List<TalentWithApplicationStatusResponse> talents = talentService.getAllTalentsWithApplicationStatus(
+                    ContextUtils.getWorkspaceId(),
+                    roleId
+                );
+
+                return ResponseEntity.ok(talents);
+        }
+
 }
