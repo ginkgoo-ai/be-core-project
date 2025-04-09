@@ -13,6 +13,14 @@ SET first_name = CASE
         END
 WHERE name IS NOT NULL;
 
+UPDATE project.talent
+SET first_name = ''
+WHERE first_name IS NULL;
+
+UPDATE project.talent
+SET last_name = ''
+WHERE last_name IS NULL;
+
 ALTER TABLE project.talent
     ALTER COLUMN first_name SET NOT NULL,
     ALTER COLUMN last_name SET NOT NULL;
