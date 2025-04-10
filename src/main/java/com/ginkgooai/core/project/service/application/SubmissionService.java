@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.service.application;
 
+import com.ginkgooai.core.common.constant.ContextsConstant;
 import com.ginkgooai.core.common.enums.ActivityType;
 import com.ginkgooai.core.common.enums.Role;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
@@ -88,17 +89,38 @@ public class SubmissionService {
                 .build();
         Submission savedSubmission = submissionRepository.save(submission);
 
-        activityLogger.log(
+        List<String> role = ContextUtils.get().get(ContextsConstant.USER_ROLE, List.class);
+
+        if (role.size() == 1 && !role.get(0).equals("ROLE_USER")) {
+            activityLogger.log(
                 workspaceId,
                 application.getProject().getId(),
                 application.getId(),
-                ActivityType.SUBMISSION_ADDED_TO_SHORTLIST,
+                ActivityType.SUBMISSION_ADDED,
                 Map.of(
                     "user", userId,
                     "talentName", String.join(" ", application.getTalent().getFirstName(), application.getTalent().getLastName()),
                     "videoName", submission.getVideoName()),
-                null,
+                Map.of(
+                    submission.getVideoName(), submission.getVideoUrl()
+                ),
                 userId);
+        } else {
+            activityLogger.log(
+                workspaceId,
+                application.getProject().getId(),
+                application.getId(),
+                ActivityType.TALENT_DIRECT_UPLOAD,
+                Map.of(
+                    "duration", submission.getVideoDuration(),
+                    "talentName", String.join(" ", application.getTalent().getFirstName(), application.getTalent().getLastName())),
+                Map.of(
+                    submission.getVideoName(), submission.getVideoUrl()
+                ),
+                userId);
+        }
+
+    
 
         application.getTalent().incrementSubmissionCount();
         applicationRepository.save(application);

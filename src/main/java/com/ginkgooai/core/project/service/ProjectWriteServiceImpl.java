@@ -135,9 +135,9 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         Project updatedProject = projectRepository.save(project);
         activityLogger.log(project.getWorkspaceId(), project.getId(), null,
             ActivityType.PROJECT_STATUS_CHANGE,
-            Map.of("project", updatedProject.getName(), "previousStatus",
-                project.getStatus().getValue(), "newStatus", status, "newStatus",
-                updatedProject.getStatus().getValue()),
+            Map.of("project", updatedProject.getName(),
+                "previousStatus", project.getStatus().getValue(),
+                "newStatus", updatedProject.getStatus().getValue()),
             null, updatedProject.getCreatedBy());
 
         return updatedProject;

@@ -1,6 +1,7 @@
 package com.ginkgooai.core.project.service.application;
 
 import com.ginkgooai.core.common.constant.ContextsConstant;
+import com.ginkgooai.core.common.enums.ActivityType;
 import com.ginkgooai.core.common.enums.Role;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.utils.ContextUtils;
@@ -51,6 +52,9 @@ public class ShortlistService {
 
 	private final String appBaseUrl;
 
+	private final ActivityLoggerService activityLogger;
+
+
 	public ShortlistService(ShortlistRepository shortlistRepository, ShortlistItemRepository shortlistItemRepository,
 			SubmissionRepository submissionRepository, ShortlistShareRepository shortlistShareRepository,
 			IdentityClient identityClient, ActivityLoggerService activityLogger,
@@ -62,6 +66,7 @@ public class ShortlistService {
 		this.shortlistShareRepository = shortlistShareRepository;
 		this.identityClient = identityClient;
 		this.appBaseUrl = appBaseUrl;
+		this.activityLogger = activityLogger;
 	}
 
 	@Transactional
@@ -112,6 +117,23 @@ public class ShortlistService {
 			shortlistItemRepository.save(shortlistItem);
 			log.debug("Added submission {} to shortlist item {}", submissionId, shortlistItem.getId());
 		}
+
+		// Log activity
+		activityLogger.log(
+			application.getWorkspaceId(),
+			application.getProject().getId(),
+			application.getId(),
+			ActivityType.SUBMISSION_ADDED_TO_SHORTLIST,
+			Map.of(
+				"user", ContextUtils.getUserId(),
+				"talentName", String.join(" ", application.getTalent().getFirstName(), application.getTalent().getLastName()),
+				"videoName", submission.getVideoName()
+			),
+			Map.of(
+				submission.getVideoName(), submission.getVideoUrl()
+			),
+			ContextUtils.getUserId()
+		);
 	}
 
 	@Transactional

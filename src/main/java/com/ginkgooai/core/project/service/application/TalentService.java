@@ -1,5 +1,6 @@
 package com.ginkgooai.core.project.service.application;
 
+import com.ginkgooai.core.common.enums.ActivityType;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.domain.application.Application;
@@ -63,19 +64,19 @@ public class TalentService {
         Talent talent = Talent.from(request);
         Talent saved = talentRepository.save(talent);
 
-//        // Log activity
-//        activityLogger.log(
-//            saved.getWorkspaceId(),
-//            null,
-//            saved.getId(),
-//            ActivityType.TALENT_IMPORTED,
-//            Map.of(
-//                "name", saved.getName(),
-//                "sources", getProfileSources(imdbProfile.getData(), spotlightProfile.getData())
-//            ),
-//            null,
-//            userId
-//        );
+        // Log activity
+        activityLogger.log(
+            saved.getWorkspaceId(),
+            null,
+            saved.getId(),
+            ActivityType.TALENT_ADDED,
+            Map.of(
+                "talentName", String.join(" ", talent.getFirstName(), talent.getLastName()),
+                "user", ContextUtils.getUserId()
+            ),
+            null,
+            ContextUtils.getUserId()
+        );
 
         return saved;
     }
