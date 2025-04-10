@@ -13,9 +13,11 @@ import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.domain.role.RoleStatus;
 import com.ginkgooai.core.project.domain.talent.Talent;
 import com.ginkgooai.core.project.dto.request.ApplicationCreateRequest;
+import com.ginkgooai.core.project.dto.request.ApplicationStatusUpdateRequest;
 import com.ginkgooai.core.project.dto.response.ApplicationCommentResponse;
 import com.ginkgooai.core.project.dto.response.ApplicationNoteResponse;
 import com.ginkgooai.core.project.dto.response.ApplicationResponse;
+import com.ginkgooai.core.project.dto.response.ApplicationStatusCountResponse;
 import com.ginkgooai.core.project.repository.*;
 import com.ginkgooai.core.project.service.ActivityLoggerService;
 import jakarta.persistence.criteria.Join;
@@ -361,10 +363,8 @@ public class ApplicationService {
     }
 
     private Application findApplicationById(String workspaceId, String id) {
-        return applicationRepository
-            .findOne((root, query, cb) -> cb.and(cb.equal(root.get("id"), id),
-                cb.equal(root.get("workspaceId"), workspaceId)))
-            .orElseThrow(() -> new ResourceNotFoundException("Application", "id", id));
+        return applicationRepository.findByIdAndWorkspaceId(id, workspaceId)
+            .orElseThrow(() -> new ResourceNotFoundException("Application", "workspaceId-applicationId", String.join("-", workspaceId, id)));
     }
 
     private List<UserInfoResponse> getUserInfoByIds(List<String> userIds) {
@@ -397,5 +397,69 @@ public class ApplicationService {
                 "Cannot delete application with status: " + application.getStatus());
         }
 
+    }
+
+    /**
+     * Get application status counts for a specific project
+     *
+     * @param projectId   The project ID
+     * @param workspaceId The workspace ID for security check
+     * @return ApplicationStatusCountResponse with counts by status
+     */
+    public ApplicationStatusCountResponse getApplicationStatusCountsByProject(String projectId, String workspaceId) {
+        // Verify project exists and belongs to the workspace
+        projectRepository.findByIdAndWorkspaceId(projectId, workspaceId)
+            .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
+
+        List<Object[]> results = applicationRepository.countByProjectIdGroupByStatus(projectId);
+        Map<ApplicationStatus, Long> statusCounts = convertToStatusCountMap(results);
+
+        return ApplicationStatusCountResponse.from(statusCounts);
+    }
+
+    /**
+     * Convert query results to a map of status to count
+     *
+     * @param results List of Object[] containing status and count
+     * @return Map of ApplicationStatus to count
+     */
+    private Map<ApplicationStatus, Long> convertToStatusCountMap(List<Object[]> results) {
+        Map<ApplicationStatus, Long> statusCounts = new HashMap<>();
+
+        for (Object[] result : results) {
+            ApplicationStatus status = (ApplicationStatus) result[0];
+            Long count = ((Number) result[1]).longValue();
+            statusCounts.put(status, count);
+        }
+
+        return statusCounts;
+    }
+
+    /**
+     * Update the status of an application
+     *
+     * @param applicationId ID of the application to update
+     * @param workspaceId   Workspace ID for security check
+     * @param request       Status update request containing new status and optional comment
+     * @return Updated application response
+     */
+    @Transactional
+    public ApplicationResponse updateApplicationStatus(String applicationId, String workspaceId, ApplicationStatusUpdateRequest request) {
+        // Find application and verify it belongs to the workspace
+        Application application = findApplicationById(workspaceId, applicationId);
+
+        // Get previous status for activity logging
+        ApplicationStatus previousStatus = application.getStatus();
+
+        // Update the status
+        application.setStatus(request.getStatus());
+
+        // Save the updated application
+        application = applicationRepository.save(application);
+
+        // Log the activity to-do
+
+        // Return updated application
+        return ApplicationResponse.from(application);
     }
 }

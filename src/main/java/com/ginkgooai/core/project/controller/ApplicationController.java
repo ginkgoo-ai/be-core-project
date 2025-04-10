@@ -5,6 +5,7 @@ import com.ginkgooai.core.project.config.security.RequireApplicationReadScope;
 import com.ginkgooai.core.project.config.security.RequireApplicationWriteScope;
 import com.ginkgooai.core.project.domain.application.ApplicationStatus;
 import com.ginkgooai.core.project.dto.request.ApplicationCreateRequest;
+import com.ginkgooai.core.project.dto.request.ApplicationStatusUpdateRequest;
 import com.ginkgooai.core.project.dto.request.NoteCreateRequest;
 import com.ginkgooai.core.project.dto.request.SubmissionCreateRequest;
 import com.ginkgooai.core.project.dto.response.ApplicationCommentResponse;
@@ -174,7 +175,29 @@ public class ApplicationController {
             request, ContextUtils.getUserId()));
     }
 
+    @Operation(summary = "Update application status",
+        description = "Updates the status of an application and optionally adds a comment")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Application status updated successfully"),
+        @ApiResponse(responseCode = "404", description = "Application not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid request")
+    })
+    @PatchMapping("/{applicationId}/status")
+    @RequireApplicationWriteScope
+    public ResponseEntity<ApplicationResponse> updateApplicationStatus(
+        @Parameter(description = "ID of the application", required = true)
+        @PathVariable String applicationId,
+        @Valid @RequestBody ApplicationStatusUpdateRequest request) {
 
+        ApplicationResponse response = applicationService.updateApplicationStatus(
+            applicationId,
+            ContextUtils.getWorkspaceId(),
+            request
+        );
+
+        return ResponseEntity.ok(response);
+    }
+    
     @Operation(summary = "Guest(Talent) Delete submission",
         description = "Deletes a submission and its associated comments")
     @ApiResponses(value = {

@@ -321,6 +321,9 @@ public class SubmissionService {
             throw new ResourceNotFoundException("Application", "ids", request.getApplicationIds());
         }
 
+        applications.forEach(application -> application.setStatus(application.getStatus() == ApplicationStatus.SHORTLISTED ? ApplicationStatus.RETAPE : ApplicationStatus.REQUESTED));
+        applicationRepository.saveAll(applications);
+
         UserInfoResponse userInfoResponse = identityClient.getUserById(ContextUtils.getUserId())
                 .getBody();
 

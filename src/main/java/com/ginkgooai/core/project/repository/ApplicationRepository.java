@@ -81,4 +81,13 @@ public interface ApplicationRepository
 
         @Modifying
         void deleteByRoleId(String roleId);
+
+        /**
+         * Count applications by status for a specific project
+         *
+         * @param projectId The project ID
+         * @return Map of ApplicationStatus to count
+         */
+        @Query("SELECT a.status as status, COUNT(a) as count FROM Application a WHERE a.project.id = :projectId GROUP BY a.status")
+        List<Object[]> countByProjectIdGroupByStatus(@Param("projectId") String projectId);
 }
