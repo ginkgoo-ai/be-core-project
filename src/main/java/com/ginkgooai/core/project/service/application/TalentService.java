@@ -110,18 +110,18 @@ public class TalentService {
 
         // Refresh profiles
         TalentProfileMeta imdbProfile = null;
-        if (StringUtils.hasText(talent.getImdbProfileUrl())) {
-            imdbProfile = profileScraperService.scrapeFromImdb(talent.getImdbProfileUrl());
-        }
-
-        TalentProfileMeta spotlightProfile = null;
-        if (StringUtils.hasText(talent.getSpotlightProfileUrl())) {
-            spotlightProfile = profileScraperService.scrapeFromSpotlight(talent.getSpotlightProfileUrl());
-        }
+//        if (StringUtils.hasText(talent.getImdbProfileUrl())) {
+//            imdbProfile = profileScraperService.scrapeFromImdb(talent.getImdbProfileUrl());
+//        }
+//
+//        TalentProfileMeta spotlightProfile = null;
+//        if (StringUtils.hasText(talent.getSpotlightProfileUrl())) {
+//            spotlightProfile = profileScraperService.scrapeFromSpotlight(talent.getSpotlightProfileUrl());
+//        }
 
         // Update talent with new profile data
-        updateTalentFromProfiles(talent, imdbProfile.getData(), spotlightProfile.getData());
-        talent.setProfileMetaId(Optional.ofNullable(imdbProfile.getId()).orElse(null));
+//        updateTalentFromProfiles(talent, imdbProfile.getData(), spotlightProfile.getData());
+//        talent.setProfileMetaId(Optional.ofNullable(imdbProfile.getId()).orElse(null));
 
         return talentRepository.save(talent);
     }
