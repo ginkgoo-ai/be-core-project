@@ -170,6 +170,7 @@ public class ApplicationController {
     @PostMapping("/{applicationId}/submissions")
     @RequireApplicationWriteScope
     public ResponseEntity<SubmissionResponse> createSubmission(
+        @Parameter(description = "ID of the application", required = true) @PathVariable String applicationId,
         @Valid @RequestBody SubmissionCreateRequest request) {
         return ResponseEntity.ok(submissionService.createSubmission(ContextUtils.getWorkspaceId(),
             request, ContextUtils.getUserId()));
