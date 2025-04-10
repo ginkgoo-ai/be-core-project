@@ -1,21 +1,17 @@
 package com.ginkgooai.core.project.dto.response;
 
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import com.ginkgooai.core.project.domain.application.ApplicationNote;
-import org.springframework.util.ObjectUtils;
-
 import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.domain.application.Application;
 import com.ginkgooai.core.project.domain.application.ApplicationStatus;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.util.ObjectUtils;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -30,6 +26,9 @@ public class ApplicationResponse {
 
     @Schema(description = "Project identifier", example = "proj_12345")
     private String projectId;
+
+    @Schema(description = "Project name", example = "my project")
+    private String projectName;
 
     @Schema(description = "Role")
     private ProjectRoleResponse role;
@@ -65,6 +64,7 @@ public class ApplicationResponse {
                 .id(application.getId())
                 .workspaceId(application.getWorkspaceId())
                 .projectId(application.getProject().getId())
+            .projectName(application.getProject().getName())
                 .role(ProjectRoleResponse.from(application.getRole()))
                 .talent(TalentResponse.from(application.getTalent()))
                 .submissions(ObjectUtils.isEmpty(application.getSubmissions()) ? null : application.getSubmissions().stream()
@@ -90,6 +90,7 @@ public class ApplicationResponse {
                 .id(application.getId())
                 .workspaceId(application.getWorkspaceId())
                 .projectId(application.getProject().getId())
+            .projectName(application.getProject().getName())
                 .role(ProjectRoleResponse.from(application.getRole()))
                 .talent(TalentResponse.from(application.getTalent()))
                 .status(application.getStatus())
