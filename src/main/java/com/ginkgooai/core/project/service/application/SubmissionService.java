@@ -39,7 +39,7 @@ import static com.ginkgooai.core.common.constant.ContextsConstant.USER_ID;
 @RequiredArgsConstructor
 public class SubmissionService {
 
-    @Value("${SHARE_LINK_EXPIRATION_TIMES:168}")
+    @Value("${SHARE_LINK_EXPIRATION_TIMES:24}")
     private Integer shareLinkExpirationTimes;
 
     @Value(("${SLATE_URI:}"))

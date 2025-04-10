@@ -1,5 +1,7 @@
 package com.ginkgooai.core.project.dto.response;
 
+import com.ginkgooai.core.common.constant.ContextsConstant;
+import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.domain.application.Application;
 import com.ginkgooai.core.project.domain.application.ApplicationStatus;
@@ -58,6 +60,9 @@ public class ApplicationResponse {
     private LocalDateTime updatedAt;
 
     public static ApplicationResponse from(Application application, List<UserInfoResponse> users, String userId) {
+        List<String> role = ContextUtils.get().get(ContextsConstant.USER_ROLE, List.class);
+        boolean isTalentRole = role.size() == 1 && !role.get(0).equals("ROLE_TALENT");
+        
         Map<String, UserInfoResponse> userInfoMap = users.stream()
                 .collect(Collectors.toMap(UserInfoResponse::getId, user -> user));
         ApplicationResponse response = ApplicationResponse.builder()
@@ -71,10 +76,10 @@ public class ApplicationResponse {
                         .map(submission -> SubmissionResponse.from(submission, users, userId))
                         .toList())
                 .status(application.getStatus())
-                .notes(application.getNotes().stream()
+            .notes(isTalentRole ? null : application.getNotes().stream()
                         .map(note -> ApplicationNoteResponse.from(note, userInfoMap.get(note.getCreatedBy())))
                         .toList())
-                .comments(application.getComments().stream()
+            .comments(isTalentRole ? null : application.getComments().stream()
                         .map(comment -> ApplicationCommentResponse.from(comment, userInfoMap.get(comment.getCreatedBy())))
                         .toList())
                 .createdBy(application.getCreatedBy())

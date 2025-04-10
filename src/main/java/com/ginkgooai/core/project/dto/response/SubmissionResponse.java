@@ -1,5 +1,7 @@
 package com.ginkgooai.core.project.dto.response;
 
+import com.ginkgooai.core.common.constant.ContextsConstant;
+import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.domain.application.CommentType;
 import com.ginkgooai.core.project.domain.application.Submission;
@@ -74,6 +76,9 @@ public class SubmissionResponse {
         Map<String, UserInfoResponse> userInfoMap = CollectionUtils.emptyIfNull(users).stream()
             .collect(Collectors.toMap(UserInfoResponse::getId, user -> user));
 
+        List<String> role = ContextUtils.get().get(ContextsConstant.USER_ROLE, List.class);
+        boolean isTalentRole = role.size() == 1 && !role.get(0).equals("ROLE_TALENT");
+
         return SubmissionResponse.builder()
             .id(submission.getId())
             .projectId(submission.getApplication().getProject().getId())
@@ -91,6 +96,8 @@ public class SubmissionResponse {
             .updatedAt(submission.getUpdatedAt())
             .publicComments(submission.getComments().stream()
                 .filter(comment -> CommentType.PUBLIC.equals(comment.getType()))
+                .filter(comment -> isTalentRole ? comment.getCreatedBy()
+                    .equals(userId) : true)
                 .map(t -> SubmissionCommentResponse.from(t,
                     userInfoMap.get(t.getCreatedBy())))
                 .toList())
