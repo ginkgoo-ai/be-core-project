@@ -194,8 +194,8 @@ public class SubmissionService {
         submission.getComments().add(comment);
         submissionRepository.save(submission);
 
-        // Check if userId is an email (contains '@' character) before logging activity
-        if (userId != null && userId.contains("@") && request.getType() == CommentType.PUBLIC) {
+        List<String> role = ContextUtils.get().get(ContextsConstant.USER_ROLE, List.class);
+        if (role.size() == 1 && !role.get(0).equals("ROLE_PRODUCER")) {
             activityLogger.log(
                 submission.getWorkspaceId(),
                 submission.getApplication().getProject().getId(),

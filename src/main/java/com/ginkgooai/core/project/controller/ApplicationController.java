@@ -4,10 +4,8 @@ import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.config.security.RequireApplicationReadScope;
 import com.ginkgooai.core.project.config.security.RequireApplicationWriteScope;
 import com.ginkgooai.core.project.domain.application.ApplicationStatus;
-import com.ginkgooai.core.project.dto.request.ApplicationCreateRequest;
-import com.ginkgooai.core.project.dto.request.ApplicationStatusUpdateRequest;
-import com.ginkgooai.core.project.dto.request.NoteCreateRequest;
-import com.ginkgooai.core.project.dto.request.SubmissionCreateRequest;
+import com.ginkgooai.core.project.domain.application.CommentType;
+import com.ginkgooai.core.project.dto.request.*;
 import com.ginkgooai.core.project.dto.response.ApplicationCommentResponse;
 import com.ginkgooai.core.project.dto.response.ApplicationNoteResponse;
 import com.ginkgooai.core.project.dto.response.ApplicationResponse;
@@ -186,8 +184,7 @@ public class ApplicationController {
     @PatchMapping("/{applicationId}/status")
     @RequireApplicationWriteScope
     public ResponseEntity<ApplicationResponse> updateApplicationStatus(
-        @Parameter(description = "ID of the application", required = true)
-        @PathVariable String applicationId,
+        @Parameter(description = "ID of the application", required = true) @PathVariable String applicationId,
         @Valid @RequestBody ApplicationStatusUpdateRequest request) {
 
         ApplicationResponse response = applicationService.updateApplicationStatus(
@@ -209,10 +206,37 @@ public class ApplicationController {
     @RequireApplicationWriteScope
     @DeleteMapping("/{applicationId}/submissions/{submissionId}")
     public ResponseEntity<Void> deleteSubmission(
-        @Parameter(description = "ID of the submission to delete", required = true,
-            example = "submission_123") @PathVariable String submissionId,
+        @Parameter(description = "ID of the application", required = true) @PathVariable String applicationId,
+        @Parameter(description = "ID of the submission to delete", required = true, example = "submission_123") @PathVariable String submissionId,
         @AuthenticationPrincipal Jwt jwt) {
         submissionService.deleteSubmission(submissionId, jwt.getSubject());
         return ResponseEntity.noContent().build();
     }
+
+    @Operation(summary = "Guest(Talent) Add comment to submission", description = "Adds a new comment to an existing submission"
+        +
+        "Requires ROLE_TALENT role with appropriate application scopes.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Comment added successfully", content = @Content(schema = @Schema(implementation = SubmissionResponse.class))),
+        @ApiResponse(responseCode = "404", description = "Submission not found")
+    })
+    @PostMapping("/{applicationId}/submissions/{submissionId}/comments")
+    @RequireApplicationWriteScope
+    public ResponseEntity<SubmissionResponse> addComment(
+        @Parameter(description = "ID of the application", required = true) @PathVariable String applicationId,
+        @Parameter(description = "ID of the submission", required = true) @PathVariable String submissionId,
+        @Valid @RequestBody GuestCommentCreateRequest request) {
+        return ResponseEntity.ok(submissionService.addComment(
+            submissionId,
+            ContextUtils.getWorkspaceId(),
+            CommentCreateRequest.builder()
+                .content(request.getContent())
+                .type(CommentType.PUBLIC)
+                .parentCommentId(request.getParentCommentId())
+                .build(),
+            ContextUtils.getUserId()));
+    }
+
+
+
 }
