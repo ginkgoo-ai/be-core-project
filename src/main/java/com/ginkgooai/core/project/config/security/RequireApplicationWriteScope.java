@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@PreAuthorize("hasRole('ROLE_USER') or (hasRole('ROLE_TALENT') and hasAuthority('applicatioin:' + #applicationId + ':write'))")
+@PreAuthorize("hasRole('ROLE_USER') or (hasRole('ROLE_TALENT') and hasAuthority('application:' + #applicationId + ':write'))")
 public @interface RequireApplicationWriteScope {
 }
