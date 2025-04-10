@@ -79,7 +79,7 @@ public class ShortlistController {
 			@Parameter(description = "Sort direction (ASC/DESC)",
 					example = "DESC") @RequestParam(defaultValue = "DESC") String sortDirection,
 			@Parameter(description = "Sort field (e.g., updatedAt)",
-					example = "updatedAt") @RequestParam(defaultValue = "updatedAt") String sortField) {
+				example = "updatedAt") @RequestParam(defaultValue = "createdAt") String sortField) {
 
 		Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
 		Pageable pageable = PageRequest.of(page, size, sort);
@@ -156,7 +156,7 @@ public class ShortlistController {
 		@Parameter(description = "Page number (zero-based)", example = "0") @RequestParam(defaultValue = "0") int page,
 		@Parameter(description = "Page size", example = "10") @RequestParam(defaultValue = "10") int size,
 		@Parameter(description = "Sort direction (ASC/DESC)", example = "DESC") @RequestParam(defaultValue = "DESC") String sortDirection,
-		@Parameter(description = "Sort field (e.g., updatedAt)", example = "updatedAt") @RequestParam(defaultValue = "updatedAt") String sortField) {
+		@Parameter(description = "Sort field (e.g., updatedAt)", example = "updatedAt") @RequestParam(defaultValue = "createdAt") String sortField) {
 		Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
 		Pageable pageable = PageRequest.of(page, size, sort);
 		return ResponseEntity

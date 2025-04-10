@@ -111,7 +111,7 @@ public class ApplicationController {
             example = "DESC") @RequestParam(defaultValue = "DESC") String sortDirection,
         @Parameter(description = "Sort field (e.g., updatedAt)",
             example = "updatedAt") @RequestParam(
-            defaultValue = "updatedAt") String sortField) {
+            defaultValue = "createdAt") String sortField) {
 
         if (sortField.equals("name")) {
             sortField = "talent.name";
