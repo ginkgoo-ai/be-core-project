@@ -91,7 +91,7 @@ public class SubmissionService {
 
         List<String> role = ContextUtils.get().get(ContextsConstant.USER_ROLE, List.class);
 
-        if (role.size() == 1 && !role.get(0).equals("ROLE_USER")) {
+        if (role.size() == 1 && role.get(0).equals("ROLE_USER")) {
             activityLogger.log(
                 workspaceId,
                 application.getProject().getId(),
@@ -195,7 +195,7 @@ public class SubmissionService {
         submissionRepository.save(submission);
 
         List<String> role = ContextUtils.get().get(ContextsConstant.USER_ROLE, List.class);
-        if (role.size() == 1 && !role.get(0).equals("ROLE_PRODUCER")) {
+        if (role.size() == 1 && role.get(0).equals("ROLE_PRODUCER")) {
             activityLogger.log(
                 submission.getWorkspaceId(),
                 submission.getApplication().getProject().getId(),

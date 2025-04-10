@@ -61,7 +61,7 @@ public class ApplicationResponse {
 
     public static ApplicationResponse from(Application application, List<UserInfoResponse> users, String userId) {
         List<String> role = ContextUtils.get().get(ContextsConstant.USER_ROLE, List.class);
-        boolean isTalentRole = role.size() == 1 && !role.get(0).equals("ROLE_TALENT");
+        boolean isTalentRole = role.size() == 1 && role.get(0).equals("ROLE_TALENT");
         
         Map<String, UserInfoResponse> userInfoMap = users.stream()
                 .collect(Collectors.toMap(UserInfoResponse::getId, user -> user));

@@ -77,7 +77,7 @@ public class SubmissionResponse {
             .collect(Collectors.toMap(UserInfoResponse::getId, user -> user));
 
         List<String> role = ContextUtils.get().get(ContextsConstant.USER_ROLE, List.class);
-        boolean isTalentRole = role.size() == 1 && !role.get(0).equals("ROLE_TALENT");
+        boolean isTalentRole = role.size() == 1 && role.get(0).equals("ROLE_TALENT");
 
         return SubmissionResponse.builder()
             .id(submission.getId())
