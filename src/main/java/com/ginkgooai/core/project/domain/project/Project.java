@@ -54,6 +54,7 @@ public class Project extends BaseLogicalDeleteEntity {
         this.status = ProjectStatus.DRAFTING;
         this.posterUrl = request.getPosterUrl();
         this.workspaceId = ContextUtils.getWorkspaceId();
+        this.producer = request.getProducer();
     }
 
     public void updateDetails(String name, String description, String plotLine, ProjectStatus status,

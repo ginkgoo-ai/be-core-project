@@ -243,16 +243,15 @@ public class ApplicationController {
     })
     @GetMapping("/statistics")
     public ResponseEntity<ApplicationStatisticsResponse> getApplicationStatusCountsByProject(
-        @Parameter(description = "Project ID filter") @RequestParam String projectId) {
+        @Parameter(description = "Project ID filter") @RequestParam String projectId,
+        @Parameter(description = "Role ID filter") @RequestParam(required = false) String roleId) {
         ApplicationStatisticsResponse response = applicationService.getApplicationStatusCountsByProject(
             projectId,
-            ContextUtils.getWorkspaceId()
+            roleId
         );
 
         return ResponseEntity.ok(response);
     }
-
-
 
 
 }

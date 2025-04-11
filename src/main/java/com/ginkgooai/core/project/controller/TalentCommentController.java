@@ -26,62 +26,54 @@ public class TalentCommentController {
 
     private final TalentCommentService talentCommentService;
 
-    @Operation(summary = "Add comment to talent", description = "Adds a new comment to the talent profile")
+    @Operation(summary = "Add comment to talent",
+        description = "Adds a new comment to the talent profile")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Comment added successfully",
-            content = @Content(schema = @Schema(implementation = TalentCommentResponse.class))),
+            content = @Content(schema = @Schema(implementation = List.class))),
         @ApiResponse(responseCode = "404", description = "Talent not found"),
-        @ApiResponse(responseCode = "400", description = "Invalid comment data")
-    })
+        @ApiResponse(responseCode = "400", description = "Invalid comment data")})
     @PostMapping
-    public ResponseEntity<TalentCommentResponse> addComment(
+    public ResponseEntity<List<TalentCommentResponse>> addComment(
         @Parameter(description = "Talent ID", required = true) @PathVariable String talentId,
-        @Parameter(description = "Comment details", required = true) @Valid @RequestBody TalentCommentRequest request) {
+        @Parameter(description = "Comment details",
+            required = true) @Valid @RequestBody TalentCommentRequest request) {
 
-        TalentCommentResponse response = talentCommentService.addComment(
-            ContextUtils.getWorkspaceId(),
-            talentId,
-            ContextUtils.getUserId(),
-            request
-        );
+        List<TalentCommentResponse> responses = talentCommentService.addComment(
+            ContextUtils.getWorkspaceId(), talentId, ContextUtils.getUserId(), request);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(responses);
     }
 
     @Operation(summary = "Get talent comments", description = "Retrieves all comments for a talent")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Comments retrieved successfully"),
-        @ApiResponse(responseCode = "404", description = "Talent not found")
-    })
+        @ApiResponse(responseCode = "200", description = "Comments retrieved successfully",
+            content = @Content(schema = @Schema(implementation = List.class))),
+        @ApiResponse(responseCode = "404", description = "Talent not found")})
     @GetMapping
     public ResponseEntity<List<TalentCommentResponse>> getComments(
         @Parameter(description = "Talent ID", required = true) @PathVariable String talentId) {
 
-        List<TalentCommentResponse> comments = talentCommentService.getComments(
-            ContextUtils.getWorkspaceId(),
-            talentId
-        );
+        List<TalentCommentResponse> comments =
+            talentCommentService.getComments(ContextUtils.getWorkspaceId(), talentId);
 
         return ResponseEntity.ok(comments);
     }
 
 
-    @Operation(summary = "Delete talent comment", description = "Soft deletes a comment from a talent profile")
+    @Operation(summary = "Delete talent comment",
+        description = "Soft deletes a comment from a talent profile")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Comment deleted successfully",
-            content = @Content(schema = @Schema(implementation = TalentCommentResponse.class))),
-        @ApiResponse(responseCode = "404", description = "Comment not found")
-    })
+        @ApiResponse(responseCode = "200", description = "Comment deleted successfully"),
+        @ApiResponse(responseCode = "404", description = "Comment not found")})
     @DeleteMapping("/{commentId}")
     public ResponseEntity deleteComment(
         @Parameter(description = "Talent ID", required = true) @PathVariable String talentId,
-        @Parameter(description = "Comment ID", required = true) @PathVariable String commentId) {
+        @Parameter(description = "Comment ID",
+            required = true) @PathVariable String commentId) {
 
-        talentCommentService.deleteComment(
-            ContextUtils.getWorkspaceId(),
-            commentId,
-            ContextUtils.getUserId()
-        );
+        talentCommentService.deleteComment(ContextUtils.getWorkspaceId(), commentId,
+            ContextUtils.getUserId());
 
         return ResponseEntity.ok().build();
     }

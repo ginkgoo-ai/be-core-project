@@ -1,6 +1,7 @@
 package com.ginkgooai.core.project.service.application;
 
 import com.ginkgooai.core.common.enums.ActivityType;
+import com.ginkgooai.core.common.exception.ResourceDuplicatedException;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.client.identity.IdentityClient;
@@ -36,6 +37,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -63,11 +65,23 @@ public class ApplicationService {
         ProjectRole role = projectRoleRepository.findById(request.getRoleId()).orElseThrow(
             () -> new ResourceNotFoundException("ProjectRole", "id", request.getRoleId()));
 
+        List<Application> existingApplications =
+            applicationRepository.findByRoleId(request.getRoleId());
+
+        Map<String, Application> existingApplicationMap = existingApplications.stream().collect(
+            Collectors.toMap(app -> app.getTalent().getId(), Function.identity(), (o, n) -> n));
+
         List<Application> createdApplications = new ArrayList<>();
         List<String> notFoundTalentIds = new ArrayList<>();
+        List<String> alreadyAppliedTalentIds = new ArrayList<>();
         List<Talent> talentsToSave = new ArrayList<>();
 
         for (String talentId : request.getTalentIds()) {
+            if (existingApplicationMap.containsKey(talentId)) {
+                alreadyAppliedTalentIds.add(talentId);
+                continue;
+            }
+
             Optional<Talent> talentOpt = talentRepository.findById(talentId);
             if (talentOpt.isPresent()) {
                 Talent talent = talentOpt.get();
@@ -81,6 +95,12 @@ public class ApplicationService {
             } else {
                 notFoundTalentIds.add(talentId);
             }
+        }
+
+        if (!alreadyAppliedTalentIds.isEmpty()) {
+            String errorDetail = String.format("Role ID: %s, Duplicate talent IDs: %s",
+                request.getRoleId(), String.join(",", alreadyAppliedTalentIds));
+            throw new ResourceDuplicatedException("Application", "roleId-talentId", errorDetail);
         }
 
         if (!notFoundTalentIds.isEmpty()) {
@@ -106,8 +126,9 @@ public class ApplicationService {
             // Log activity for application creation
             activityLogger.log(project.getWorkspaceId(), project.getId(), savedApplication.getId(),
                 ActivityType.ROLE_STATUS_UPDATE,
-                Map.of(
-                    "talentName", String.join(" ", savedApplication.getTalent().getFirstName(), savedApplication.getTalent().getLastName()),
+                Map.of("talentName",
+                    String.join(" ", savedApplication.getTalent().getFirstName(),
+                        savedApplication.getTalent().getLastName()),
                     "roleName", role.getName(), "user", userId),
                 null, userId);
 
@@ -364,7 +385,8 @@ public class ApplicationService {
 
     private Application findApplicationById(String workspaceId, String id) {
         return applicationRepository.findByIdAndWorkspaceId(id, workspaceId)
-            .orElseThrow(() -> new ResourceNotFoundException("Application", "workspaceId-applicationId", String.join("-", workspaceId, id)));
+            .orElseThrow(() -> new ResourceNotFoundException("Application",
+                "workspaceId-applicationId", String.join("-", workspaceId, id)));
     }
 
     private List<UserInfoResponse> getUserInfoByIds(List<String> userIds) {
@@ -402,16 +424,26 @@ public class ApplicationService {
     /**
      * Get application status counts for a specific project
      *
-     * @param projectId   The project ID
-     * @param workspaceId The workspace ID for security check
+     * @param projectId The project ID
+     * @param roleId Optional role ID to filter applications
      * @return ApplicationStatusCountResponse with counts by status
      */
-    public ApplicationStatisticsResponse getApplicationStatusCountsByProject(String projectId, String workspaceId) {
+    public ApplicationStatisticsResponse getApplicationStatusCountsByProject(String projectId, String roleId) {
+        String workspaceId = ContextUtils.getWorkspaceId();
         // Verify project exists and belongs to the workspace
         projectRepository.findByIdAndWorkspaceId(projectId, workspaceId)
             .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
 
-        List<Object[]> results = applicationRepository.countByProjectIdGroupByStatus(projectId);
+        List<Object[]> results;
+        if (StringUtils.hasText(roleId)) {
+            projectRoleRepository.findById(roleId)
+                .orElseThrow(() -> new ResourceNotFoundException("ProjectRole", "id", roleId));
+            results =
+                applicationRepository.countByProjectIdAndRoleIdGroupByStatus(projectId, roleId);
+        } else {
+            results = applicationRepository.countByProjectIdGroupByStatus(projectId);
+        }
+
         Map<ApplicationStatus, Long> statusCounts = convertToStatusCountMap(results);
 
         return ApplicationStatisticsResponse.from(statusCounts);
@@ -439,12 +471,13 @@ public class ApplicationService {
      * Update the status of an application
      *
      * @param applicationId ID of the application to update
-     * @param workspaceId   Workspace ID for security check
-     * @param request       Status update request containing new status and optional comment
+     * @param workspaceId Workspace ID for security check
+     * @param request Status update request containing new status and optional comment
      * @return Updated application response
      */
     @Transactional
-    public ApplicationResponse updateApplicationStatus(String applicationId, String workspaceId, ApplicationStatusUpdateRequest request) {
+    public ApplicationResponse updateApplicationStatus(String applicationId, String workspaceId,
+                                                       ApplicationStatusUpdateRequest request) {
         // Find application and verify it belongs to the workspace
         Application application = findApplicationById(workspaceId, applicationId);
 
