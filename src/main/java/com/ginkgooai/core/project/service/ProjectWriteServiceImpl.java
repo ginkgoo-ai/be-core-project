@@ -165,6 +165,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         role.setSides(request.getSides().toArray(new String[0]));
         role.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
         role.setProject(project);
+        role.setWorkspaceId(project.getWorkspaceId());
 
         ProjectRole savedRole = projectRoleRepository.save(role);
 
