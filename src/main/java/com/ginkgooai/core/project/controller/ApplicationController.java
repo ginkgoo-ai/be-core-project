@@ -242,9 +242,9 @@ public class ApplicationController {
         @ApiResponse(responseCode = "404", description = "Project not found")
     })
     @GetMapping("/statistics")
-    public ResponseEntity<ApplicationStatusCountResponse> getApplicationStatusCountsByProject(
+    public ResponseEntity<ApplicationStatisticsResponse> getApplicationStatusCountsByProject(
         @Parameter(description = "Project ID filter") @RequestParam String projectId) {
-        ApplicationStatusCountResponse response = applicationService.getApplicationStatusCountsByProject(
+        ApplicationStatisticsResponse response = applicationService.getApplicationStatusCountsByProject(
             projectId,
             ContextUtils.getWorkspaceId()
         );

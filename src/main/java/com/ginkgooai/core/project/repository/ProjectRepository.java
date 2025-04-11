@@ -24,4 +24,6 @@ public interface ProjectRepository extends JpaRepository<Project, String>, JpaSp
 
     List<Project> findByCreatedAtGreaterThanEqualAndCreatedAtLessThanEqual(
             LocalDateTime startTime, LocalDateTime endTime);
+
+    long countByWorkspaceIdAndStatusIn(String workspaceId, List<ProjectStatus> statuses);
 }

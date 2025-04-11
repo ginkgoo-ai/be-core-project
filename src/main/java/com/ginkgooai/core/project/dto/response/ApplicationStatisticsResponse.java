@@ -14,33 +14,33 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "Response containing counts of applications by status")
-public class ApplicationStatusCountResponse {
+public class ApplicationStatisticsResponse {
 
-    @Schema(description = "Count of applications with ADDED status")
+    @Schema(description = "Count of applications with ADDED status", example = "100")
     private Long added;
 
-    @Schema(description = "Count of applications with NDA_SENT status")
+    @Schema(description = "Count of applications with NDA_SENT status", example = "80")
     private Long ndaSent;
 
-    @Schema(description = "Count of applications with NDA_SIGNED status")
+    @Schema(description = "Count of applications with NDA_SIGNED status", example = "69")
     private Long ndaSigned;
 
-    @Schema(description = "Count of applications with REQUESTED status")
+    @Schema(description = "Count of applications with REQUESTED status", example = "40")
     private Long requested;
 
-    @Schema(description = "Count of applications with DECLINED status")
+    @Schema(description = "Count of applications with DECLINED status", example = "10")
     private Long declined;
 
-    @Schema(description = "Count of applications with SUBMITTED status")
+    @Schema(description = "Count of applications with SUBMITTED status", example = "30")
     private Long submitted;
 
-    @Schema(description = "Count of applications with REVIEWED status")
+    @Schema(description = "Count of applications with REVIEWED status", example = "20")
     private Long reviewed;
 
-    @Schema(description = "Count of applications with RETAPE status")
+    @Schema(description = "Count of applications with RETAPE status", example = "10")
     private Long retape;
 
-    @Schema(description = "Count of applications with SHORTLISTED status")
+    @Schema(description = "Count of applications with SHORTLISTED status", example = "10")
     private Long shortlisted;
 
     /**
@@ -49,8 +49,8 @@ public class ApplicationStatusCountResponse {
      * @param statusCounts Map of ApplicationStatus to count
      * @return ApplicationStatusCountResponse with populated counts
      */
-    public static ApplicationStatusCountResponse from(Map<ApplicationStatus, Long> statusCounts) {
-        return ApplicationStatusCountResponse.builder()
+    public static ApplicationStatisticsResponse from(Map<ApplicationStatus, Long> statusCounts) {
+        return ApplicationStatisticsResponse.builder()
             .added(statusCounts.getOrDefault(ApplicationStatus.ADDED, 0L))
             .ndaSent(statusCounts.getOrDefault(ApplicationStatus.NDA_SENT, 0L))
             .ndaSigned(statusCounts.getOrDefault(ApplicationStatus.NDA_SIGNED, 0L))

@@ -166,13 +166,12 @@ public class ProjectController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @GetMapping("/{projectId}/statistics")
+    @GetMapping("/statistics")
     @Operation(summary = "Get project statistics", description = "Retrieves statistics for a specific project.")
     @ApiResponse(responseCode = "200", description = "Statistics retrieved successfully")
     @ApiResponse(responseCode = "404", description = "Project not found")
-    public ResponseEntity<ProjectStatisticsResponse> getProjectStatistics(
-        @PathVariable String projectId) {
-        ProjectStatisticsResponse statistics = projectReadService.getProjectStatistics(projectId);
+    public ResponseEntity<ProjectStatisticsResponse> getProjectsStatistics() {
+        ProjectStatisticsResponse statistics = projectReadService.getProjectsStatistics();
         return new ResponseEntity<>(statistics, HttpStatus.OK);
     }
 }

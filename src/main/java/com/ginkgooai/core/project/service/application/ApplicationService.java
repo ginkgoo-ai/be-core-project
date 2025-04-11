@@ -17,7 +17,7 @@ import com.ginkgooai.core.project.dto.request.ApplicationStatusUpdateRequest;
 import com.ginkgooai.core.project.dto.response.ApplicationCommentResponse;
 import com.ginkgooai.core.project.dto.response.ApplicationNoteResponse;
 import com.ginkgooai.core.project.dto.response.ApplicationResponse;
-import com.ginkgooai.core.project.dto.response.ApplicationStatusCountResponse;
+import com.ginkgooai.core.project.dto.response.ApplicationStatisticsResponse;
 import com.ginkgooai.core.project.repository.*;
 import com.ginkgooai.core.project.service.ActivityLoggerService;
 import jakarta.persistence.criteria.Join;
@@ -406,7 +406,7 @@ public class ApplicationService {
      * @param workspaceId The workspace ID for security check
      * @return ApplicationStatusCountResponse with counts by status
      */
-    public ApplicationStatusCountResponse getApplicationStatusCountsByProject(String projectId, String workspaceId) {
+    public ApplicationStatisticsResponse getApplicationStatusCountsByProject(String projectId, String workspaceId) {
         // Verify project exists and belongs to the workspace
         projectRepository.findByIdAndWorkspaceId(projectId, workspaceId)
             .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
@@ -414,7 +414,7 @@ public class ApplicationService {
         List<Object[]> results = applicationRepository.countByProjectIdGroupByStatus(projectId);
         Map<ApplicationStatus, Long> statusCounts = convertToStatusCountMap(results);
 
-        return ApplicationStatusCountResponse.from(statusCounts);
+        return ApplicationStatisticsResponse.from(statusCounts);
     }
 
     /**

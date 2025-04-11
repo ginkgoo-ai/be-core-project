@@ -8,18 +8,18 @@ import lombok.Data;
 public class ProjectStatisticsResponse {
 
     @Schema(description = "Number of active projects", example = "30")
-    private int activeProjects;
+    private long activeProjects;
 
     @Schema(description = "Number of roles yet to be filled", example = "77")
-    private int rolesToFill;
+    private long rolesToFill;
 
     @Schema(description = "Number of submissions pending review", example = "137")
-    private int pendingSubmissions;
+    private long pendingSubmissions;
 
     @Schema(description = "Number of submissions with unviewed videos", example = "8")
-    private int unviewedVideos;
+    private long unviewedVideos;
 
-    public ProjectStatisticsResponse(int activeProjects, int rolesToFill, int pendingSubmissions, int unviewedVideos) {
+    public ProjectStatisticsResponse(long activeProjects, long rolesToFill, long pendingSubmissions, long unviewedVideos) {
         this.activeProjects = activeProjects;
         this.rolesToFill = rolesToFill;
         this.pendingSubmissions = pendingSubmissions;

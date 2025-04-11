@@ -29,7 +29,7 @@ public interface ApplicationRepository
 
         List<Application> findByTalentEmailOrderByCreatedAtDesc(String talentEmail);
 
-        long countByProjectIdAndStatus(String projectId, ApplicationStatus status);
+        long countByWorkspaceIdAndStatus(String workspaceId, ApplicationStatus status);
 
         long countByRoleId(String roleId);
 

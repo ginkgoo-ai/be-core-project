@@ -15,4 +15,6 @@ public interface ProjectRoleRepository extends JpaRepository<ProjectRole, String
     List<ProjectRole> findByProjectIdAndStatus(String projectId, RoleStatus status);
 
     Page<ProjectRole> findByProjectId(String projectId, Pageable pageable);
+
+    long countByWorkspaceIdAndStatusNot(String workspaceId, RoleStatus status);
 }

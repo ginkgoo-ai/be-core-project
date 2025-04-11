@@ -35,4 +35,6 @@ public class ProjectRole extends BaseLogicalDeleteEntity {
     @ManyToOne
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
+
+    private String workspaceId;
 }

@@ -15,4 +15,11 @@ public interface SubmissionRepository extends JpaRepository<Submission, String>,
         ORDER BY s.createdAt DESC
         """)
     List<Submission> findByTalentIdOrderByCreatedAtDesc(@Param("talentId") String talentId);
+
+    @Query("""
+        SELECT COUNT(s) FROM Submission s 
+        WHERE s.workspaceId = :workspaceId 
+        AND (s.viewCount = 0 OR s.viewCount IS NULL)
+        """)
+    long countUnviewedSubmissions(@Param("workspaceId") String workspaceId);
 }

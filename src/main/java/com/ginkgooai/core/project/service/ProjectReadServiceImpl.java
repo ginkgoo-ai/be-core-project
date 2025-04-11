@@ -3,9 +3,11 @@ package com.ginkgooai.core.project.service;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.client.storage.StorageClient;
 import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
+import com.ginkgooai.core.project.domain.application.ApplicationStatus;
 import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.project.ProjectStatus;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
+import com.ginkgooai.core.project.domain.role.RoleStatus;
 import com.ginkgooai.core.project.dto.request.ProjectResponse;
 import com.ginkgooai.core.project.dto.response.ProjectBasicResponse;
 import com.ginkgooai.core.project.dto.response.ProjectRoleStatisticsResponse;
@@ -165,10 +167,34 @@ public class ProjectReadServiceImpl implements ProjectReadService {
     }
 
     @Override
-    public ProjectStatisticsResponse getProjectStatistics(String projectId) {
-        // Construct and return the DTO
-        return new ProjectStatisticsResponse(0, 0, 0, 0);
+    public ProjectStatisticsResponse getProjectsStatistics() {
+        String workspaceId = ContextUtils.getWorkspaceId();
 
+        long activeProjects = projectRepository.countByWorkspaceIdAndStatusIn(
+            workspaceId,
+            List.of(ProjectStatus.DRAFTING, ProjectStatus.IN_PROGRESS)
+        );
+
+        long rolesToFill = projectRoleRepository.countByWorkspaceIdAndStatusNot(
+            workspaceId,
+            RoleStatus.CAST
+        );
+
+        long pendingReviews = applicationRepository.countByWorkspaceIdAndStatus(
+            workspaceId,
+            ApplicationStatus.SUBMITTED
+        );
+
+        long unviewedVideos = submissionRepository.countUnviewedSubmissions(
+            workspaceId
+        );
+
+        return new ProjectStatisticsResponse(
+            activeProjects,
+            rolesToFill,
+            pendingReviews,
+            unviewedVideos
+        );
     }
 
 

@@ -21,7 +21,7 @@ public interface ProjectReadService {
 
     List<ProjectBasicResponse> findAllBasicInfo();
 
-    ProjectStatisticsResponse getProjectStatistics(String projectId);
+    ProjectStatisticsResponse getProjectsStatistics();
 
     List<ProjectResponse> findAll();
 
