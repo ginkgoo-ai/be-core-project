@@ -9,10 +9,12 @@ import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.dto.request.ProjectResponse;
 import com.ginkgooai.core.project.dto.response.ProjectBasicResponse;
 import com.ginkgooai.core.project.dto.response.ProjectRoleStatisticsResponse;
+import com.ginkgooai.core.project.dto.response.ProjectStatisticsResponse;
 import com.ginkgooai.core.project.dto.response.RoleBasicResponse;
 import com.ginkgooai.core.project.repository.ApplicationRepository;
 import com.ginkgooai.core.project.repository.ProjectRepository;
 import com.ginkgooai.core.project.repository.ProjectRoleRepository;
+import com.ginkgooai.core.project.repository.SubmissionRepository;
 import com.ginkgooai.core.project.specification.ProjectSpecification;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +38,8 @@ public class ProjectReadServiceImpl implements ProjectReadService {
     private ProjectRoleRepository projectRoleRepository;
     @Autowired
     private ApplicationRepository applicationRepository;
+    @Autowired
+    private SubmissionRepository submissionRepository;
     @Autowired
     private StorageClient storageClient;
 
@@ -159,5 +163,13 @@ public class ProjectReadServiceImpl implements ProjectReadService {
                 .map(RoleBasicResponse::from)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public ProjectStatisticsResponse getProjectStatistics(String projectId) {
+        // Construct and return the DTO
+        return new ProjectStatisticsResponse(0, 0, 0, 0);
+
+    }
+
 
 }

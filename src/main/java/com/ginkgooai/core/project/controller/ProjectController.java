@@ -10,6 +10,7 @@ import com.ginkgooai.core.project.dto.request.ProjectUpdateRequest;
 import com.ginkgooai.core.project.dto.request.ProjectUpdateStatusRequest;
 import com.ginkgooai.core.project.dto.response.ApplicationStatusCountResponse;
 import com.ginkgooai.core.project.dto.response.ProjectBasicResponse;
+import com.ginkgooai.core.project.dto.response.ProjectStatisticsResponse;
 import com.ginkgooai.core.project.service.ActivityLoggerService;
 import com.ginkgooai.core.project.service.ProjectReadService;
 import com.ginkgooai.core.project.service.ProjectWriteService;
@@ -183,5 +184,16 @@ public class ProjectController {
         );
 
         return ResponseEntity.ok(response);
+    }
+
+
+    @GetMapping("/{projectId}/statistics")
+    @Operation(summary = "Get project statistics", description = "Retrieves statistics for a specific project.")
+    @ApiResponse(responseCode = "200", description = "Statistics retrieved successfully")
+    @ApiResponse(responseCode = "404", description = "Project not found")
+    public ResponseEntity<ProjectStatisticsResponse> getProjectStatistics(
+        @PathVariable String projectId) {
+        ProjectStatisticsResponse statistics = projectReadService.getProjectStatistics(projectId);
+        return new ResponseEntity<>(statistics, HttpStatus.OK);
     }
 }
