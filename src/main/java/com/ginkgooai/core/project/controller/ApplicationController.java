@@ -6,10 +6,7 @@ import com.ginkgooai.core.project.config.security.RequireApplicationWriteScope;
 import com.ginkgooai.core.project.domain.application.ApplicationStatus;
 import com.ginkgooai.core.project.domain.application.CommentType;
 import com.ginkgooai.core.project.dto.request.*;
-import com.ginkgooai.core.project.dto.response.ApplicationCommentResponse;
-import com.ginkgooai.core.project.dto.response.ApplicationNoteResponse;
-import com.ginkgooai.core.project.dto.response.ApplicationResponse;
-import com.ginkgooai.core.project.dto.response.SubmissionResponse;
+import com.ginkgooai.core.project.dto.response.*;
 import com.ginkgooai.core.project.service.application.ApplicationService;
 import com.ginkgooai.core.project.service.application.SubmissionService;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -236,6 +233,25 @@ public class ApplicationController {
                 .build(),
             ContextUtils.getUserId()));
     }
+
+
+    @Operation(summary = "Get application status counts for a project",
+        description = "Returns counts of applications by status for a specific project")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Status counts retrieved successfully"),
+        @ApiResponse(responseCode = "404", description = "Project not found")
+    })
+    @GetMapping("/statistics")
+    public ResponseEntity<ApplicationStatusCountResponse> getApplicationStatusCountsByProject(
+        @Parameter(description = "Project ID filter") @RequestParam String projectId) {
+        ApplicationStatusCountResponse response = applicationService.getApplicationStatusCountsByProject(
+            projectId,
+            ContextUtils.getWorkspaceId()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
 
 
 

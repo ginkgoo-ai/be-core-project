@@ -8,7 +8,6 @@ import com.ginkgooai.core.project.dto.request.ProjectCreateRequest;
 import com.ginkgooai.core.project.dto.request.ProjectResponse;
 import com.ginkgooai.core.project.dto.request.ProjectUpdateRequest;
 import com.ginkgooai.core.project.dto.request.ProjectUpdateStatusRequest;
-import com.ginkgooai.core.project.dto.response.ApplicationStatusCountResponse;
 import com.ginkgooai.core.project.dto.response.ProjectBasicResponse;
 import com.ginkgooai.core.project.dto.response.ProjectStatisticsResponse;
 import com.ginkgooai.core.project.service.ActivityLoggerService;
@@ -166,26 +165,6 @@ public class ProjectController {
         projectWriteService.deleteProject(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
-
-    @Operation(summary = "Get application status counts for a project",
-        description = "Returns counts of applications by status for a specific project")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Status counts retrieved successfully"),
-        @ApiResponse(responseCode = "404", description = "Project not found")
-    })
-    @GetMapping("/{projectId}/applications/status-counts")
-    public ResponseEntity<ApplicationStatusCountResponse> getApplicationStatusCountsByProject(
-        @Parameter(description = "ID of the project", required = true)
-        @PathVariable String projectId) {
-
-        ApplicationStatusCountResponse response = applicationService.getApplicationStatusCountsByProject(
-            projectId,
-            ContextUtils.getWorkspaceId()
-        );
-
-        return ResponseEntity.ok(response);
-    }
-
 
     @GetMapping("/{projectId}/statistics")
     @Operation(summary = "Get project statistics", description = "Retrieves statistics for a specific project.")
