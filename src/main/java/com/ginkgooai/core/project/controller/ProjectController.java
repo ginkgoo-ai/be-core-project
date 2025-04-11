@@ -1,6 +1,5 @@
 package com.ginkgooai.core.project.controller;
 
-import com.ginkgooai.core.common.enums.ActivityType;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.project.ProjectStatus;
@@ -33,7 +32,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/projects")
@@ -136,21 +134,6 @@ public class ProjectController {
             @Parameter(description = "New project status", required = true, schema = @Schema(implementation = ProjectStatus.class, example = "IN_PROGRESS")) @RequestBody ProjectUpdateStatusRequest request,
             @AuthenticationPrincipal Jwt jwt) {
         Project updatedProject = projectWriteService.updateProjectStatus(id, request.getStatus());
-        // Log activity to message queue
-        Map<String, Object> variables = Map.of(
-                "project", updatedProject.getName(),
-                "previousStatus", updatedProject.getStatus().name(),
-                "newStatus", request.getStatus().name(),
-                "time", System.currentTimeMillis());
-
-        activityLogger.log(
-                updatedProject.getWorkspaceId(),
-                updatedProject.getId(),
-                null,
-                ActivityType.PROJECT_STATUS_CHANGE,
-                variables,
-                null,
-                ContextUtils.getUserId());
 
         return new ResponseEntity<>(ProjectResponse.from(updatedProject), HttpStatus.OK);
     }
