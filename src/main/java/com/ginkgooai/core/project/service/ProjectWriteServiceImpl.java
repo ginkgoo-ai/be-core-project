@@ -3,6 +3,7 @@ package com.ginkgooai.core.project.service;
 import com.ginkgooai.core.common.enums.ActivityType;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.utils.ContextUtils;
+import com.ginkgooai.core.project.aspect.lock.annotation.DistributedLock;
 import com.ginkgooai.core.project.client.storage.StorageClient;
 import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
 import com.ginkgooai.core.project.domain.application.Application;
@@ -103,8 +104,8 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
 
     @Override
     @Transactional
-    public Project updateProject(String projectId, ProjectUpdateRequest request,
-                                 String workspaceId) {
+    @DistributedLock(key = "'project:' + #projectId")
+    public Project updateProject(String projectId, ProjectUpdateRequest request, String workspaceId) {
         Project project = projectRepository.findByIdAndWorkspaceId(projectId, workspaceId)
             .orElseThrow(() -> new ResourceNotFoundException("Project", "id&workspaceId",
                 projectId + ":" + workspaceId));
@@ -119,9 +120,10 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
 
     @Override
     @Transactional
-    public Project updateProjectStatus(String id, ProjectStatus status) {
-        Project project = projectRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
+    @DistributedLock(key = "'project:' + #projectId")
+    public Project updateProjectStatus(String projectId, ProjectStatus status) {
+        Project project = projectRepository.findById(projectId)
+            .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
 
         if (status == null) {
             throw new IllegalArgumentException("Status cannot be null");

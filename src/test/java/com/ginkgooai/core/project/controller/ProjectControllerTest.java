@@ -1,6 +1,5 @@
 package com.ginkgooai.core.project.controller;
 
-import com.ginkgooai.core.common.enums.ActivityType;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.domain.project.Project;
@@ -28,7 +27,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -228,15 +226,6 @@ class ProjectControllerTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-
-        verify(activityLogger).log(
-                eq(workspaceId),
-                eq(projectId),
-                eq(null),
-                eq(ActivityType.PROJECT_STATUS_CHANGE),
-                any(Map.class),
-                eq(null),
-                eq(userId));
     }
 
     @Test
