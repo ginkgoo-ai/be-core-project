@@ -12,8 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -69,11 +68,15 @@ class SendEmailInnerServiceTest {
         verify(emailRateLimitService).isRateLimited("test1@example.com", emailType);
         verify(emailRateLimitService).isRateLimited("test2@example.com", emailType);
         verify(emailRateLimitService).setRateLimit("test2@example.com", emailType);
-        verify(queueInterface).send(eq(MessageQueue.EMAIL_SEND_QUEUE), eq(message));
+
+        // Create expected message with only non-rate-limited recipients
+        InnerMailSendMessage expectedMessage =
+            createMessage(emailType, Arrays.asList(createReceipt("test2@example.com")));
+        verify(queueInterface).send(eq(MessageQueue.EMAIL_SEND_QUEUE), eq(expectedMessage));
     }
 
     @Test
-    void testEmail_WhenAllRecipientsRateLimited_ShouldStillSendMessage() {
+    void testEmail_WhenAllRecipientsRateLimited_ShouldNotSendMessage() {
         // Arrange
         String emailType = "INVITATION";
         List<InnerMailSendMessage.Receipt> receipts = Arrays
@@ -88,7 +91,7 @@ class SendEmailInnerServiceTest {
         // Assert
         verify(emailRateLimitService, times(2)).isRateLimited(anyString(), eq(emailType));
         verify(emailRateLimitService, never()).setRateLimit(anyString(), anyString());
-        verify(queueInterface).send(eq(MessageQueue.EMAIL_SEND_QUEUE), eq(message));
+        verify(queueInterface, never()).send(anyString(), any());
     }
 
     private InnerMailSendMessage.Receipt createReceipt(String email) {
