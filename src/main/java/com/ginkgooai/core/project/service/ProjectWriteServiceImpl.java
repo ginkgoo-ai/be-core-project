@@ -1,6 +1,7 @@
 package com.ginkgooai.core.project.service;
 
 import com.ginkgooai.core.common.enums.ActivityType;
+import com.ginkgooai.core.common.exception.ConflictException;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.aspect.lock.annotation.DistributedLock;
@@ -81,9 +82,9 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
 
         Project savedProject = projectRepository.save(project);
         savedProject.getRoles().forEach(role -> {
-            activityLogger.log(workspaceId, savedProject.getId(), null,
-                ActivityType.ROLE_CREATED, Map.of("user", userId, "project",
-                    savedProject.getName(), "roleName", role.getName()),
+            activityLogger.log(workspaceId, savedProject.getId(), null, ActivityType.ROLE_CREATED,
+                Map.of("user", userId, "project", savedProject.getName(), "roleName",
+                    role.getName()),
                 null, userId);
         });
 
@@ -105,7 +106,8 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
     @Override
     @Transactional
     @DistributedLock(key = "'project:' + #projectId")
-    public Project updateProject(String projectId, ProjectUpdateRequest request, String workspaceId) {
+    public Project updateProject(String projectId, ProjectUpdateRequest request,
+                                 String workspaceId) {
         Project project = projectRepository.findByIdAndWorkspaceId(projectId, workspaceId)
             .orElseThrow(() -> new ResourceNotFoundException("Project", "id&workspaceId",
                 projectId + ":" + workspaceId));
@@ -137,9 +139,9 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         Project updatedProject = projectRepository.save(project);
         activityLogger.log(project.getWorkspaceId(), project.getId(), null,
             ActivityType.PROJECT_STATUS_CHANGE,
-            Map.of("project", updatedProject.getName(),
-                "previousStatus", project.getStatus().getValue(),
-                "newStatus", updatedProject.getStatus().getValue()),
+            Map.of("project", updatedProject.getName(), "previousStatus",
+                project.getStatus().getValue(), "newStatus",
+                updatedProject.getStatus().getValue()),
             null, updatedProject.getCreatedBy());
 
         return updatedProject;
@@ -225,7 +227,9 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
 
         List<Application> dependentApplications = applicationRepository.findByRoleId(roleId);
         if (!dependentApplications.isEmpty()) {
-            throw new IllegalArgumentException("Role '" + roleId + "' already has applications");
+            throw new ConflictException(
+                String.format("Cannot delete role '%s' as it has %d dependent applications",
+                    roleId, dependentApplications.size()));
         }
 
         applicationRepository.deleteByRoleId(roleId);
