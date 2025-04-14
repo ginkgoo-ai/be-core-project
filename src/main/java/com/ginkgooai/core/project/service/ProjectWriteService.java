@@ -20,7 +20,7 @@ public interface ProjectWriteService {
 
     ProjectRole updateRole(String roleId, ProjectRoleRequest request);
 
-    ProjectRole patchRoleDetails(String roleId, ProjectRolePatchRequest request);
+    ProjectRole patchRole(String roleId, ProjectRolePatchRequest request);
 
     void deleteRole(String roleId);
 }

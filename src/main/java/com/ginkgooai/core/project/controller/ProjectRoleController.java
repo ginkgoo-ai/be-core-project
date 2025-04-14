@@ -151,12 +151,12 @@ public class ProjectRoleController {
         @ApiResponse(responseCode = "404", description = "Role not found"),
         @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    @PatchMapping("/{projectId}/roles/{roleId}/details")
+    @PatchMapping("/{projectId}/roles/{roleId}")
     public ResponseEntity<ProjectRoleResponse> patchRoleDetails(
         @PathVariable String projectId,
         @PathVariable String roleId,
         @RequestBody ProjectRolePatchRequest request) {
-        ProjectRole updatedRole = projectWriteService.patchRoleDetails(roleId, request);
+        ProjectRole updatedRole = projectWriteService.patchRole(roleId, request);
         Map<String, CloudFileResponse> roleSideFilesMap = retrieveSideFilesForRole(updatedRole);
         return new ResponseEntity<>(
             ProjectRoleResponse.from(updatedRole, roleSideFilesMap),

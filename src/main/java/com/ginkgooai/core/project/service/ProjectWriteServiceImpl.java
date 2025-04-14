@@ -202,7 +202,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
     }
 
     @Override
-    public ProjectRole patchRoleDetails(String roleId, ProjectRolePatchRequest request) {
+    public ProjectRole patchRole(String roleId, ProjectRolePatchRequest request) {
         ProjectRole role = projectRoleRepository.findById(roleId)
             .orElseThrow(() -> new ResourceNotFoundException("Role", "roleId", roleId));
 
@@ -216,6 +216,10 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         if (request.getSides() != null) {
             role.setSides(request.getSides().toArray(new String[0]));
         }
+        if (request.getStatus() != null) {
+            role.setStatus(request.getStatus());
+        }
+        
         return projectRoleRepository.save(role);
     }
 
