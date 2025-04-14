@@ -4,6 +4,7 @@ import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.common.utils.IpUtils;
 import com.ginkgooai.core.project.config.security.RequireShareShortlistScope;
 import com.ginkgooai.core.project.domain.application.CommentType;
+import com.ginkgooai.core.project.domain.application.ShortlistSortType;
 import com.ginkgooai.core.project.dto.request.CommentCreateRequest;
 import com.ginkgooai.core.project.dto.request.GuestCommentCreateRequest;
 import com.ginkgooai.core.project.dto.request.ShareShortlistRequest;
@@ -27,9 +28,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -61,29 +64,63 @@ public class ShortlistController {
 	}
 
 	@Operation(summary = "List shortlist items",
-			description = "Retrieves a paginated list of shortlisted items with optional search functionality")
+		description = "Retrieves a paginated list of shortlisted items with optional search functionality and sorting")
 	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Successfully retrieved shortlist items",
-					content = @Content(schema = @Schema(implementation = Page.class))),
-			@ApiResponse(responseCode = "400", description = "Invalid pagination parameters"),
-			@ApiResponse(responseCode = "403", description = "Not authorized to view shortlist") })
+		@ApiResponse(responseCode = "200", description = "Successfully retrieved shortlist items",
+			content = @Content(schema = @Schema(implementation = Page.class))),
+		@ApiResponse(responseCode = "400", description = "Invalid pagination parameters"),
+		@ApiResponse(responseCode = "403", description = "Not authorized to view shortlist")})
 	@GetMapping("/items")
 	public ResponseEntity<Page<ShortlistItemResponse>> listShortlistItems(
-			@Parameter(description = "ID of the project to filter shortlist items", required = true,
-					example = "proj_789") @RequestParam String projectId,
-			@Parameter(description = "Optional search keyword to filter items",
-					example = "John Smith") @RequestParam(required = false) String keyword,
-			@Parameter(description = "Page number (zero-based)",
-					example = "0") @RequestParam(defaultValue = "0") int page,
-			@Parameter(description = "Page size", example = "10") @RequestParam(defaultValue = "10") int size,
-			@Parameter(description = "Sort direction (ASC/DESC)",
-					example = "DESC") @RequestParam(defaultValue = "DESC") String sortDirection,
-			@Parameter(description = "Sort field (e.g., updatedAt)",
-				example = "updatedAt") @RequestParam(defaultValue = "createdAt") String sortField) {
+		@Parameter(description = "ID of the project to filter shortlist items", required = true)
+		@RequestParam String projectId,
 
-		Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
+		@Parameter(description = "Optional search keyword to filter items")
+		@RequestParam(required = false) String keyword,
+
+		@Parameter(description = "Role ID to filter items")
+		@RequestParam(required = false) String roleId,
+
+		@Parameter(description = "Start date for submission creation (format: yyyy-MM-dd'T'HH:mm:ss)")
+		@RequestParam(required = false)
+		@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+		LocalDateTime startDateTime,
+
+		@Parameter(description = "End date for submission creation (format: yyyy-MM-dd'T'HH:mm:ss)")
+		@RequestParam(required = false)
+		@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+		LocalDateTime endDateTime,
+
+		@Parameter(description = "Sort type for the results", example = "NEWEST_FIRST")
+		@RequestParam(defaultValue = "NEWEST_FIRST")
+		ShortlistSortType sortType,
+
+		@Parameter(description = "Page number (zero-based)", example = "0")
+		@RequestParam(defaultValue = "0") int page,
+
+		@Parameter(description = "Page size", example = "10")
+		@RequestParam(defaultValue = "10") int size) {
+
+		Sort sort;
+		switch (sortType) {
+			case NEWEST_FIRST:
+				sort = Sort.by(Sort.Direction.DESC, "createdAt");
+				break;
+			case OLDEST_FIRST:
+				sort = Sort.by(Sort.Direction.ASC, "createdAt");
+				break;
+			default:
+				sort = Sort.by(Sort.Direction.DESC, "createdAt");
+		}
+
 		Pageable pageable = PageRequest.of(page, size, sort);
-		return ResponseEntity.ok(shortlistService.listShortlistItems(projectId, keyword, pageable));
+		return ResponseEntity.ok(shortlistService.listShortlistItems(
+			projectId,
+			keyword,
+			roleId,
+			startDateTime,
+			endDateTime,
+			pageable));
 	}
 
 	@Operation(summary = "Remove item from shortlist", description = "Removes a specific submission from a shortlist")
@@ -139,28 +176,59 @@ public class ShortlistController {
 		return ResponseEntity.noContent().build();
 	}
 
-	@Operation(summary = "Guest(Producer) Get shortlist items by shortlist ID", description = "Retrieves a paginated list of items from a specific shortlist. "
-		+
-		"Requires ROLE_USER role or ROLE_PRODUCER role with appropriate shortlist scopes.")
-	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "Successfully retrieved shortlist items", content = @Content(schema = @Schema(implementation = Page.class))),
-		@ApiResponse(responseCode = "400", description = "Invalid pagination parameters"),
-		@ApiResponse(responseCode = "403", description = "Not authorized to view this shortlist"),
-		@ApiResponse(responseCode = "404", description = "Shortlist not found")
-	})
 	@GetMapping("/{shortlistId}/items")
 	@RequireShareShortlistScope
 	public ResponseEntity<Page<ShortlistItemResponse>> getShortlistItemsByShortlistId(
-		@Parameter(description = "ID of the shortlist", required = true, example = "cfc08cb3-c87c-4190-9355-1ff73fe15c0e") @PathVariable String shortlistId,
-		@Parameter(description = "Optional search keyword to filter items", example = "John Smith") @RequestParam(required = false) String keyword,
-		@Parameter(description = "Page number (zero-based)", example = "0") @RequestParam(defaultValue = "0") int page,
-		@Parameter(description = "Page size", example = "10") @RequestParam(defaultValue = "10") int size,
-		@Parameter(description = "Sort direction (ASC/DESC)", example = "DESC") @RequestParam(defaultValue = "DESC") String sortDirection,
-		@Parameter(description = "Sort field (e.g., updatedAt)", example = "updatedAt") @RequestParam(defaultValue = "createdAt") String sortField) {
-		Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
+		@Parameter(description = "ID of the shortlist", required = true)
+		@PathVariable String shortlistId,
+
+		@Parameter(description = "Optional search keyword to filter items")
+		@RequestParam(required = false) String keyword,
+
+		@Parameter(description = "Role ID to filter items")
+		@RequestParam(required = false) String roleId,
+
+		@Parameter(description = "Start date for submission creation (format: yyyy-MM-dd'T'HH:mm:ss)")
+		@RequestParam(required = false)
+		@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+		LocalDateTime startDateTime,
+
+		@Parameter(description = "End date for submission creation (format: yyyy-MM-dd'T'HH:mm:ss)")
+		@RequestParam(required = false)
+		@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+		LocalDateTime endDateTime,
+
+		@Parameter(description = "Sort type for the results", example = "NEWEST_FIRST")
+		@RequestParam(defaultValue = "NEWEST_FIRST")
+		ShortlistSortType sortType,
+
+		@Parameter(description = "Page number (zero-based)", example = "0")
+		@RequestParam(defaultValue = "0") int page,
+
+		@Parameter(description = "Page size", example = "10")
+		@RequestParam(defaultValue = "10") int size) {
+
+		Sort sort;
+		switch (sortType) {
+			case NEWEST_FIRST:
+				sort = Sort.by(Sort.Direction.DESC, "createdAt");
+				break;
+			case OLDEST_FIRST:
+				sort = Sort.by(Sort.Direction.ASC, "createdAt");
+				break;
+			default:
+				sort = Sort.by(Sort.Direction.DESC, "createdAt");
+		}
+
 		Pageable pageable = PageRequest.of(page, size, sort);
-		return ResponseEntity
-			.ok(shortlistService.listShortlistItemsByShortlistId(shortlistId, keyword, pageable));
+		return ResponseEntity.ok(shortlistService.listShortlistItemsByShortlistId(
+			shortlistId,
+			keyword,
+			roleId,
+			startDateTime,
+			endDateTime,
+			pageable
+		));
 	}
 
 	@Operation(summary = "Get shortlist item by ID", description = "Retrieves details of a specific shortlist item by its ID. "

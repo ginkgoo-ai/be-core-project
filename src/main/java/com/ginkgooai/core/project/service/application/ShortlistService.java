@@ -19,6 +19,7 @@ import com.ginkgooai.core.project.repository.ShortlistItemRepository;
 import com.ginkgooai.core.project.repository.ShortlistRepository;
 import com.ginkgooai.core.project.repository.ShortlistShareRepository;
 import com.ginkgooai.core.project.repository.SubmissionRepository;
+import com.ginkgooai.core.project.repository.specification.ShortlistItemSpecification;
 import com.ginkgooai.core.project.service.ActivityLoggerService;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
@@ -173,7 +174,8 @@ public class ShortlistService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<ShortlistItemResponse> listShortlistItems(String projectId, String keyword, Pageable pageable) {
+	public Page<ShortlistItemResponse> listShortlistItems(String projectId, String keyword, String roleId,
+	                                                      LocalDateTime startDateTime, LocalDateTime endDateTime, Pageable pageable) {
 		String workspaceId = ContextUtils.get().getWorkspaceId();
 		String userId = ContextUtils.get(ContextsConstant.USER_ID, String.class, null);
 
@@ -186,18 +188,33 @@ public class ShortlistService {
 			return Page.empty(pageable);
 		}
 
-		return shortlistItemRepository.findAll(buildShortlistItemSpecification(shortlist.getId(), keyword), pageable)
+		return shortlistItemRepository.findAll(
+				ShortlistItemSpecification.findAllWithFilters(
+					shortlist.getId(),
+					keyword,
+					roleId,
+					startDateTime,
+					endDateTime,
+					null),
+				pageable)
 			.map(t -> ShortlistItemResponse.from(t, userId));
 	}
 
 	@Transactional(readOnly = true)
-	public Page<ShortlistItemResponse> listShortlistItemsByShortlistId(String shortlistId, String keyword,
-			Pageable pageable) {
-		Shortlist shortlist = shortlistRepository.findById(shortlistId)
-			.orElseThrow(() -> new ResourceNotFoundException("Shortlist", "id", shortlistId));
+	public Page<ShortlistItemResponse> listShortlistItemsByShortlistId(String shortlistId, String keyword, String roleId,
+	                                                                   LocalDateTime startDateTime, LocalDateTime endDateTime, Pageable pageable) {
 
-		return shortlistItemRepository.findAll(buildShortlistItemSpecification(shortlistId, keyword), pageable)
-			.map(t -> ShortlistItemResponse.from(t, shortlist.getOwnerId()));
+		return shortlistItemRepository.findAll(
+			ShortlistItemSpecification.findAllWithFilters(
+				shortlistId,
+				keyword,
+				roleId,
+				startDateTime,
+				endDateTime,
+				null
+			),
+			pageable
+		).map(t -> ShortlistItemResponse.from(t, ContextUtils.getUserId()));
 	}
 
 	private Specification<ShortlistItem> buildShortlistItemSpecification(String shortlistId, String keyword) {
