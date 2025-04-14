@@ -15,11 +15,11 @@ public class ShortlistItemSpecification {
 
     public static Specification<ShortlistItem> findAllWithFilters(String shortlistId,
                                                                   String keyword, String roleId, LocalDateTime startDateTime, LocalDateTime endDateTime,
-                                                                  String talent) {
+                                                                  String talentId) {
         return (root, query, cb) -> {
             if (query.getResultType() == Long.class || query.getResultType() == long.class) {
                 return cb.and(buildPredicates(root, query, cb, shortlistId, keyword, roleId,
-                    startDateTime, endDateTime, talent).toArray(new Predicate[0]));
+                    startDateTime, endDateTime, talentId).toArray(new Predicate[0]));
             }
 
             query.distinct(true);
@@ -29,7 +29,7 @@ public class ShortlistItemSpecification {
             root.fetch("submissions", JoinType.LEFT);
 
             return cb.and(buildPredicates(root, query, cb, shortlistId, keyword, roleId,
-                startDateTime, endDateTime, talent).toArray(new Predicate[0]));
+                startDateTime, endDateTime, talentId).toArray(new Predicate[0]));
         };
     }
 
@@ -37,7 +37,7 @@ public class ShortlistItemSpecification {
         jakarta.persistence.criteria.Root<ShortlistItem> root,
         jakarta.persistence.criteria.CriteriaQuery<?> query,
         jakarta.persistence.criteria.CriteriaBuilder cb, String shortlistId, String keyword,
-        String roleId, LocalDateTime startDateTime, LocalDateTime endDateTime, String talent) {
+        String roleId, LocalDateTime startDateTime, LocalDateTime endDateTime, String talentId) {
         List<Predicate> predicates = new ArrayList<>();
 
         // Join tables
@@ -64,21 +64,18 @@ public class ShortlistItemSpecification {
             predicates.add(cb.equal(role.get("id"), roleId));
         }
 
+
+        // Add talent ID filter
+        if (StringUtils.hasText(talentId)) {
+            predicates.add(cb.equal(root.get("application").get("talent").get("id"), talentId));
+        }
+
         // Add date range conditions
         if (startDateTime != null) {
             predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), startDateTime));
         }
         if (endDateTime != null) {
             predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), endDateTime));
-        }
-
-        // Add talent search conditions
-        if (StringUtils.hasText(talent)) {
-            String likePattern = "%" + talent.toLowerCase() + "%";
-            predicates.add(cb.or(
-                cb.like(cb.lower(cb.concat(cb.concat(talentJoin.get("firstName"), " "),
-                    talentJoin.get("lastName"))), likePattern),
-                cb.like(cb.lower(talentJoin.get("email")), likePattern)));
         }
 
         return predicates;

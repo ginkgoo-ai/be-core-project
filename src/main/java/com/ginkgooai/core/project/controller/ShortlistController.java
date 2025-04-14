@@ -81,6 +81,9 @@ public class ShortlistController {
 		@Parameter(description = "Role ID to filter items")
 		@RequestParam(required = false) String roleId,
 
+		@Parameter(description = "Talent ID to filter items")
+		@RequestParam(required = false) String talentId,
+
 		@Parameter(description = "Start date for submission creation (format: yyyy-MM-dd'T'HH:mm:ss)")
 		@RequestParam(required = false)
 		@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
@@ -118,6 +121,7 @@ public class ShortlistController {
 			projectId,
 			keyword,
 			roleId,
+			talentId,
 			startDateTime,
 			endDateTime,
 			pageable));
@@ -188,6 +192,9 @@ public class ShortlistController {
 		@Parameter(description = "Role ID to filter items")
 		@RequestParam(required = false) String roleId,
 
+		@Parameter(description = "Talent ID to filter items")
+		@RequestParam(required = false) String talentId,
+
 		@Parameter(description = "Start date for submission creation (format: yyyy-MM-dd'T'HH:mm:ss)")
 		@RequestParam(required = false)
 		@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
@@ -225,6 +232,7 @@ public class ShortlistController {
 			shortlistId,
 			keyword,
 			roleId,
+			talentId,
 			startDateTime,
 			endDateTime,
 			pageable

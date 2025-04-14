@@ -174,7 +174,7 @@ public class ShortlistService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<ShortlistItemResponse> listShortlistItems(String projectId, String keyword, String roleId,
+	public Page<ShortlistItemResponse> listShortlistItems(String projectId, String keyword, String roleId, String talentId,
 	                                                      LocalDateTime startDateTime, LocalDateTime endDateTime, Pageable pageable) {
 		String workspaceId = ContextUtils.get().getWorkspaceId();
 		String userId = ContextUtils.get(ContextsConstant.USER_ID, String.class, null);
@@ -195,13 +195,13 @@ public class ShortlistService {
 					roleId,
 					startDateTime,
 					endDateTime,
-					null),
+					talentId),
 				pageable)
 			.map(t -> ShortlistItemResponse.from(t, userId));
 	}
 
 	@Transactional(readOnly = true)
-	public Page<ShortlistItemResponse> listShortlistItemsByShortlistId(String shortlistId, String keyword, String roleId,
+	public Page<ShortlistItemResponse> listShortlistItemsByShortlistId(String shortlistId, String keyword, String roleId, String talentId,
 	                                                                   LocalDateTime startDateTime, LocalDateTime endDateTime, Pageable pageable) {
 
 		return shortlistItemRepository.findAll(
@@ -211,7 +211,7 @@ public class ShortlistService {
 				roleId,
 				startDateTime,
 				endDateTime,
-				null
+				talentId
 			),
 			pageable
 		).map(t -> ShortlistItemResponse.from(t, ContextUtils.getUserId()));
