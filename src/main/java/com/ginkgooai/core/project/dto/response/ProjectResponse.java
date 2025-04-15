@@ -1,9 +1,8 @@
-package com.ginkgooai.core.project.dto.request;
+package com.ginkgooai.core.project.dto.response;
 
 import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
 import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.project.ProjectStatus;
-import com.ginkgooai.core.project.dto.response.ProjectRoleResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.springframework.util.ObjectUtils;

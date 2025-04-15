@@ -4,10 +4,11 @@ import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.project.ProjectStatus;
 import com.ginkgooai.core.project.dto.request.ProjectCreateRequest;
-import com.ginkgooai.core.project.dto.request.ProjectResponse;
 import com.ginkgooai.core.project.dto.request.ProjectUpdateRequest;
 import com.ginkgooai.core.project.dto.request.ProjectUpdateStatusRequest;
 import com.ginkgooai.core.project.dto.response.ProjectBasicResponse;
+import com.ginkgooai.core.project.dto.response.ProjectListResponse;
+import com.ginkgooai.core.project.dto.response.ProjectResponse;
 import com.ginkgooai.core.project.dto.response.ProjectStatisticsResponse;
 import com.ginkgooai.core.project.service.ActivityLoggerService;
 import com.ginkgooai.core.project.service.ProjectReadService;
@@ -81,11 +82,12 @@ public class ProjectController {
             @ApiResponse(responseCode = "400", description = "Invalid pagination parameters")
     })
     @GetMapping
-    public ResponseEntity<Page<ProjectResponse>> getProjects(
+	public ResponseEntity<Page<ProjectListResponse>> getProjects(
             @Parameter(description = "Page number (zero-based)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size", example = "10") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "Sort direction (ASC/DESC)", example = "DESC") @RequestParam(defaultValue = "DESC") String sortDirection,
-            @Parameter(description = "Sort field (e.g., updatedAt)", example = "updatedAt") @RequestParam(defaultValue = "createdAt") String sortField,
+			@Parameter(description = "Sort field (name, updatedAt, roleCount, pendingReviewCount)",
+					example = "updatedAt") @RequestParam(defaultValue = "updatedAt") String sortField,
             @Parameter(description = "Filter by project name (fuzzy search)", example = "Enchanted") @RequestParam(required = false) String name,
             @Parameter(description = "Filter by project status (e.g., DRAFTING, ACTIVE, COMPLETED, PENDING_REVIEW)", example = "IN_PROGRESS") @RequestParam(required = false) ProjectStatus status) {
 
@@ -93,8 +95,7 @@ public class ProjectController {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<ProjectResponse> projects = projectReadService.findProjects(ContextUtils.getWorkspaceId(), name,
-                status, pageable);
+		Page<ProjectListResponse> projects = projectReadService.findProjectList(name, status, pageable);
 
         return new ResponseEntity<>(projects, HttpStatus.OK);
     }

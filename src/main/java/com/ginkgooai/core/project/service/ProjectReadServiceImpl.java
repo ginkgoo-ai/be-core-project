@@ -4,25 +4,18 @@ import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.client.storage.StorageClient;
 import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
 import com.ginkgooai.core.project.domain.application.ApplicationStatus;
-import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.project.ProjectStatus;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.domain.role.RoleStatus;
-import com.ginkgooai.core.project.dto.request.ProjectResponse;
-import com.ginkgooai.core.project.dto.response.ProjectBasicResponse;
-import com.ginkgooai.core.project.dto.response.ProjectRoleStatisticsResponse;
-import com.ginkgooai.core.project.dto.response.ProjectStatisticsResponse;
-import com.ginkgooai.core.project.dto.response.RoleBasicResponse;
+import com.ginkgooai.core.project.dto.response.*;
 import com.ginkgooai.core.project.repository.ApplicationRepository;
 import com.ginkgooai.core.project.repository.ProjectRepository;
 import com.ginkgooai.core.project.repository.ProjectRoleRepository;
 import com.ginkgooai.core.project.repository.SubmissionRepository;
-import com.ginkgooai.core.project.specification.ProjectSpecification;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -59,22 +52,8 @@ public class ProjectReadServiceImpl implements ProjectReadService {
     }
 
     @Override
-    public Page<ProjectResponse> findProjects(String workspaceId, String name, ProjectStatus status,
-            Pageable pageable) {
-        Specification<Project> spec = Specification.where(ProjectSpecification.hasWorkspaceId(workspaceId));
-
-        // Apply name filter if provided and not empty
-        if (name != null && !name.trim().isEmpty()) {
-            spec = spec.and(ProjectSpecification.hasNameLike(name.trim()));
-        }
-
-        // Apply status filter if provided
-        if (status != null) {
-            spec = spec.and(ProjectSpecification.hasStatus(status));
-        }
-
-        Page<Project> projects = projectRepository.findAll(spec, pageable);
-        return projects.map(ProjectResponse::from);
+	public Page<ProjectListResponse> findProjectList(String name, ProjectStatus status, Pageable pageable) {
+		return projectRepository.findProjectList(ContextUtils.getWorkspaceId(), name, status, pageable);
     }
 
     @Override

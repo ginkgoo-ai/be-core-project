@@ -2,11 +2,7 @@ package com.ginkgooai.core.project.service;
 
 import com.ginkgooai.core.project.domain.project.ProjectStatus;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
-import com.ginkgooai.core.project.dto.request.ProjectResponse;
-import com.ginkgooai.core.project.dto.response.ProjectBasicResponse;
-import com.ginkgooai.core.project.dto.response.ProjectRoleStatisticsResponse;
-import com.ginkgooai.core.project.dto.response.ProjectStatisticsResponse;
-import com.ginkgooai.core.project.dto.response.RoleBasicResponse;
+import com.ginkgooai.core.project.dto.response.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -17,7 +13,7 @@ public interface ProjectReadService {
 
     Optional<ProjectResponse> findById(String workspaceId, String id);
 
-    Page<ProjectResponse> findProjects(String workspaceId, String name, ProjectStatus status, Pageable pageable);
+	Page<ProjectListResponse> findProjectList(String name, ProjectStatus status, Pageable pageable);
 
     List<ProjectBasicResponse> findAllBasicInfo();
 

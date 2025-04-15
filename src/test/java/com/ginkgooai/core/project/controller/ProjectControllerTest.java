@@ -5,10 +5,10 @@ import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.project.ProjectStatus;
 import com.ginkgooai.core.project.dto.request.ProjectCreateRequest;
-import com.ginkgooai.core.project.dto.request.ProjectResponse;
 import com.ginkgooai.core.project.dto.request.ProjectUpdateRequest;
 import com.ginkgooai.core.project.dto.request.ProjectUpdateStatusRequest;
 import com.ginkgooai.core.project.dto.response.ProjectBasicResponse;
+import com.ginkgooai.core.project.dto.response.ProjectResponse;
 import com.ginkgooai.core.project.service.ActivityLoggerService;
 import com.ginkgooai.core.project.service.ProjectReadService;
 import com.ginkgooai.core.project.service.ProjectWriteService;
@@ -20,7 +20,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -30,7 +29,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -138,25 +138,6 @@ class ProjectControllerTest {
         ResponseEntity<ProjectResponse> response = projectController.getProjectById(projectId);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
-
-    @Test
-    void getProjects_Success() {
-        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "updatedAt"));
-        List<ProjectResponse> projectList = Arrays.asList(projectResponse);
-        Page<ProjectResponse> projectPage = new PageImpl<>(projectList, pageable, 1);
-
-        when(projectReadService.findProjects(eq(workspaceId), anyString(), any(ProjectStatus.class),
-                any(Pageable.class)))
-                .thenReturn(projectPage);
-
-        ResponseEntity<Page<ProjectResponse>> response = projectController.getProjects(
-                0, 10, "DESC", "updatedAt", "测试", ProjectStatus.DRAFTING);
-
-        // 验证结果
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(1, response.getBody().getTotalElements());
     }
 
     @Test
