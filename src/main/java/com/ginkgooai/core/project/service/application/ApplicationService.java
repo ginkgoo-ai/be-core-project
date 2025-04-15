@@ -123,15 +123,6 @@ public class ApplicationService {
         List<Submission> allSubmissions = new ArrayList<>();
 
         savedApplications.forEach(savedApplication -> {
-            // Log activity for application creation
-            activityLogger.log(project.getWorkspaceId(), project.getId(), savedApplication.getId(),
-                ActivityType.ROLE_STATUS_UPDATE,
-                Map.of("talentName",
-                    String.join(" ", savedApplication.getTalent().getFirstName(),
-                        savedApplication.getTalent().getLastName()),
-                    "roleName", role.getName(), "user", userId),
-                null, userId);
-
             // Create submissions if provided
             if (!finalVideoFiles.isEmpty()) {
                 List<Submission> submissions = finalVideoFiles.stream()
@@ -155,8 +146,6 @@ public class ApplicationService {
 
         // Log role status update activity once after all applications are processed
         activityLogger.log(project.getWorkspaceId(), project.getId(), null, // No specific
-            // application ID for
-            // this log
             ActivityType.ROLE_STATUS_UPDATE, Map.of("roleName", role.getName(), "newStatus",
                 role.getStatus().getValue(), "user", userId),
             null, userId);

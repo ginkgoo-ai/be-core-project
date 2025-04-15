@@ -131,7 +131,8 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
             throw new IllegalArgumentException("Status cannot be null");
         }
 
-        if (status == project.getStatus()) {
+		ProjectStatus previousStatus = project.getStatus();
+		if (status == previousStatus) {
             return project;
         }
 
@@ -140,7 +141,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         activityLogger.log(project.getWorkspaceId(), project.getId(), null,
             ActivityType.PROJECT_STATUS_CHANGE,
             Map.of("project", updatedProject.getName(), "previousStatus",
-                project.getStatus().getValue(), "newStatus",
+						previousStatus.getValue(), "newStatus",
                 updatedProject.getStatus().getValue()),
             null, updatedProject.getCreatedBy());
 
@@ -161,6 +162,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         Project project = projectRepository.findById(projectId).orElseThrow(
             () -> new ResourceNotFoundException("Project", "projectId", projectId));
 
+		String userId = ContextUtils.getUserId();
         ProjectRole role = new ProjectRole();
         role.setName(request.getName());
         role.setStatus(RoleStatus.DRAFTING);
@@ -179,6 +181,9 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
                 .getFileDetails(Arrays.stream(savedRole.getSides()).toList()).getBody().stream()
                 .collect(Collectors.toMap(file -> file.getId(), Function.identity()));
         }
+
+		activityLogger.log(project.getWorkspaceId(), project.getId(), null, ActivityType.ROLE_CREATED,
+				Map.of("user", userId, "project", project.getName(), "roleName", role.getName()), null, userId);
 
         return ProjectRoleResponse.from(role, roleSideFilesMap);
     }

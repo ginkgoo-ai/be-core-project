@@ -62,26 +62,33 @@ public class ApplicationResponse {
     public static ApplicationResponse from(Application application, List<UserInfoResponse> users, String userId) {
         List<String> role = ContextUtils.get().get(ContextsConstant.USER_ROLE, List.class);
         boolean isTalentRole = role.size() == 1 && role.get(0).equals("ROLE_TALENT");
-        
+
         Map<String, UserInfoResponse> userInfoMap = users.stream()
                 .collect(Collectors.toMap(UserInfoResponse::getId, user -> user));
         ApplicationResponse response = ApplicationResponse.builder()
                 .id(application.getId())
                 .workspaceId(application.getWorkspaceId())
                 .projectId(application.getProject().getId())
-            .projectName(application.getProject().getName())
+			.projectName(application.getProject().getName())
                 .role(ProjectRoleResponse.from(application.getRole()))
                 .talent(TalentResponse.from(application.getTalent()))
-                .submissions(ObjectUtils.isEmpty(application.getSubmissions()) ? null : application.getSubmissions().stream()
-                        .map(submission -> SubmissionResponse.from(submission, users, userId))
-                        .toList())
+			.submissions(ObjectUtils.isEmpty(application.getSubmissions()) ? null
+					: application.getSubmissions()
+						.stream()
+						.map(submission -> SubmissionResponse.from(submission, users, userId))
+						.toList())
                 .status(application.getStatus())
-            .notes(isTalentRole ? null : application.getNotes().stream()
-                        .map(note -> ApplicationNoteResponse.from(note, userInfoMap.get(note.getCreatedBy())))
-                        .toList())
-            .comments(isTalentRole ? null : application.getComments().stream()
-                        .map(comment -> ApplicationCommentResponse.from(comment, userInfoMap.get(comment.getCreatedBy())))
-                        .toList())
+			.notes(isTalentRole ? null
+					: application.getNotes()
+						.stream()
+						.map(note -> ApplicationNoteResponse.from(note, userInfoMap.get(note.getCreatedBy())))
+						.sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+						.toList())
+			.comments(isTalentRole ? null : application.getComments()
+				.stream()
+				.map(comment -> ApplicationCommentResponse.from(comment, userInfoMap.get(comment.getCreatedBy())))
+				.sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+				.toList())
                 .createdBy(application.getCreatedBy())
                 .createdAt(application.getCreatedAt())
                 .updatedAt(application.getUpdatedAt())
@@ -95,7 +102,7 @@ public class ApplicationResponse {
                 .id(application.getId())
                 .workspaceId(application.getWorkspaceId())
                 .projectId(application.getProject().getId())
-            .projectName(application.getProject().getName())
+			.projectName(application.getProject().getName())
                 .role(ProjectRoleResponse.from(application.getRole()))
                 .talent(TalentResponse.from(application.getTalent()))
                 .status(application.getStatus())
@@ -106,5 +113,5 @@ public class ApplicationResponse {
 
         return response;
     }
-    
+
 }
