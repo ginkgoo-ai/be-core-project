@@ -104,7 +104,7 @@ public class ApplicationResponse {
     }
 
     public static ApplicationResponse from(Application application) {
-		return from(application, Collections.emptyList(), null, Collections.emptyMap());
+		return from(application, Collections.emptyList(), ContextUtils.getUserId(), Collections.emptyMap());
 	}
 
 	public static ApplicationResponse from(Application application, List<UserInfoResponse> users, String userId) {
