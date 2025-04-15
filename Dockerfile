@@ -15,4 +15,5 @@ WORKDIR /app
 COPY --from=builder /app/target/*.jar app.jar
 COPY integration/grafana-opentelemetry-java-v2.12.0.jar ./grafana-opentelemetry-java-v2.12.0.jar
 
+
 CMD ["java", "-Xms128m", "-Xmx1024m", "-javaagent:grafana-opentelemetry-java-v2.12.0.jar", "-jar", "app.jar"]
