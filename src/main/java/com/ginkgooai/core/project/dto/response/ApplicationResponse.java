@@ -3,20 +3,24 @@ package com.ginkgooai.core.project.dto.response;
 import com.ginkgooai.core.common.constant.ContextsConstant;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
+import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
 import com.ginkgooai.core.project.domain.application.Application;
 import com.ginkgooai.core.project.domain.application.ApplicationStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ObjectUtils;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Data
 @Builder
+@Slf4j
 @Schema(description = "Response object containing application details")
 public class ApplicationResponse {
 
@@ -59,18 +63,20 @@ public class ApplicationResponse {
     @Schema(description = "Last update timestamp")
     private LocalDateTime updatedAt;
 
-    public static ApplicationResponse from(Application application, List<UserInfoResponse> users, String userId) {
+	public static ApplicationResponse from(Application application, List<UserInfoResponse> users, String userId,
+			Map<String, CloudFileResponse> roleSideFilesMap) {
         List<String> role = ContextUtils.get().get(ContextsConstant.USER_ROLE, List.class);
         boolean isTalentRole = role.size() == 1 && role.get(0).equals("ROLE_TALENT");
 
         Map<String, UserInfoResponse> userInfoMap = users.stream()
                 .collect(Collectors.toMap(UserInfoResponse::getId, user -> user));
+
         ApplicationResponse response = ApplicationResponse.builder()
                 .id(application.getId())
                 .workspaceId(application.getWorkspaceId())
                 .projectId(application.getProject().getId())
 			.projectName(application.getProject().getName())
-                .role(ProjectRoleResponse.from(application.getRole()))
+			.role(ProjectRoleResponse.from(application.getRole(), roleSideFilesMap))
                 .talent(TalentResponse.from(application.getTalent()))
 			.submissions(ObjectUtils.isEmpty(application.getSubmissions()) ? null
 					: application.getSubmissions()
@@ -98,20 +104,11 @@ public class ApplicationResponse {
     }
 
     public static ApplicationResponse from(Application application) {
-        ApplicationResponse response = ApplicationResponse.builder()
-                .id(application.getId())
-                .workspaceId(application.getWorkspaceId())
-                .projectId(application.getProject().getId())
-			.projectName(application.getProject().getName())
-                .role(ProjectRoleResponse.from(application.getRole()))
-                .talent(TalentResponse.from(application.getTalent()))
-                .status(application.getStatus())
-                .createdBy(application.getCreatedBy())
-                .createdAt(application.getCreatedAt())
-                .updatedAt(application.getUpdatedAt())
-                .build();
+		return from(application, Collections.emptyList(), null, Collections.emptyMap());
+	}
 
-        return response;
+	public static ApplicationResponse from(Application application, List<UserInfoResponse> users, String userId) {
+		return from(application, users, userId, Collections.emptyMap());
     }
 
 }

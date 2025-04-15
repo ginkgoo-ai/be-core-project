@@ -71,7 +71,7 @@ public class ApplicationController {
         @Parameter(description = "Application ID",
             example = "app_12345") @PathVariable String applicationId) {
         ApplicationResponse application =
-            applicationService.getApplicationById(ContextUtils.getWorkspaceId(), applicationId);
+				applicationService.getApplicationById(applicationId);
         return ResponseEntity.ok(application);
     }
 
