@@ -69,10 +69,10 @@ public class TalentService {
             saved.getWorkspaceId(),
             null,
             saved.getId(),
-            ActivityType.TALENT_ADDED,
+				ActivityType.TALENT_IMPORTED,
             Map.of(
-                "talentName", String.join(" ", talent.getFirstName(), talent.getLastName()),
-                "user", ContextUtils.getUserId()
+						"talentName",
+						String.join(" ", talent.getFirstName(), talent.getLastName())
             ),
             null,
             ContextUtils.getUserId()

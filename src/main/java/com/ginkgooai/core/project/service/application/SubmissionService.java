@@ -98,9 +98,8 @@ public class SubmissionService {
                 application.getId(),
                 ActivityType.SUBMISSION_ADDED,
                 Map.of(
-                    "user", userId,
                     "talentName", String.join(" ", application.getTalent().getFirstName(), application.getTalent().getLastName()),
-                    "videoName", submission.getVideoName()),
+							"roleName", application.getRole().getName(), "project", application.getProject().getName()),
                 Map.of(
                     submission.getVideoName(), submission.getVideoUrl()
                 ),
@@ -112,8 +111,10 @@ public class SubmissionService {
                 application.getId(),
                 ActivityType.TALENT_DIRECT_UPLOAD,
                 Map.of(
-                    "duration", submission.getVideoDuration(),
-                    "talentName", String.join(" ", application.getTalent().getFirstName(), application.getTalent().getLastName())),
+							"talentName",
+							String.join(" ", application.getTalent().getFirstName(),
+									application.getTalent().getLastName()),
+							"roleName", application.getRole().getName(), "project", application.getProject().getName()),
                 Map.of(
                     submission.getVideoName(), submission.getVideoUrl()
                 ),
@@ -200,9 +201,13 @@ public class SubmissionService {
                 submission.getWorkspaceId(),
                 submission.getApplication().getProject().getId(),
                 submission.getApplication().getId(),
-                ActivityType.PRODUCER_FEEDBACK_ADDED,
+					ActivityType.FEEDBACK_ADDED,
                 Map.of(
-                    "talentName", String.join(" ", submission.getApplication().getTalent().getFirstName(), submission.getApplication().getTalent().getLastName())
+							"talentName",
+							String.join(" ", submission.getApplication().getTalent().getFirstName(),
+									submission.getApplication().getTalent().getLastName()),
+							"roleName", submission.getApplication().getRole().getName(), "project",
+							submission.getApplication().getProject().getName()
                 ),
                 null,
                 userId);

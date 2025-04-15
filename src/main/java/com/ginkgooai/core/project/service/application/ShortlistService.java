@@ -126,9 +126,9 @@ public class ShortlistService {
 			application.getId(),
 			ActivityType.SUBMISSION_ADDED_TO_SHORTLIST,
 			Map.of(
-				"user", ContextUtils.getUserId(),
 				"talentName", String.join(" ", application.getTalent().getFirstName(), application.getTalent().getLastName()),
-				"videoName", submission.getVideoName()
+						"roleName", application.getRole().getName(), "project", application.getProject()
+							.getName()
 			),
 			Map.of(
 				submission.getVideoName(), submission.getVideoUrl()
