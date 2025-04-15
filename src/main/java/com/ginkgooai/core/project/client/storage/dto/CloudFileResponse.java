@@ -41,4 +41,6 @@ public class CloudFileResponse implements Serializable {
 
 	private LocalDateTime createdAt;
 
+	private LocalDateTime updatedAt;
+
 }
