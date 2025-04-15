@@ -7,8 +7,10 @@ import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.common.utils.UrlUtils;
 import com.ginkgooai.core.project.client.identity.IdentityClient;
+import com.ginkgooai.core.project.client.identity.dto.PatchUserRequest;
 import com.ginkgooai.core.project.client.identity.dto.ShareCodeRequest;
 import com.ginkgooai.core.project.client.identity.dto.ShareCodeResponse;
+import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.domain.application.*;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.domain.talent.Talent;
@@ -308,6 +310,17 @@ public class ShortlistService {
 					.active(true)
 					.build();
 				shortlistShareRepository.save(share);
+
+				UserInfoResponse userInfoResponse = identityClient.getUserById(response.getUserId()).getBody();
+				if ((!Objects.equals(userInfoResponse.getFirstName(), recipient.getFirstName())
+						|| !Objects.equals(userInfoResponse.getLastName(), recipient.getLastName()))
+						&& !userInfoResponse.getRoles().contains(Role.ROLE_USER.name())) {
+					identityClient.patchUserInfo(userInfoResponse.getId(),
+							PatchUserRequest.builder()
+								.firstName(recipient.getFirstName())
+								.lastName(recipient.getLastName())
+								.build());
+				}
 			}
 
 			log.info("Created shared shortlist for recipient: {}, shortlistId: {}", recipient.getEmail(), shortlistId);

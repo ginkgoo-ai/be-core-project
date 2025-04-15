@@ -68,6 +68,9 @@ public class Talent extends BaseAuditableEntity {
     @Column
     private Long submissionCount = 0L;
 
+	@Column
+	private String userId;
+
     public static Talent from(TalentRequest request) {
         return Talent.builder()
             .firstName(request.getFirstName())
@@ -88,14 +91,16 @@ public class Talent extends BaseAuditableEntity {
     }
 
     public void decrementApplicationCount() {
-        this.applicationCount = (this.applicationCount == null || this.applicationCount < 1) ? 0 : this.applicationCount - 1;
+		this.applicationCount = (this.applicationCount == null || this.applicationCount < 1) ? 0
+				: this.applicationCount - 1;
     }
 
     public void incrementSubmissionCount() {
         this.submissionCount = (this.submissionCount == null ? 0 : this.submissionCount) + 1;
     }
-    
+
     public void decrementSubmissionCount() {
-        this.submissionCount = (this.submissionCount == null || this.submissionCount < 1) ? 0 : this.submissionCount - 1;
+		this.submissionCount = (this.submissionCount == null || this.submissionCount < 1) ? 0
+				: this.submissionCount - 1;
     }
 }

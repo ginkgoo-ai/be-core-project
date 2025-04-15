@@ -14,6 +14,7 @@ import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.client.storage.StorageClient;
 import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
 import com.ginkgooai.core.project.domain.application.*;
+import com.ginkgooai.core.project.domain.talent.Talent;
 import com.ginkgooai.core.project.dto.request.CommentCreateRequest;
 import com.ginkgooai.core.project.dto.request.InvitationEmailRequest;
 import com.ginkgooai.core.project.dto.request.SubmissionCreateRequest;
@@ -63,65 +64,55 @@ public class SubmissionService {
 
     private final SendEmailInnerService sendEmailInnerService;
 
+	private final TalentRepository talentRepository;
+
     @Transactional
-    public SubmissionResponse createSubmission(String workspaceId,
-            SubmissionCreateRequest request,
+	public SubmissionResponse createSubmission(String workspaceId, SubmissionCreateRequest request,
             String userId) {
 
         Application application = applicationRepository.findById(request.getApplicationId())
-                .orElseThrow(() -> new ResourceNotFoundException("Application", "id", request.getApplicationId()));
+			.orElseThrow(() -> new ResourceNotFoundException("Application", "id", request.getApplicationId()));
 
-        List<CloudFileResponse> videoFiles = storageClient.getFileDetails(Arrays.asList(request.getVideoId()))
-                .getBody();
+		List<CloudFileResponse> videoFiles = storageClient.getFileDetails(Arrays.asList(request.getVideoId()))
+			.getBody();
         log.debug("Video files: {}", videoFiles);
 
-        CloudFileResponse video = videoFiles.stream().findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Video file", "id", request.getVideoId()));
-        Submission submission = Submission.builder()
-                .workspaceId(workspaceId)
-                .application(application)
-                .videoName(video.getOriginalName())
-                .videoUrl(video.getStoragePath())
-                .videoDuration(video.getVideoDuration())
+		CloudFileResponse video = videoFiles.stream()
+			.findFirst()
+			.orElseThrow(() -> new ResourceNotFoundException("Video file", "id", request.getVideoId()));
+		Submission submission = Submission.builder()
+			.workspaceId(workspaceId)
+			.application(application)
+			.videoName(video.getOriginalName())
+			.videoUrl(video.getStoragePath())
+			.videoDuration(video.getVideoDuration())
                 .videoThumbnailUrl(video.getVideoThumbnailUrl())
-                .videoResolution(video.getVideoResolution())
-                .mimeType(video.getFileType())
-                .build();
+			.videoResolution(video.getVideoResolution())
+			.mimeType(video.getFileType())
+			.build();
         Submission savedSubmission = submissionRepository.save(submission);
 
         List<String> role = ContextUtils.get().get(ContextsConstant.USER_ROLE, List.class);
 
         if (role.size() == 1 && role.get(0).equals("ROLE_USER")) {
-            activityLogger.log(
-                workspaceId,
-                application.getProject().getId(),
-                application.getId(),
-                ActivityType.SUBMISSION_ADDED,
-                Map.of(
-                    "talentName", String.join(" ", application.getTalent().getFirstName(), application.getTalent().getLastName()),
-							"roleName", application.getRole().getName(), "project", application.getProject().getName()),
-                Map.of(
-                    submission.getVideoName(), submission.getVideoUrl()
-                ),
-                userId);
-        } else {
-            activityLogger.log(
-                workspaceId,
-                application.getProject().getId(),
-                application.getId(),
-                ActivityType.TALENT_DIRECT_UPLOAD,
-                Map.of(
-							"talentName",
+			activityLogger.log(workspaceId, application.getProject().getId(), application.getId(),
+					ActivityType.SUBMISSION_ADDED,
+					Map.of("talentName",
 							String.join(" ", application.getTalent().getFirstName(),
 									application.getTalent().getLastName()),
 							"roleName", application.getRole().getName(), "project", application.getProject().getName()),
-                Map.of(
-                    submission.getVideoName(), submission.getVideoUrl()
-                ),
-                userId);
+					Map.of(submission.getVideoName(), submission.getVideoUrl()), userId);
+        } else {
+			activityLogger.log(workspaceId, application.getProject().getId(), application.getId(),
+					ActivityType.TALENT_DIRECT_UPLOAD,
+					Map.of("talentName",
+							String.join(" ", application.getTalent().getFirstName(),
+									application.getTalent().getLastName()),
+							"roleName", application.getRole().getName(), "project", application.getProject().getName()),
+					Map.of(submission.getVideoName(), submission.getVideoUrl()), userId);
         }
 
-    
+
 
         application.getTalent().incrementSubmissionCount();
         applicationRepository.save(application);
@@ -134,18 +125,18 @@ public class SubmissionService {
         Submission submission = findSubmissionById(submissionId);
 
         List<String> commentUserIds = CollectionUtils.emptyIfNull(submission.getComments()).stream()
-                .map(SubmissionComment::getCreatedBy)
-                .distinct()
-                .toList();
+			.map(SubmissionComment::getCreatedBy)
+			.distinct()
+			.toList();
 
         List<UserInfoResponse> commentUsers = new ArrayList<>();
         if (!CollectionUtils.isEmpty(commentUserIds)) {
-            commentUsers = identityClient
-                    .getUsersByIds(
-                            submission.getComments().stream().map(SubmissionComment::getCreatedBy).distinct().toList())
-                    .getBody();
+			commentUsers = identityClient
+				.getUsersByIds(
+						submission.getComments().stream().map(SubmissionComment::getCreatedBy).distinct().toList())
+				.getBody();
         }
-        return SubmissionResponse.from(submission, commentUsers, ContextUtils.get(USER_ID, String.class, null));
+		return SubmissionResponse.from(submission, commentUsers, ContextUtils.get(USER_ID, String.class, null));
     }
 
     @Transactional
@@ -156,7 +147,7 @@ public class SubmissionService {
             throw new AccessDeniedException("Not authorized to delete this submission");
         }
 
-        List<ShortlistItem> shortlistItems = shortlistItemRepository.findAllBySubmissionId(submissionId, userId);
+		List<ShortlistItem> shortlistItems = shortlistItemRepository.findAllBySubmissionId(submissionId, userId);
         for (ShortlistItem item : shortlistItems) {
             item.getSubmissions().remove(submission);
             if (item.getSubmissions().isEmpty()) {
@@ -167,7 +158,7 @@ public class SubmissionService {
         }
 
         submissionRepository.delete(submission);
-       
+
         submission.getApplication().getTalent().decrementSubmissionCount();
         applicationRepository.save(submission.getApplication());
 
@@ -177,18 +168,16 @@ public class SubmissionService {
     public SubmissionResponse addComment(String submissionId, String workspaceId,
             CommentCreateRequest request, String userId) {
         Submission submission = findSubmissionById(submissionId);
-        SubmissionComment comment = SubmissionComment.builder()
-                .submission(submission)
-                .content(request.getContent())
-                .type(request.getType())
-                .workspaceId(workspaceId)
-                .build();
+		SubmissionComment comment = SubmissionComment.builder()
+			.submission(submission)
+			.content(request.getContent())
+			.type(request.getType())
+			.workspaceId(workspaceId)
+			.build();
 
         if (request.getParentCommentId() != null) {
-            SubmissionComment parentComment = submissionCommentRepository
-                    .findById(request.getParentCommentId())
-                    .orElseThrow(
-                            () -> new ResourceNotFoundException("Parent comment", "id", request.getParentCommentId()));
+			SubmissionComment parentComment = submissionCommentRepository.findById(request.getParentCommentId())
+				.orElseThrow(() -> new ResourceNotFoundException("Parent comment", "id", request.getParentCommentId()));
             comment.setParentComment(parentComment);
         }
 
@@ -197,26 +186,19 @@ public class SubmissionService {
 
         List<String> role = ContextUtils.get().get(ContextsConstant.USER_ROLE, List.class);
         if (role.size() == 1 && role.get(0).equals("ROLE_PRODUCER")) {
-            activityLogger.log(
-                submission.getWorkspaceId(),
-                submission.getApplication().getProject().getId(),
-                submission.getApplication().getId(),
-					ActivityType.FEEDBACK_ADDED,
-                Map.of(
-							"talentName",
+			activityLogger.log(submission.getWorkspaceId(), submission.getApplication().getProject().getId(),
+					submission.getApplication().getId(), ActivityType.FEEDBACK_ADDED,
+					Map.of("talentName",
 							String.join(" ", submission.getApplication().getTalent().getFirstName(),
 									submission.getApplication().getTalent().getLastName()),
 							"roleName", submission.getApplication().getRole().getName(), "project",
-							submission.getApplication().getProject().getName()
-                ),
-                null,
-                userId);
+							submission.getApplication().getProject().getName()),
+					null, userId);
         }
 
-        List<UserInfoResponse> users = identityClient
-                .getUsersByIds(
-                        submission.getComments().stream().map(SubmissionComment::getCreatedBy).distinct().toList())
-                .getBody();
+		List<UserInfoResponse> users = identityClient
+			.getUsersByIds(submission.getComments().stream().map(SubmissionComment::getCreatedBy).distinct().toList())
+			.getBody();
         return SubmissionResponse.from(submission, users, ContextUtils.getUserId());
     }
 
@@ -224,8 +206,8 @@ public class SubmissionService {
     public void deleteComment(String submissionId, String commentId, String userId) {
         Submission submission = findSubmissionById(submissionId);
 
-        submission.getComments()
-                .removeIf(comment -> comment.getId().equals(commentId) && comment.getCreatedBy().equals(userId));
+		submission.getComments()
+			.removeIf(comment -> comment.getId().equals(commentId) && comment.getCreatedBy().equals(userId));
 
         submissionRepository.save(submission);
     }
@@ -235,9 +217,10 @@ public class SubmissionService {
         Submission submission = findSubmissionById(submissionId);
 
         Map<String, UserInfoResponse> usersMap = identityClient
-                .getUsersByIds(
-                        submission.getComments().stream().map(SubmissionComment::getCreatedBy).distinct().toList())
-                .getBody().stream().collect(Collectors.toMap(UserInfoResponse::getId, user -> user));
+			.getUsersByIds(submission.getComments().stream().map(SubmissionComment::getCreatedBy).distinct().toList())
+			.getBody()
+			.stream()
+			.collect(Collectors.toMap(UserInfoResponse::getId, user -> user));
 
         return submission.getComments().stream()
                 .sorted(Comparator.comparing(SubmissionComment::getCreatedAt))
@@ -250,11 +233,11 @@ public class SubmissionService {
         Submission submission = findSubmissionById(submissionId);
 
         if (shouldCountView(submission, userId, ipAddress)) {
-            SubmissionViewRecord viewRecord = SubmissionViewRecord.builder()
-                    .submission(submission)
-                    .workspaceId(submission.getWorkspaceId())
-                    .userId(userId)
-                    .ipAddress(ipAddress)
+			SubmissionViewRecord viewRecord = SubmissionViewRecord.builder()
+				.submission(submission)
+				.workspaceId(submission.getWorkspaceId())
+				.userId(userId)
+				.ipAddress(ipAddress)
                     .build();
 
             viewRecordRepository.save(viewRecord);
@@ -276,9 +259,9 @@ public class SubmissionService {
     }
 
     /**
-     * Determines if a view should be counted.
-     * Simple deduplication logic - each user only counts once per video
-     */
+	 * Determines if a view should be counted. Simple deduplication logic - each user only
+	 * counts once per video
+	 */
     private boolean shouldCountView(Submission submission, String userId, String ipAddress) {
         // If both are empty, default to count
         if ((userId == null || userId.isEmpty()) && (ipAddress == null || ipAddress.isEmpty())) {
@@ -286,8 +269,8 @@ public class SubmissionService {
         }
 
         // Check if this user/IP has already viewed this submission
-        boolean hasExistingView = viewRecordRepository.existsBySubmissionIdAndUserIdOrIpAddress(
-                submission.getId(), userId);
+		boolean hasExistingView = viewRecordRepository.existsBySubmissionIdAndUserIdOrIpAddress(submission.getId(),
+				userId);
 
         // Only count if no previous view record exists
         return !hasExistingView;
@@ -296,41 +279,39 @@ public class SubmissionService {
     private Submission findSubmissionById(String id) {
         String workspaceId = ContextUtils.getWorkspaceId();
 
-        return submissionRepository.findOne(
-                (root, query, cb) -> cb.and(
-                        cb.equal(root.get("id"), id),
+		return submissionRepository.findOne((root, query, cb) -> cb.and(cb.equal(root.get("id"), id),
                         cb.equal(root.get("workspaceId"), workspaceId)))
                 .orElseThrow(() -> new ResourceNotFoundException("Submission", "id", id));
     }
 
     /**
-     * Sends invitation emails to multiple applicants for their submissions.
-     * This method processes a batch of applications and sends personalized invitation emails
-     * to each applicant using the specified email template.
-     *
-     * The email template will be populated with the following placeholders:
-     * - ROLE_NAME: The name of the role the applicant is applying for
-     * - PROJECT_NAME: The name of the project
-     * - FIRST_NAME: The applicant's first name
-     * - SENDER_NAME: The name of the user sending the invitation
-     *
-     * @param request The invitation email request containing:
-     *                - emailTemplateType: The type of email template to use
-     *                - applicationIds: List of application IDs to send invitations for
-     * @throws ResourceNotFoundException if any of the specified applications are not found
-     */
+	 * Sends invitation emails to multiple applicants for their submissions. This method
+	 * processes a batch of applications and sends personalized invitation emails to each
+	 * applicant using the specified email template.
+	 *
+	 * The email template will be populated with the following placeholders: - ROLE_NAME:
+	 * The name of the role the applicant is applying for - PROJECT_NAME: The name of the
+	 * project - FIRST_NAME: The applicant's first name - SENDER_NAME: The name of the
+	 * user sending the invitation
+	 * @param request The invitation email request containing: - emailTemplateType: The
+	 * type of email template to use - applicationIds: List of application IDs to send
+	 * invitations for
+	 * @throws ResourceNotFoundException if any of the specified applications are not
+	 * found
+	 */
     public void sendInvitationEmail(InvitationEmailRequest request) {
-        List<Application> applications = applicationRepository.findAllById(request.getApplicationIds());
+		List<Application> applications = applicationRepository.findAllById(request.getApplicationIds());
 
         if (CollectionUtils.isEmpty(applications)) {
             throw new ResourceNotFoundException("Application", "ids", request.getApplicationIds());
         }
 
-        applications.forEach(application -> application.setStatus(application.getStatus() == ApplicationStatus.SHORTLISTED ? ApplicationStatus.RETAPE : ApplicationStatus.REQUESTED));
+		applications
+			.forEach(application -> application.setStatus(application.getStatus() == ApplicationStatus.SHORTLISTED
+					? ApplicationStatus.RETAPE : ApplicationStatus.REQUESTED));
         applicationRepository.saveAll(applications);
 
-        UserInfoResponse userInfoResponse = identityClient.getUserById(ContextUtils.getUserId())
-                .getBody();
+		UserInfoResponse userInfoResponse = identityClient.getUserById(ContextUtils.getUserId()).getBody();
 
         if (userInfoResponse == null) {
             throw new ResourceNotFoundException("User", "id", ContextUtils.getUserId());
@@ -339,39 +320,43 @@ public class SubmissionService {
         String baseUrl = slateUri + "/shares/application";
         List<InnerMailSendMessage.Receipt> list = applications.stream().map(application -> {
 
-            ShareCodeResponse response =
-                    identityClient
-                            .generateShareCode(
-                                    ShareCodeRequest.builder()
-                                            .workspaceId(ContextUtils.getWorkspaceId())
-                                            .resource("application")
-                                            .resourceId(application.getId())
-                                        .guestName(String.join(" ", application.getTalent().getFirstName(), application.getTalent().getLastName()))
-                                            .guestEmail(application.getTalent().getEmail())
-                                            .roles(List.of(Role.ROLE_TALENT))
-                                            .write(true)
-                                            .expiryHours(shareLinkExpirationTimes)
-                                            .build())
-                            .getBody();
+			ShareCodeResponse response = identityClient
+				.generateShareCode(ShareCodeRequest.builder()
+					.workspaceId(ContextUtils.getWorkspaceId())
+					.resource("application")
+					.resourceId(application.getId())
+					.guestName(String.join(" ", application.getTalent().getFirstName(),
+							application.getTalent().getLastName()))
+					.guestEmail(application.getTalent().getEmail())
+					.roles(List.of(Role.ROLE_TALENT))
+					.write(true)
+					.expiryHours(shareLinkExpirationTimes)
+					.build())
+				.getBody();
 
-            String shareLink = UrlUtils.appendQueryParam(baseUrl + "/" + application.getId(), "share_code", response.getShareCode());
+			// Update talent's userId
+			Talent talent = application.getTalent();
+			talent.setUserId(response.getUserId());
+			talentRepository.save(talent);
 
-            log.info("BaseUrl:{},applicationId:{},shareCode:{},Share link:{}",baseUrl, application.getId(), response.getShareCode(), shareLink);
-            
+			String shareLink = UrlUtils.appendQueryParam(baseUrl + "/" + application.getId(), "share_code",
+					response.getShareCode());
+
+			log.info("BaseUrl:{},applicationId:{},shareCode:{},Share link:{}", baseUrl, application.getId(),
+					response.getShareCode(), shareLink);
+
             Map<String, String> placeholders = Map.of(
-                    "ROLE_NAME", application.getRole().getName(),
-                    "PROJECT_NAME", application.getProject().getName(),
-                "FIRST_NAME", application.getTalent().getFirstName(),
-                    "SENDER_NAME", userInfoResponse.getFirstName() + " " + userInfoResponse.getLastName(),
-                    "SHARE_LINK",shareLink
-            );
-            return InnerMailSendMessage.Receipt.builder()
-                    .placeholders(placeholders)
+					"ROLE_NAME", application.getRole().getName(), "PROJECT_NAME", application.getProject().getName(),
+					"FIRST_NAME", application.getTalent().getFirstName(), "SENDER_NAME",
+					userInfoResponse.getFirstName() + " " + userInfoResponse.getLastName(), "SHARE_LINK", shareLink);
+			return InnerMailSendMessage.Receipt.builder()
+				.placeholders(placeholders)
                     .to(application.getTalent().getEmail()).build();
         }).toList();
 
         sendEmailInnerService.email(InnerMailSendMessage.builder()
-                .emailTemplateType(request.getEmailTemplateType())
-                .receipts(list).build());
+			.emailTemplateType(request.getEmailTemplateType())
+			.receipts(list)
+			.build());
     }
 }

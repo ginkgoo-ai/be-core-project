@@ -14,7 +14,9 @@ public interface ShortlistShareRepository extends JpaRepository<ShortlistShare, 
 
 	Optional<ShortlistShare> findByShareCode(String shareCode);
 
-	@Query("SELECT s FROM ShortlistShare s WHERE s.shortlist.id = :shortlistId AND s.recipientEmail = :email AND s.active = true")
+	@Query("SELECT s FROM ShortlistShare s WHERE s.shortlist.id = :shortlistId " + "AND s.recipientEmail = :email "
+			+ "AND s.active = true " + "AND s.expiresAt > CURRENT_TIMESTAMP "
+			+ "AND s.expiresAt > DATEADD(HOUR, 1, CURRENT_TIMESTAMP)")
 	Optional<ShortlistShare> findActiveShareByShortlistIdAndEmail(@Param("shortlistId") String shortlistId,
 			@Param("email") String email);
 

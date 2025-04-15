@@ -13,6 +13,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Data
@@ -72,6 +73,8 @@ public class SubmissionResponse {
     @Schema(description = "List of public comments associated with this submission")
     private List<SubmissionCommentResponse> publicComments;
 
+	private long publicCommentCount;
+
     public static SubmissionResponse from(Submission submission, List<UserInfoResponse> users, String userId) {
         Map<String, UserInfoResponse> userInfoMap = CollectionUtils.emptyIfNull(users).stream()
             .collect(Collectors.toMap(UserInfoResponse::getId, user -> user));
@@ -127,6 +130,7 @@ public class SubmissionResponse {
             .videoDuration(submission.getVideoDuration())
             .videoResolution(submission.getVideoResolution())
             .viewCount(submission.getViewCount())
+			.publicCommentCount(Optional.ofNullable(submission.getComments()).map(List::size).orElse(0))
             .createdBy(submission.getCreatedBy())
             .createdAt(submission.getCreatedAt())
             .updatedAt(submission.getUpdatedAt())
