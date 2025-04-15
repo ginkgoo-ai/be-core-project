@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -39,8 +38,8 @@ public class CloudFileResponse implements Serializable {
 
     private String videoResolution;
 
-	private LocalDateTime createdAt;
+	private String createdAt;
 
-	private LocalDateTime updatedAt;
+	private String updatedAt;
 
 }
