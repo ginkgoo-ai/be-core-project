@@ -234,7 +234,8 @@ public class ShortlistService {
 				keywordPredicates.add(cb.like(cb.lower(roleJoin.get("name")), likePattern));
 
 				Join<Application, Talent> talentJoin = applicationJoin.join("talent", JoinType.LEFT);
-				keywordPredicates.add(cb.like(cb.lower(talentJoin.get("name")), likePattern));
+				keywordPredicates.add(cb.like(cb.lower(talentJoin.get("firstName")), likePattern));
+				keywordPredicates.add(cb.like(cb.lower(talentJoin.get("lastName")), likePattern));
 				keywordPredicates.add(cb.like(cb.lower(talentJoin.get("email")), likePattern));
 
 				Join<ShortlistItem, Submission> submissionsJoin = root.join("submissions", JoinType.LEFT);

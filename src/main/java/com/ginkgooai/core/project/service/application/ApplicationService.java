@@ -298,7 +298,9 @@ public class ApplicationService {
                 Join<Application, ProjectRole> roleJoin = root.join("role", JoinType.LEFT);
 
                 Predicate talentNamePredicate =
-                    cb.like(cb.lower(talentJoin.get("name")), likePattern);
+						cb.like(cb
+							.lower(cb.concat(cb.concat(talentJoin.get("firstName"), " "), talentJoin.get("lastName"))),
+								likePattern);
                 Predicate talentEmailPredicate =
                     cb.like(cb.lower(talentJoin.get("email")), likePattern);
                 Predicate roleNamePredicate = cb.like(cb.lower(roleJoin.get("name")), likePattern);
