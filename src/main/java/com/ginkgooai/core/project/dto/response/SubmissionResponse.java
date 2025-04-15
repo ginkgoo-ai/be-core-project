@@ -87,6 +87,8 @@ public class SubmissionResponse {
         List<String> role = ContextUtils.get().get(ContextsConstant.USER_ROLE, List.class);
         boolean isTalentRole = role.size() == 1 && role.get(0).equals("ROLE_TALENT");
 
+		List<SubmissionComment> comments = Optional.ofNullable(submission.getComments()).orElse(List.of());
+
         return SubmissionResponse.builder()
             .id(submission.getId())
             .projectId(submission.getApplication().getProject().getId())
@@ -102,19 +104,21 @@ public class SubmissionResponse {
             .createdBy(submission.getCreatedBy())
             .createdAt(submission.getCreatedAt())
             .updatedAt(submission.getUpdatedAt())
-            .publicComments(submission.getComments().stream()
+			.publicComments(comments.stream()
                 .filter(comment -> CommentType.PUBLIC.equals(comment.getType()))
                 .filter(comment -> isTalentRole ? comment.getCreatedBy()
                     .equals(userId) : true)
                 .map(t -> SubmissionCommentResponse.from(t,
                     userInfoMap.get(t.getCreatedBy())))
                 .toList())
-            .internalComments(userId.equals(submission.getCreatedBy()) ? submission.getComments()
+			.internalComments(userId.equals(submission.getCreatedBy()) ? comments 
                 .stream()
                 .filter(comment -> CommentType.INTERNAL.equals(comment.getType()))
                 .map(t -> SubmissionCommentResponse.from(t,
                     userInfoMap.get(t.getCreatedBy())))
                 .toList() : null)
+			.publicCommentCount(comments.stream().filter(t -> CommentType.PUBLIC.equals(t.getType())).count())
+			.internalCommentCount(comments.stream().filter(t -> CommentType.INTERNAL.equals(t.getType())).count())
             .shortlisted(submission.getShortlistItems() != null &&
                 submission.getShortlistItems().stream()
                     .anyMatch(item -> item.getShortlist().getCreatedBy()
