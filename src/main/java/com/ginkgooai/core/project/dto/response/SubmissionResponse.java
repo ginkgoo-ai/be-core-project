@@ -5,6 +5,7 @@ import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.domain.application.CommentType;
 import com.ginkgooai.core.project.domain.application.Submission;
+import com.ginkgooai.core.project.domain.application.SubmissionComment;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
@@ -73,7 +74,11 @@ public class SubmissionResponse {
     @Schema(description = "List of public comments associated with this submission")
     private List<SubmissionCommentResponse> publicComments;
 
+	@Schema(description = "Number of public comments associated with this submission")
 	private long publicCommentCount;
+
+	@Schema(description = "Number of internal comments associated with this submission")
+	private long internalCommentCount;
 
     public static SubmissionResponse from(Submission submission, List<UserInfoResponse> users, String userId) {
         Map<String, UserInfoResponse> userInfoMap = CollectionUtils.emptyIfNull(users).stream()
@@ -118,6 +123,7 @@ public class SubmissionResponse {
     }
 
     public static SubmissionResponse from(Submission submission, String userId) {
+		List<SubmissionComment> comments = Optional.ofNullable(submission.getComments()).orElse(List.of());
         return SubmissionResponse.builder()
             .id(submission.getId())
             .projectId(submission.getApplication().getProject().getId())
@@ -130,7 +136,8 @@ public class SubmissionResponse {
             .videoDuration(submission.getVideoDuration())
             .videoResolution(submission.getVideoResolution())
             .viewCount(submission.getViewCount())
-			.publicCommentCount(Optional.ofNullable(submission.getComments()).map(List::size).orElse(0))
+			.publicCommentCount(comments.stream().filter(t -> CommentType.PUBLIC.equals(t.getType())).count())
+			.internalCommentCount(comments.stream().filter(t -> CommentType.INTERNAL.equals(t.getType())).count())
             .createdBy(submission.getCreatedBy())
             .createdAt(submission.getCreatedAt())
             .updatedAt(submission.getUpdatedAt())
