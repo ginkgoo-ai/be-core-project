@@ -1,20 +1,16 @@
 package com.ginkgooai.core.project.dto.response;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
 import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
-
+import com.ginkgooai.core.project.domain.role.RoleStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -49,6 +45,9 @@ public class ProjectRoleResponse {
     @Schema(description = "Whether the role is active", example = "true")
     private Boolean isActive;
 
+	@Schema(description = "Role status", example = "CASTING")
+	private RoleStatus status;
+
     @Schema(description = "Project ID associated with the role", example = "proj123")
     private String projectId;
 
@@ -64,6 +63,7 @@ public class ProjectRoleResponse {
                 .selfTapeInstructions(role.getSelfTapeInstructions())
                 .isActive(role.getIsActive())
                 .projectId(role.getProject() != null ? role.getProject().getId() : null)
+			.status(role.getStatus())
                 .build();
     }
 
