@@ -66,7 +66,9 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         List<CloudFileResponse> roleSideFiles = new ArrayList<>();
         if (request.getRoles() != null && !request.getRoles().isEmpty()) {
             request.getRoles().forEach(roleRequest -> {
-                ProjectRole role = ProjectRole.builder().name(roleRequest.getName())
+				ProjectRole role = ProjectRole.builder()
+					.workspaceId(workspaceId)
+					.name(roleRequest.getName())
                     .characterDescription(roleRequest.getCharacterDescription())
                     .selfTapeInstructions(roleRequest.getSelfTapeInstructions())
                     .isActive(roleRequest.getIsActive() != null ? roleRequest.getIsActive()
@@ -76,11 +78,11 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
                 project.addRole(role);
             });
 
-            roleSideFiles =
-                storageClient
-                    .getFileDetails(request.getRoles().stream()
-                        .flatMap(roles -> roles.getSides().stream()).toList())
-                    .getBody();
+			List<String> sideFileIds = request.getRoles().stream().flatMap(roles -> roles.getSides().stream()).toList();
+			if (!sideFileIds.isEmpty()) {
+				roleSideFiles = ObjectUtils.isEmpty(sideFileIds) ? new ArrayList<>()
+						: storageClient.getFileDetails(sideFileIds).getBody();
+			}
             log.debug("Roles sides files: {}", roleSideFiles);
         }
 
@@ -229,7 +231,9 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
             role.setStatus(request.getStatus());
         }
         
-        return projectRoleRepository.save(role);
+		projectRoleRepository.save(role);
+
+		return role;
     }
 
     @Override
