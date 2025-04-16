@@ -206,10 +206,10 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         if (request.getIsActive() != null) {
             role.setIsActive(request.getIsActive());
         }
+		role.setSides(request.getSides().toArray(new String[0]));
+		projectRoleRepository.save(role);
 
-        ProjectRole savedRole = projectRoleRepository.save(role);
-
-        return savedRole;
+		return role;
     }
 
     @Override
