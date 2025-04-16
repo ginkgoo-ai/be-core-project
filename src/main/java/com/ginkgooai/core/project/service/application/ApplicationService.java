@@ -259,8 +259,9 @@ public class ApplicationService {
             List<Predicate> predicates = new ArrayList<>();
 
             Join<Application, Talent> talentJoin = root.join("talent", JoinType.LEFT);
+			Join<Application, ProjectRole> roleJoin = root.join("role", JoinType.LEFT);
 
-            // Workspace filter (required)
+			// Workspace filter (required)
             predicates.add(cb.equal(root.get("workspaceId"), workspaceId));
 
             // Project filter
@@ -283,38 +284,20 @@ public class ApplicationService {
                 predicates.add(cb.equal(root.get("status"), status));
             }
 
-            // viewMode filter
-            if ("submissions".equals(viewMode)) {
-				Join<Application, Submission> submissionJoin = root.join("submissions", JoinType.LEFT);
-                predicates.add(cb.isNotNull(submissionJoin.get("id")));
-                query.distinct(true);
-
-                // Date filter
-                if (startDateTime != null && endDateTime != null) {
-                    predicates.add(cb.between(submissionJoin.get("createdAt"), startDateTime,
-							endDateTime));
-                } else if (startDateTime != null) {
-                    predicates.add(cb.greaterThanOrEqualTo(submissionJoin.get("createdAt"),
-							startDateTime));
-                } else if (endDateTime != null) {
-                    predicates.add(
-							cb.lessThanOrEqualTo(submissionJoin.get("createdAt"), endDateTime));
-                }
-            } else {
-                if (startDateTime != null && endDateTime != null) {
-                    predicates.add(cb.between(root.get("createdAt"), startDateTime, endDateTime));
-                } else if (startDateTime != null) {
-                    predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), startDateTime));
-                } else if (endDateTime != null) {
-                    predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), endDateTime));
-                }
-            }
+			// Date filter
+			if (startDateTime != null && endDateTime != null) {
+				predicates.add(cb.between(root.get("createdAt"), startDateTime, endDateTime));
+			}
+			else if (startDateTime != null) {
+				predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), startDateTime));
+			}
+			else if (endDateTime != null) {
+				predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), endDateTime));
+			}
 
             // Keyword search on talent name or email
             if (StringUtils.hasText(keyword)) {
                 String likePattern = "%" + keyword.toLowerCase() + "%";
-
-                Join<Application, ProjectRole> roleJoin = root.join("role", JoinType.LEFT);
 
 				Predicate talentNamePredicate = cb.like(
 						cb.lower(cb.concat(cb.concat(talentJoin.get("firstName"), " "), talentJoin.get("lastName"))),
@@ -329,15 +312,17 @@ public class ApplicationService {
                 // Add groupBy on the Application ID
                 query.groupBy(root.get("id"));
 
-                // If sorting by talent.name, add it to the groupBy
-                if (sort != null && sort.isSorted()) {
-                    for (Sort.Order order : sort) {
-                        if ("talent.name".equals(order.getProperty())) {
-                            query.groupBy(root.get("id"), talentJoin.get("name"));
-                            break;
-                        }
-                    }
-                }
+				// Add sort fields to groupBy if needed
+				if (sort != null && sort.isSorted()) {
+					for (Sort.Order order : sort) {
+						if ("talent.firstName".equals(order.getProperty())) {
+							query.groupBy(root.get("id"), talentJoin.get("firstName"));
+						}
+						else if ("role.name".equals(order.getProperty())) {
+							query.groupBy(root.get("id"), roleJoin.get("name"));
+						}
+					}
+				}
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

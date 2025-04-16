@@ -102,6 +102,9 @@ public class ApplicationController {
 		if (sortField.equals("name")) {
 			sortField = "talent.firstName";
 		}
+		else if (sortField.equals("role")) {
+			sortField = "role.name";
+		}
 
 		Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
 		Pageable pageable = PageRequest.of(page, size, sort);
