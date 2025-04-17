@@ -1,9 +1,10 @@
 package com.ginkgooai.core.project.dto.request;
 
-import java.util.List;
-
+import com.ginkgooai.core.project.domain.role.RoleStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 @Schema(description = "Request payload for creating or updating a project role")
@@ -31,4 +32,7 @@ public class ProjectRoleRequest {
 
     @Schema(description = "Whether the role is active", example = "true")
     private Boolean isActive;
+
+	@Schema(description = "Role status", example = "CASTING")
+	private RoleStatus status;
 }

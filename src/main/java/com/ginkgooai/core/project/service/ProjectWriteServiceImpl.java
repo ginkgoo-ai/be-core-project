@@ -203,9 +203,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         role.setName(request.getName());
         role.setCharacterDescription(request.getCharacterDescription());
         role.setSelfTapeInstructions(request.getSelfTapeInstructions());
-        if (request.getIsActive() != null) {
-            role.setIsActive(request.getIsActive());
-        }
+		role.setStatus(request.getStatus());
 		role.setSides(request.getSides().toArray(new String[0]));
 		projectRoleRepository.save(role);
 
