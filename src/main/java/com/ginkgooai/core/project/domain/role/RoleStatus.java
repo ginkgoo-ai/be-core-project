@@ -6,7 +6,7 @@ import lombok.Setter;
 public enum RoleStatus {
     DRAFTING("Drafting"),
     CASTING("Casting"),
-	SUBMITTED("Submitted"),
+	SUBMITTING("Submitting"),
     SHORTLISTED("Shortlisted"),
     CAST("Cast");
 

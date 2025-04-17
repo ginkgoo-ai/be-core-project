@@ -115,7 +115,7 @@ public class SubmissionService {
 
 
         application.getTalent().incrementSubmissionCount();
-		application.getRole().setStatus(RoleStatus.SUBMITTED);
+		application.getRole().setStatus(RoleStatus.SUBMITTING);
         applicationRepository.save(application);
 
 		activityLogger.log(application.getRole().getWorkspaceId(), application.getRole().getId(), null, // No
