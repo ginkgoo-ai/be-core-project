@@ -121,12 +121,6 @@ public class ApplicationService {
 		List<CloudFileResponse> videoFiles = Collections.emptyList();
         if (!ObjectUtils.isEmpty(request.getVideoIds())) {
             videoFiles = storageClient.getFileDetails(request.getVideoIds()).getBody();
-
-			role.setStatus(RoleStatus.SUBMITTED);
-			activityLogger.log(project.getWorkspaceId(), project.getId(), null, // No
-																				// specific
-					ActivityType.ROLE_STATUS_UPDATE,
-					Map.of("roleName", role.getName(), "newStatus", role.getStatus().getValue()), null, userId);
 		}
 
         final List<CloudFileResponse> finalVideoFiles = videoFiles;

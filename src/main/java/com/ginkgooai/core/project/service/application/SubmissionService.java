@@ -14,6 +14,7 @@ import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.client.storage.StorageClient;
 import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
 import com.ginkgooai.core.project.domain.application.*;
+import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.domain.role.RoleStatus;
 import com.ginkgooai.core.project.domain.talent.Talent;
 import com.ginkgooai.core.project.dto.request.CommentCreateRequest;
@@ -115,14 +116,7 @@ public class SubmissionService {
 
 
         application.getTalent().incrementSubmissionCount();
-		application.getRole().setStatus(RoleStatus.SUBMITTING);
         applicationRepository.save(application);
-
-		activityLogger.log(application.getRole().getWorkspaceId(), application.getRole().getId(), null, // No
-																										// specific
-				ActivityType.ROLE_STATUS_UPDATE, Map.of("roleName", application.getRole().getName(), "newStatus",
-						application.getRole().getStatus().getValue()),
-				null, userId);
 
         return SubmissionResponse.from(savedSubmission, Collections.EMPTY_LIST, userId);
     }
@@ -360,6 +354,14 @@ public class SubmissionService {
 				.placeholders(placeholders)
                     .to(application.getTalent().getEmail()).build();
         }).toList();
+
+		ProjectRole role = applications.get(0).getRole();
+		role.setStatus(RoleStatus.SUBMITTING);
+		activityLogger.log(role.getWorkspaceId(), role.getProject().getId(), null, // No
+				// specific
+				ActivityType.ROLE_STATUS_UPDATE,
+				Map.of("roleName", role.getName(), "newStatus", role.getStatus().getValue()), null,
+				ContextUtils.getUserId());
 
         sendEmailInnerService.email(InnerMailSendMessage.builder()
 			.emailTemplateType(request.getEmailTemplateType())
