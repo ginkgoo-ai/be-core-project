@@ -346,10 +346,10 @@ public class SubmissionService {
 			log.info("BaseUrl:{},applicationId:{},shareCode:{},Share link:{}", baseUrl, application.getId(),
 					response.getShareCode(), shareLink);
 
-            Map<String, String> placeholders = Map.of(
-					"ROLE_NAME", application.getRole().getName(), "PROJECT_NAME", application.getProject().getName(),
-					"FIRST_NAME", application.getTalent().getFirstName(), "SENDER_NAME",
-					userInfoResponse.getFirstName() + " " + userInfoResponse.getLastName(), "SHARE_LINK", shareLink);
+			Map<String, String> placeholders = Map.of("ROLE_NAME", application.getRole().getName(), "PROJECT_NAME",
+					application.getProject().getName(), "FIRST_NAME", application.getTalent().getFirstName(),
+					"SENDER_NAME", userInfoResponse.getFirstName() + " " + userInfoResponse.getLastName(), "SHARE_LINK",
+					shareLink);
 			return InnerMailSendMessage.Receipt.builder()
 				.placeholders(placeholders)
                     .to(application.getTalent().getEmail()).build();
@@ -357,11 +357,6 @@ public class SubmissionService {
 
 		ProjectRole role = applications.get(0).getRole();
 		role.setStatus(RoleStatus.SUBMITTING);
-		activityLogger.log(role.getWorkspaceId(), role.getProject().getId(), null, // No
-				// specific
-				ActivityType.ROLE_STATUS_UPDATE,
-				Map.of("roleName", role.getName(), "newStatus", role.getStatus().getValue()), null,
-				ContextUtils.getUserId());
 
         sendEmailInnerService.email(InnerMailSendMessage.builder()
 			.emailTemplateType(request.getEmailTemplateType())

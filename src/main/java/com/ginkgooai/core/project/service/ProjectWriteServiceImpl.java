@@ -175,18 +175,10 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
             () -> new ResourceNotFoundException("Project", "projectId", projectId));
 
 		String userId = ContextUtils.getUserId();
-        ProjectRole role = new ProjectRole();
-        role.setName(request.getName());
-        role.setStatus(RoleStatus.DRAFTING);
-        role.setCharacterDescription(request.getCharacterDescription());
-        role.setSelfTapeInstructions(request.getSelfTapeInstructions());
-        role.setSides(request.getSides().toArray(new String[0]));
-        role.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
-        role.setProject(project);
-        role.setWorkspaceId(project.getWorkspaceId());
+		ProjectRole role = new ProjectRole(project, request.getName(), request.getCharacterDescription(),
+				request.getSelfTapeInstructions(), request.getSides().toArray(new String[0]));
 
         ProjectRole savedRole = projectRoleRepository.save(role);
-
         Map<String, CloudFileResponse> roleSideFilesMap = new HashMap<>();
         if (!ObjectUtils.isEmpty(savedRole.getSides())) {
             roleSideFilesMap = storageClient
@@ -205,13 +197,6 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
     public ProjectRole updateRole(String roleId, ProjectRoleRequest request) {
         ProjectRole role = projectRoleRepository.findById(roleId)
             .orElseThrow(() -> new ResourceNotFoundException("Role", "roleId", roleId));
-
-		// Log role status update activity once after all applications are processed
-		if (request.getStatus() != role.getStatus()) {
-			activityLogger.log(role.getWorkspaceId(), role.getProject().getId(), null, ActivityType.ROLE_STATUS_UPDATE,
-					Map.of("roleName", role.getName(), "newStatus", request.getStatus().getValue()), null,
-					ContextUtils.getUserId());
-		}
 
         role.setName(request.getName());
         role.setCharacterDescription(request.getCharacterDescription());
@@ -240,10 +225,6 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         }
         if (request.getStatus() != null) {
             role.setStatus(request.getStatus());
-			// Log role status update activity once after all applications are processed
-			activityLogger.log(role.getWorkspaceId(), role.getProject().getId(), null, ActivityType.ROLE_STATUS_UPDATE,
-					Map.of("roleName", role.getName(), "newStatus", role.getStatus().getValue()), null,
-					ContextUtils.getUserId());
         }
         
 		projectRoleRepository.save(role);

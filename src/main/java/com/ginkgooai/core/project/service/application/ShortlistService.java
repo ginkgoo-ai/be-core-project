@@ -116,11 +116,6 @@ public class ShortlistService {
 		application.setStatus(ApplicationStatus.SHORTLISTED);
 		application.getRole().setStatus(RoleStatus.SHORTLISTED);
 
-		activityLogger.log(application.getRole().getWorkspaceId(), application.getRole().getProject().getId(), null,
-				ActivityType.ROLE_STATUS_UPDATE, Map.of("roleName", application.getRole().getName(), "newStatus",
-						application.getRole().getStatus().getValue()),
-				null, ContextUtils.getUserId());
-
 		// Add submission to existing shortlist item if not already present
 		if (!shortlistItem.getSubmissions().contains(submission)) {
 			shortlistItem.getSubmissions().add(submission);

@@ -1,6 +1,5 @@
 package com.ginkgooai.core.project.service.application;
 
-import com.ginkgooai.core.common.enums.ActivityType;
 import com.ginkgooai.core.common.exception.ResourceDuplicatedException;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
 import com.ginkgooai.core.common.utils.ContextUtils;
@@ -114,10 +113,6 @@ public class ApplicationService {
         List<Application> savedApplications = applicationRepository.saveAll(createdApplications);
 
         role.setStatus(RoleStatus.CASTING);
-		activityLogger.log(project.getWorkspaceId(), project.getId(), null, // No specific
-				ActivityType.ROLE_STATUS_UPDATE,
-				Map.of("roleName", role.getName(), "newStatus", role.getStatus().getValue()), null, userId);
-
 		List<CloudFileResponse> videoFiles = Collections.emptyList();
         if (!ObjectUtils.isEmpty(request.getVideoIds())) {
             videoFiles = storageClient.getFileDetails(request.getVideoIds()).getBody();

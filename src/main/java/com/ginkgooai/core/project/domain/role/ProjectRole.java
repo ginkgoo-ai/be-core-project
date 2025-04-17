@@ -1,6 +1,9 @@
 package com.ginkgooai.core.project.domain.role;
 
+import com.ginkgooai.core.common.utils.ContextUtils;
+import com.ginkgooai.core.project.component.ApplicationContextProvider;
 import com.ginkgooai.core.project.domain.BaseLogicalDeleteEntity;
+import com.ginkgooai.core.project.domain.event.RoleStatusChangedEvent;
 import com.ginkgooai.core.project.domain.project.Project;
 import jakarta.persistence.*;
 import lombok.*;
@@ -37,4 +40,27 @@ public class ProjectRole extends BaseLogicalDeleteEntity {
     private Project project;
 
     private String workspaceId;
+
+	public ProjectRole(Project project, String name, String characterDescription, String selfTapeInstructions,
+			String[] sides) {
+		this.name = name;
+		this.characterDescription = characterDescription;
+		this.selfTapeInstructions = selfTapeInstructions;
+		this.sides = sides;
+		this.status = RoleStatus.DRAFTING;
+		this.project = project;
+		this.workspaceId = project.getWorkspaceId();
+	}
+
+	public void setStatus(RoleStatus newStatus) {
+		if (newStatus != this.status) {
+			RoleStatus oldStatus = this.status;
+			this.status = newStatus;
+
+			String userId = ContextUtils.getUserId();
+			ApplicationContextProvider.getApplicationContext()
+				.publishEvent(new RoleStatusChangedEvent(this, this, oldStatus, newStatus, userId));
+		}
+	}
+
 }
