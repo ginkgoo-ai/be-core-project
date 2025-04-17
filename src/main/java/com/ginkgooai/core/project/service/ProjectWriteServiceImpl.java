@@ -95,7 +95,7 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         });
 
         activityLogger.log(workspaceId, savedProject.getId(), null, ActivityType.PROJECT_CREATED,
-            Map.of("user", userId, "project", savedProject.getName()), null, userId);
+				Map.of("project", savedProject.getName()), null, userId);
 
         return ProjectResponse.from(savedProject, roleSideFiles);
     }
