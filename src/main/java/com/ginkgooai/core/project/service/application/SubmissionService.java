@@ -14,6 +14,7 @@ import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.client.storage.StorageClient;
 import com.ginkgooai.core.project.client.storage.dto.CloudFileResponse;
 import com.ginkgooai.core.project.domain.application.*;
+import com.ginkgooai.core.project.domain.role.RoleStatus;
 import com.ginkgooai.core.project.domain.talent.Talent;
 import com.ginkgooai.core.project.dto.request.CommentCreateRequest;
 import com.ginkgooai.core.project.dto.request.InvitationEmailRequest;
@@ -113,9 +114,15 @@ public class SubmissionService {
         }
 
 
-
         application.getTalent().incrementSubmissionCount();
+		application.getRole().setStatus(RoleStatus.SUBMITTED);
         applicationRepository.save(application);
+
+		activityLogger.log(application.getRole().getWorkspaceId(), application.getRole().getId(), null, // No
+																										// specific
+				ActivityType.ROLE_STATUS_UPDATE, Map.of("roleName", application.getRole().getName(), "newStatus",
+						application.getRole().getStatus().getValue()),
+				null, userId);
 
         return SubmissionResponse.from(savedSubmission, Collections.EMPTY_LIST, userId);
     }

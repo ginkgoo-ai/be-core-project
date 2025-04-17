@@ -114,12 +114,20 @@ public class ApplicationService {
         List<Application> savedApplications = applicationRepository.saveAll(createdApplications);
 
         role.setStatus(RoleStatus.CASTING);
-        projectRoleRepository.save(role);
+		activityLogger.log(project.getWorkspaceId(), project.getId(), null, // No specific
+				ActivityType.ROLE_STATUS_UPDATE,
+				Map.of("roleName", role.getName(), "newStatus", role.getStatus().getValue()), null, userId);
 
-        List<CloudFileResponse> videoFiles = Collections.emptyList();
+		List<CloudFileResponse> videoFiles = Collections.emptyList();
         if (!ObjectUtils.isEmpty(request.getVideoIds())) {
             videoFiles = storageClient.getFileDetails(request.getVideoIds()).getBody();
-        }
+
+			role.setStatus(RoleStatus.SUBMITTED);
+			activityLogger.log(project.getWorkspaceId(), project.getId(), null, // No
+																				// specific
+					ActivityType.ROLE_STATUS_UPDATE,
+					Map.of("roleName", role.getName(), "newStatus", role.getStatus().getValue()), null, userId);
+		}
 
         final List<CloudFileResponse> finalVideoFiles = videoFiles;
         List<Submission> allSubmissions = new ArrayList<>();
@@ -148,12 +156,6 @@ public class ApplicationService {
             submissionRepository.saveAll(allSubmissions);
             applicationRepository.saveAll(savedApplications);
         }
-
-        // Log role status update activity once after all applications are processed
-        activityLogger.log(project.getWorkspaceId(), project.getId(), null, // No specific
-				ActivityType.ROLE_STATUS_UPDATE,
-				Map.of("roleName", role.getName(), "newStatus", role.getStatus().getValue(), "user", userId), null,
-				userId);
 
         return savedApplications.stream()
 			.map(app -> ApplicationResponse.from(app, Collections.emptyList(), userId))

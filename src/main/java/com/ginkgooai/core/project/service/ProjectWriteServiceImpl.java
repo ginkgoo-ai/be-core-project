@@ -118,9 +118,15 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
             .orElseThrow(() -> new ResourceNotFoundException("Project", "id&workspaceId",
                 projectId + ":" + workspaceId));
 
+		if (project.getStatus() != request.getStatus()) {
+			activityLogger.log(project.getWorkspaceId(), project.getId(), null, ActivityType.PROJECT_STATUS_CHANGE,
+					Map.of("project", project.getName(), "previousStatus", project.getStatus().getValue(), "newStatus",
+							request.getStatus().getValue()),
+					null, project.getCreatedBy());
+		}
+
         project.updateDetails(request.getName(), request.getDescription(), request.getPlotLine(),
             request.getStatus(), request.getPosterUrl(), request.getProducer());
-
         Project updatedProject = projectRepository.save(project);
 
         return updatedProject;
@@ -200,6 +206,13 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         ProjectRole role = projectRoleRepository.findById(roleId)
             .orElseThrow(() -> new ResourceNotFoundException("Role", "roleId", roleId));
 
+		// Log role status update activity once after all applications are processed
+		if (request.getStatus() != role.getStatus()) {
+			activityLogger.log(role.getWorkspaceId(), role.getProject().getId(), null, ActivityType.ROLE_STATUS_UPDATE,
+					Map.of("roleName", role.getName(), "newStatus", request.getStatus().getValue()), null,
+					ContextUtils.getUserId());
+		}
+
         role.setName(request.getName());
         role.setCharacterDescription(request.getCharacterDescription());
         role.setSelfTapeInstructions(request.getSelfTapeInstructions());
@@ -227,6 +240,10 @@ public class ProjectWriteServiceImpl implements ProjectWriteService {
         }
         if (request.getStatus() != null) {
             role.setStatus(request.getStatus());
+			// Log role status update activity once after all applications are processed
+			activityLogger.log(role.getWorkspaceId(), role.getProject().getId(), null, ActivityType.ROLE_STATUS_UPDATE,
+					Map.of("roleName", role.getName(), "newStatus", role.getStatus().getValue()), null,
+					ContextUtils.getUserId());
         }
         
 		projectRoleRepository.save(role);
