@@ -116,6 +116,7 @@ public class SubmissionService {
 
 
         application.getTalent().incrementSubmissionCount();
+		application.setStatus(ApplicationStatus.SUBMITTED);
         applicationRepository.save(application);
 
         return SubmissionResponse.from(savedSubmission, Collections.EMPTY_LIST, userId);

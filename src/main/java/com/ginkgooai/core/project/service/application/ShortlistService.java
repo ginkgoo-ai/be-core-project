@@ -368,8 +368,35 @@ public class ShortlistService {
 		ShortlistItem shortlistItem = shortlistItemRepository.findById(shortlistItemId)
 			.orElseThrow(() -> new ResourceNotFoundException("ShortlistItem", "id", shortlistItemId));
 
+		List<String> userIds = new ArrayList<>();
+		shortlistItem.getSubmissions()
+			.forEach(submission -> submission.getComments().forEach(comment -> userIds.add(comment.getCreatedBy())));
+
+		final List<UserInfoResponse> commentUsers = getUserInfoByIds(userIds);
 		Shortlist shortlist = shortlistItem.getShortlist();
-		return ShortlistItemResponse.from(shortlistItem, shortlist.getOwnerId());
+		return ShortlistItemResponse.from(shortlistItem, commentUsers, shortlist.getOwnerId());
 	}
 
+	private List<UserInfoResponse> getUserInfoByIds(List<String> userIds) {
+		List<String> distinctUserIds = userIds.stream()
+			.filter(id -> id != null && !id.isEmpty())
+			.distinct()
+			.collect(Collectors.toList());
+
+		List<UserInfoResponse> users = new ArrayList<>();
+		if (!distinctUserIds.isEmpty()) {
+			try {
+				users = identityClient.getUsersByIds(distinctUserIds).getBody();
+				if (users == null) {
+					users = new ArrayList<>();
+					log.warn("Failed to get user information from identity service");
+				}
+			}
+			catch (Exception e) {
+				log.error("Error fetching user information: {}", e.getMessage());
+			}
+		}
+
+		return users;
+	}
 }

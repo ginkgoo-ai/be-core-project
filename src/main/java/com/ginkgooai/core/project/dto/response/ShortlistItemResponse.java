@@ -1,6 +1,6 @@
 package com.ginkgooai.core.project.dto.response;
 
-import com.ginkgooai.core.project.domain.application.Application;
+import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.domain.application.ShortlistItem;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -45,4 +45,18 @@ public class ShortlistItemResponse {
                 .createdAt(shortlistItem.getCreatedAt())
                 .build();
     }
+
+	public static ShortlistItemResponse from(ShortlistItem shortlistItem, List<UserInfoResponse> users, String userId) {
+		return ShortlistItemResponse.builder()
+			.id(shortlistItem.getId())
+			.application(ApplicationResponse.from(shortlistItem.getApplication()))
+			.submissions(shortlistItem.getSubmissions()
+				.stream()
+				.map(t -> SubmissionResponse.from(t, users, userId))
+				.toList())
+			.order(shortlistItem.getSortOrder())
+			.createdBy(shortlistItem.getCreatedBy())
+			.createdAt(shortlistItem.getCreatedAt())
+			.build();
+	}
 }
