@@ -20,7 +20,7 @@ COPY --from=builder /app/target/*.jar app.jar
 # Install curl, download the agent and clean up
 RUN apt-get update && \
     apt-get install -y curl && \
-    curl -L https://github.com/grafana/grafana-opentelemetry-java/releases/download/${GRAFANA_OTEL_VERSION}/grafana-opentelemetry-java.jar \
+    curl -s -L https://github.com/grafana/grafana-opentelemetry-java/releases/download/${GRAFANA_OTEL_VERSION}/grafana-opentelemetry-java.jar \
      -o ${GRAFANA_OTEL_JAR} && \
     apt-get purge -y --auto-remove curl && \
     rm -rf /var/lib/apt/lists/*
