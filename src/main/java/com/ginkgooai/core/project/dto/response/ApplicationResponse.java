@@ -36,6 +36,12 @@ public class ApplicationResponse {
     @Schema(description = "Project name", example = "my project")
     private String projectName;
 
+	@Schema(description = "Project Description", example = "This is my project")
+	private String projectDescription;
+
+	@Schema(description = "Project Plot line", example = "Story...")
+	private String projectPlotLine;
+
     @Schema(description = "Role")
     private ProjectRoleResponse role;
 
@@ -76,6 +82,8 @@ public class ApplicationResponse {
                 .workspaceId(application.getWorkspaceId())
                 .projectId(application.getProject().getId())
 			.projectName(application.getProject().getName())
+			.projectDescription(application.getProject().getDescription())
+			.projectPlotLine(application.getProject().getPlotLine())
 			.role(ProjectRoleResponse.from(application.getRole(), roleSideFilesMap))
                 .talent(TalentResponse.from(application.getTalent()))
 			.submissions(ObjectUtils.isEmpty(application.getSubmissions()) ? null
