@@ -31,7 +31,7 @@ public interface ProjectRepository extends JpaRepository<Project, String>, JpaSp
 			)
 			FROM Project p
 			WHERE p.workspaceId = :workspaceId
-			AND (:nameLike IS NULL OR p.name ILIKE :nameLike)
+			AND (:nameLike IS NULL OR p.name ILIKE CONCAT('%', :nameLike, '%'))
 			AND (:status IS NULL OR p.status = :status)
 			""")
 	Page<ProjectListResponse> findProjectList(@Param("workspaceId") String workspaceId,

@@ -73,7 +73,7 @@ public interface ApplicationRepository
                         FROM ProjectRole r
                         LEFT JOIN Application a on a.role.id = r.id
                         WHERE r.project.id = :projectId
-                        AND (COALESCE(:name, '') = '' OR r.name LIKE CONCAT('%', :name, '%'))
+			                AND (COALESCE(:name, '') = '' OR r.name ILIKE CONCAT('%', :name, '%'))
             GROUP BY r.id, r.name, r.status, r.sides, r.characterDescription, r.selfTapeInstructions
         """)
     Page<ProjectRoleStatisticsResponse> getProjectRolesStatistics(
