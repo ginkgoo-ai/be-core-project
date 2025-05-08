@@ -22,6 +22,9 @@ public class SendEmailInnerService {
         List<InnerMailSendMessage.Receipt> filteredReceipts = new ArrayList<>();
         String emailType = message.getEmailTemplateType();
 
+		log.debug("Processing email of type: {}, to recipients:{}", emailType,
+				message.getReceipts().stream().map(InnerMailSendMessage.Receipt::getTo).toList());
+
         // Check rate limit for each recipient and filter out rate-limited ones
         for (InnerMailSendMessage.Receipt receipt : message.getReceipts()) {
             String recipientEmail = receipt.getTo();
