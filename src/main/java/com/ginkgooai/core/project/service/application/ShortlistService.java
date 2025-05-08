@@ -4,6 +4,7 @@ import com.ginkgooai.core.common.constant.ContextsConstant;
 import com.ginkgooai.core.common.enums.ActivityType;
 import com.ginkgooai.core.common.enums.Role;
 import com.ginkgooai.core.common.exception.ResourceNotFoundException;
+import com.ginkgooai.core.common.message.InnerMailSendMessage;
 import com.ginkgooai.core.common.utils.ContextUtils;
 import com.ginkgooai.core.common.utils.UrlUtils;
 import com.ginkgooai.core.project.client.identity.IdentityClient;
@@ -12,16 +13,14 @@ import com.ginkgooai.core.project.client.identity.dto.ShareCodeRequest;
 import com.ginkgooai.core.project.client.identity.dto.ShareCodeResponse;
 import com.ginkgooai.core.project.client.identity.dto.UserInfoResponse;
 import com.ginkgooai.core.project.domain.application.*;
+import com.ginkgooai.core.project.domain.project.Project;
 import com.ginkgooai.core.project.domain.role.ProjectRole;
 import com.ginkgooai.core.project.domain.role.RoleStatus;
 import com.ginkgooai.core.project.domain.talent.Talent;
 import com.ginkgooai.core.project.dto.request.ShareShortlistRequest;
 import com.ginkgooai.core.project.dto.response.ShortlistItemResponse;
 import com.ginkgooai.core.project.dto.response.ShortlistShareResponse;
-import com.ginkgooai.core.project.repository.ShortlistItemRepository;
-import com.ginkgooai.core.project.repository.ShortlistRepository;
-import com.ginkgooai.core.project.repository.ShortlistShareRepository;
-import com.ginkgooai.core.project.repository.SubmissionRepository;
+import com.ginkgooai.core.project.repository.*;
 import com.ginkgooai.core.project.repository.specification.ShortlistItemSpecification;
 import com.ginkgooai.core.project.service.ActivityLoggerService;
 import jakarta.persistence.criteria.Join;
@@ -44,6 +43,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ShortlistService {
 
+	private final ProjectRepository projectRepository;
+	
 	private final ShortlistRepository shortlistRepository;
 
 	private final ShortlistItemRepository shortlistItemRepository;
@@ -58,12 +59,16 @@ public class ShortlistService {
 
 	private final ActivityLoggerService activityLogger;
 
+	private final SendEmailInnerService sendEmailInnerService;
 
-	public ShortlistService(ShortlistRepository shortlistRepository, ShortlistItemRepository shortlistItemRepository,
+	public ShortlistService(ProjectRepository projectRepository, ShortlistRepository shortlistRepository,
+			ShortlistItemRepository shortlistItemRepository,
 			SubmissionRepository submissionRepository, ShortlistShareRepository shortlistShareRepository,
 			IdentityClient identityClient, ActivityLoggerService activityLogger,
+			SendEmailInnerService sendEmailInnerService,
 			@Value("${spring.security.oauth2.guest_login_uri}") String guestLoginUri,
 			@Value("${app.base-uri}") String appBaseUrl) {
+		this.projectRepository = projectRepository;
 		this.shortlistRepository = shortlistRepository;
 		this.shortlistItemRepository = shortlistItemRepository;
 		this.submissionRepository = submissionRepository;
@@ -71,6 +76,7 @@ public class ShortlistService {
 		this.identityClient = identityClient;
 		this.appBaseUrl = appBaseUrl;
 		this.activityLogger = activityLogger;
+		this.sendEmailInnerService = sendEmailInnerService;
 	}
 
 	@Transactional
@@ -262,7 +268,16 @@ public class ShortlistService {
 		String workspaceId = ContextUtils.get().getWorkspaceId();
 		String userId = ContextUtils.get(ContextsConstant.USER_ID, String.class, null);
 
-		// First get the user's shortlist for this project
+		Project project = projectRepository.findById(request.getProjectId())
+			.orElseThrow(() -> new ResourceNotFoundException("Project", "id", request.getProjectId())); // First
+																										// get
+																										// the
+																										// user's
+																										// shortlist
+																										// for
+																										// this
+																										// project
+		
 		Shortlist shortlist = shortlistRepository
 			.findByWorkspaceIdAndProjectIdAndOwnerId(workspaceId, request.getProjectId(), userId)
 			.orElse(null);
@@ -327,6 +342,19 @@ public class ShortlistService {
 
 			log.info("Created shared shortlist for recipient: {}, shortlistId: {}", recipient.getEmail(), shortlistId);
 		}
+
+		// FIRST_NAME,PROJECT_NAME,SENDER_NAME,SHARE_LINK
+		UserInfoResponse userInfoResponse = identityClient.getUserById(userId).getBody();
+		List<InnerMailSendMessage.Receipt> list = request.getRecipients().stream().map(recipient -> {
+			Map<String, String> placeholders = Map.of("PROJECT_NAME", project.getName(), "FIRST_NAME",
+					recipient.getFirstName(), "SENDER_NAME",
+					userInfoResponse.getFirstName() + " " + userInfoResponse.getLastName(), "SHARE_LINK",
+					shareLinks.get(recipient.getEmail()));
+			return InnerMailSendMessage.Receipt.builder().placeholders(placeholders).to(recipient.getEmail()).build();
+		}).toList();
+
+		sendEmailInnerService
+			.email(InnerMailSendMessage.builder().emailTemplateType("SHARE_SHORTLIST").receipts(list).build());
 
 		return shareLinks;
 	}
